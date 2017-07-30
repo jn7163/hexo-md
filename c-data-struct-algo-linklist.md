@@ -173,7 +173,7 @@ extern int popLinkList(LinkList L);
 /**
  * 排序(冒泡排序)
  * @param L     要操作的单链表L
- * @param rev   0:正序排列; 1:倒序排列
+ * @param rev   0:升序排列; 1:降序排列
  * @return void 无返回值
 **/
 extern void sortLinkList(LinkList L, int rev);

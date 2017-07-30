@@ -74,10 +74,10 @@ L是一个指针，存放的是顺序表的地址，表长`L->len`，存储区�
 <pre><code class="language-c line-numbers"><script type="text/plain">#ifndef __SEQLIST_H
 #define __SEQLIST_H
 
-#define MAXSIZE 100   // MAXSIZE
+#define MAXSIZE 100
 typedef struct{
-    int data[MAXSIZE];    // data
-    int len;        // data的长度，即元素个数
+    int data[MAXSIZE];
+    int len;
 } SeqList;
 
 // 初始化
@@ -86,10 +86,10 @@ extern SeqList *Init_SeqList();
 // 判空
 extern int Empty_SeqList(SeqList *L);
 
-// 获取长度
+// 求长度
 extern int Length_SeqList(SeqList *L);
 
-// 打印SeqList
+// 打印
 extern void Print_SeqList(SeqList *L);
 
 // 销毁
@@ -104,7 +104,7 @@ extern int Locate_SeqList(SeqList *L, int x);
 // 表尾插入元素
 extern int Append_SeqList(SeqList *L, int x);
 
-// 移除表的最后一项
+// 移除末尾元素
 extern int Pop_SeqList(SeqList *L);
 
 // 插入元素
@@ -116,22 +116,22 @@ extern int Delete_SeqList(SeqList *L, int index);
 // 将顺序表(a1, a2, ..., an)以a1为界重排：a1前面的值均比a1小; a1后面的值均比a1大
 extern int Part_SeqList(SeqList *L);
 
-// 合并两个增序列为新的增序列
+// 合并两个升序序列为新的升序序列
 extern SeqList *Merge_SeqList(SeqList *L1, SeqList *L2);
 
-// 比较两个顺序表
+// 比较
 extern int Compare_SeqList(SeqList *L1, SeqList *L2);
 
-// 查找最大值
+// 最大值
 extern int Max_SeqList(SeqList *L);
 
-// 查找最小值
+// 最小值
 extern int Min_SeqList(SeqList *L);
 
-// 排序，rev参数如果为1表示倒序排列，为0则表示正序排列
+// 排序(冒泡排序)，rev为0表示升序排列，rev为1表示降序排列
 extern int Sort_SeqList(SeqList *L, int rev);
 
-// 逆置元素
+// 逆置
 extern void Reverse_SeqList(SeqList *L);
 
 #endif
@@ -142,38 +142,34 @@ extern void Reverse_SeqList(SeqList *L);
 #include <stdio.h>
 #include <stdlib.h>
 
-// 初始化
 SeqList *Init_SeqList(){
     SeqList *L = (SeqList *)malloc(sizeof(SeqList));
     if(L == NULL){
-        return NULL;    // 申请内存失败
+        return NULL;
     }else{
-        L->len = 0; // 将len长度置为0
-        return L;   // 返回SeqList首地址
+        L->len = 0;
+        return L;
     }
 }
 
-// 判空
 int Empty_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return 1;   // true, 当前SeqList为空
+        return 1;
     }else{
-        return 0;   // false, 不为空
+        return 0;
     }
 }
 
-// 获取长度
 int Length_SeqList(SeqList *L){
     if(L == NULL){
-        return -1;  // 传入的参数有误
+        return -1;
     }
-    return L->len;  // 返回当前顺序表的长度
+    return L->len;
 }
 
-// 打印SeqList
 void Print_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return; // 传入的参数有误
+        return;
     }
     printf("Length:%d  { ", L->len);
     for(int i=0; i<L->len; i++){
@@ -182,28 +178,25 @@ void Print_SeqList(SeqList *L){
     printf("\b\b }\n");
 }
 
-// 销毁
 int Destroy_SeqList(SeqList *L){
     if(L == NULL){
-        return 0;   // false, 空指针
+        return 0;
     }else{
         free(L);
-        return 1;   // true, 操作成功
+        return 1;
     }
 }
 
-// 取表元
 int GetElem_SeqList(SeqList *L, int i){
     if(L == NULL || L->len == 0 || i<0 || i>=L->len){
-        return 0;   // 传入的参数有误
+        return 0;
     }
-    return L->data[i];  // 返回索引为i的元素的值
+    return L->data[i];
 }
 
-// 按值查找
 int Locate_SeqList(SeqList *L, int x){
     if(L == NULL || L->len == 0){
-        return -1;  // 传入的参数有误
+        return -1;
     }else{
         int index = -1;
         for(int i=0; i<L->len; i++){
@@ -212,72 +205,67 @@ int Locate_SeqList(SeqList *L, int x){
                 break;
             }
         }
-        return index;   // 若查找成功, 返回第一次出现的索引值index; 否则返回-1
+        return index;
     }
 }
 
-// 表尾插入元素
 int Append_SeqList(SeqList *L, int x){
     if(L == NULL || L->len == MAXSIZE){
-        return -1;  // 传入的参数有误
+        return -1;
     }else{
         L->data[L->len] = x;
         L->len++;
-        return x;   // 操作成功，返回插入的元素的值
+        return x;
     }
 }
 
-// 移除表的最后一项
 int Pop_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return -1;  // 传入的参数有误
+        return -1;
     }else{
         int val = L->data[L->len-1];
         L->data[L->len-1] = 0;
         L->len--;
-        return val; // 操作成功，返回移除的元素的值
+        return val;
     }
 }
 
-// 插入元素
 int Insert_SeqList(SeqList *L, int index, int x){
     if(L == NULL || index >= MAXSIZE || L->len == MAXSIZE){
-        return -1;  // 传入的参数有误
+        return -1;
     }else if(L->len == 0 || index > L->len-1){
         L->data[index] = x;
         L->len = index+1;
-        return 0;   // 操作成功
+        return 0;
     }else{
         for(int i=L->len-1; i>=index; i--){
             L->data[i+1] = L->data[i];
         }
         L->data[index] = x;
         L->len++;
-        return 0;   // 操作成功
+        return 0;
     }
 }
 
-// 删除元素
 int Delete_SeqList(SeqList *L, int index){
     if(L == NULL || L->len == 0 || index >= L->len){
-        return -1;  // 传入的参数有误
+        return -1;
     }else if(index == L->len-1){
         L->data[index] = 0;
         L->len--;
-        return 0;   // 操作成功
+        return 0;
     }else{
         for(int i=index+1; i<L->len; i++){
             L->data[i-1] = L->data[i];
         }
         L->len--;
-        return 0;   // 操作成功
+        return 0;
     }
 }
 
-// 将顺序表(a1, a2, ..., an)以a1为界重排：a1前面的值均比a1小; a1后面的值均比a1大
 int Part_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return -1;  // 传入的参数有误
+        return -1;
     }else{
         int base = L->data[0];
         int temp;
@@ -290,18 +278,17 @@ int Part_SeqList(SeqList *L){
                 L->data[0] = temp;
             }
         }
-        return 0;   // 操作成功
+        return 0;
     }
 }
 
-// 合并两个增序列为新的增序列
 SeqList *Merge_SeqList(SeqList *L1, SeqList *L2){
     if(L1 == NULL || L2 == NULL || L1->len ==0 || L2->len == 0 || L1->len+L2->len > MAXSIZE){
-        return NULL;    // 传入的参数有误
+        return NULL;
     }else{
         SeqList *L = Init_SeqList();
         if(L == NULL){
-            return NULL;    // 申请内存失败
+            return NULL;
         }
         int i=0, j=0, k=0;
         while(i<L1->len && j<L2->len){
@@ -321,33 +308,31 @@ SeqList *Merge_SeqList(SeqList *L1, SeqList *L2){
             L->data[k] = L2->data[j];
             L->len++;
         }
-        return L;   // 返回新增序列的首地址
+        return L;
     }
 }
 
-// 比较两个顺序表
 int Compare_SeqList(SeqList *L1, SeqList *L2){
     if(L1 == NULL || L2 == NULL || L1->len == 0 || L2->len == 0){
-        return 0;   // 传参有误
+        return 0;
     }else{
         int mark=0;
         while(L1->data[mark] == L2->data[mark] && (mark < L1->len || mark < L2->len)){
             mark++;
         }
         if(mark == L1->len && mark == L2->len){
-            return 0;   // L1 == L2
+            return 0;
         }else if((mark == L1->len && mark < L2->len) || (mark < L1->len && mark < L2->len && L1->data[mark] < L2->data[mark])){
-            return -1;  // L1 < L2
+            return -1;
         }else{
-            return 1;   // L1 > L2
+            return 1;
         }
     }
 }
 
-// 查找最大值
 int Max_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return 0;   // 传入的参数有误
+        return 0;
     }else{
         int maxVal = L->data[0];
         for(int i=1; i<L->len; i++){
@@ -355,14 +340,13 @@ int Max_SeqList(SeqList *L){
                 maxVal = L->data[i];
             }
         }
-        return maxVal;  // 返回最大值
+        return maxVal;
     }
 }
 
-// 查找最小值
 int Min_SeqList(SeqList *L){
     if(L == NULL || L->len == 0){
-        return 0;   // 传入的参数有误
+        return 0;
     }else{
         int minVal = L->data[0];
         for(int i=1; i<L->len; i++){
@@ -370,14 +354,13 @@ int Min_SeqList(SeqList *L){
                 minVal = L->data[i];
             }
         }
-        return minVal;  // 返回最小值
+        return minVal;
     }
 }
 
-// 排序，rev参数如果为1表示倒序排列，为0则表示正序排列
 int Sort_SeqList(SeqList *L, int rev){
     if(L == NULL || L->len == 0){
-        return -1;  // 传入的参数有误
+        return -1;
     }else{
         for(int i=0; i<L->len-1; i++){
             int sorted = 1;
@@ -402,11 +385,10 @@ int Sort_SeqList(SeqList *L, int rev){
                 break;
             }
         }
-        return 0;   // 操作成功
+        return 0;
     }
 }
 
-// 逆置元素
 void Reverse_SeqList(SeqList *L){
     for(int i=0; i<L->len/2; i++){
         int tmp = L->data[i];
