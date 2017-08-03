@@ -20,13 +20,13 @@ scanf()、fscanf()、sscanf()、vscanf()、vfscanf()、vsscanf()
 - `int printf(const char *fmt, ...);`：输出至stdout
 - `int fprintf(FILE *stream, const char *fmt, ...);`：输出至stream
 - `int sprintf(char *str, const char *fmt, ...);`：输出至str
-- `int snprintf(char *str, size_t size, const char *fmt, ...);`：输出至str，写入至多size个字节
+- `int snprintf(char *str, size_t size, const char *fmt, ...);`：输出至str，写入至多size个字符(包括'\0'字符)
 - `int vprintf(const char *fmt, va_list ap);`：fmt从变参列表ap获取数据，然后输出至stdout
 - `int vfprintf(FILE *stream, const char *fmt, va_list ap);`：fmt从变参列表ap获取数据，然后输出至stream
 - `int vsprintf(char *str, const char *fmt, va_list ap);`：fmt从变参列表ap获取数据，然后输出至str
-- `int vsnprintf(char *str, size_t size, const char *fmt, va_list ap);`：fmt从变参列表ap获取数据，然后输出至str，写入至多size个字节
+- `int vsnprintf(char *str, size_t size, const char *fmt, va_list ap);`：fmt从变参列表ap获取数据，然后输出至str，写入至多size个字符(包括'\0'字符)
 
-返回值：正常情况下，返回成功写入的字符数(不含'\0')；若出错，则返回负值；
+返回值：正常情况下，返回成功写入的字符数；若出错，则返回负值；
 
 比如：我们可以利用vprintf()写一个自己的格式化输出函数，来模拟printf()
 <pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
