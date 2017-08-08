@@ -75,7 +75,7 @@ socket就是该模式的一个实现，socket即是一种特殊的文件，一�
 `int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);`：接受socket连接请求
 - `sockfd`：输入参数，被监听的套接字
 - `addr`：输出参数，返回客户端的地址，可为NULL
-- `addrlen`：输出参数，返回客户端的地址的长度，可为NULL
+- `addrlen`：输入参数，指定客户端的地址的长度，可为NULL
 - 返回值：成功返回已连接的新套接字描述符connfd，失败返回-1，并设置errno
 
 `int recv(int sockfd, void *buf, int len, int flags);`：从socket接收数据
@@ -98,7 +98,7 @@ socket就是该模式的一个实现，socket即是一种特殊的文件，一�
 - `len`：输入参数，指定buf的长度
 - `flags`：输入参数，flags，指定对应的选项，一般置为0
 - `addr`：输出参数，保存该数据的发送方地址
-- `addrlen`：输出参数，保存发送方地址的长度
+- `addrlen`：输入参数，指定发送方地址的长度
 - 返回值：成功返回接收到的数据大小，失败则返回-1，并设置errno
 
 `int sendto(int sockfd, void *buf, int len, int flags, struct sockaddr *addr, socklen_t addrlen);`：向udp socket发送数据
@@ -110,7 +110,7 @@ socket就是该模式的一个实现，socket即是一种特殊的文件，一�
 - `addrlen`：输入参数，指定接收方的地址的长度
 - 返回值：成功返回发送的数据大小，失败则返回-1，并设置errno
 
-关于recv、send、recvfrom、sendto函数的最后一个参数`flags`：
+最后一个参数`flags`：
 - `MSG_WAITALL`：用于recv，尽可能等待所有数据
 - `MSG_DONTWAIT`：用于recv、send，仅本次操作不阻塞
 - `MSG_DONTROUTE`：用于send，绕过路由表查找
@@ -209,7 +209,7 @@ int main(void){
 
     int connfd;
     struct sockaddr_in peeraddr;
-    socklen_t peerlen;
+    socklen_t peerlen = sizeof(peeraddr);
     char buf[BUF_SIZE];
     int nbuf;
 
@@ -323,7 +323,7 @@ echo msg:
 
 # root @ localhost in ~/tmp [14:59:43]
 $ ./server
-new conn(0.0.0.0:0); msg: www.zfl9.com
+new conn(127.0.0.1:55806); msg: www.zfl9.com
 new conn(127.0.0.1:55808); msg: www.zfl9.com
 new conn(127.0.0.1:55810); msg: www.zfl9.com
 new conn(127.0.0.1:55812); msg: www.zfl9.com
@@ -381,7 +381,7 @@ int main(void){
     }
 
     struct sockaddr_in peeraddr;
-    socklen_t peerlen;
+    socklen_t peerlen = sizeof(peeraddr);
     char buf[BUF_SIZE];
     int nbuf;
 
@@ -487,7 +487,7 @@ echo msg: www.zfl9.com
 
 # root @ localhost in ~/tmp [15:36:41]
 $ ./server
-new msg(0.0.0.0:0): test
+new msg(127.0.0.1:45884): test
 new msg(127.0.0.1:47339): www.zfl9.com
 new msg(127.0.0.1:49160): www.zfl9.com
 new msg(127.0.0.1:34802): www.zfl9.com
