@@ -66,6 +66,7 @@ h就是host，也就是主机序，n就是network，也就是网络序，s表示
 不过对于ip地址，我们其实一般都是用点分十进制记法的字符串来表示的，如`"114.114.114.114"`，而并不像端口号直接用整数表示
 
 对于这种形式的ip地址，可以用`inet_addr()`、`inet_aton()`、`inet_ntoa()`、`inet_pton()`、`inet_ntop()`函数进行转换
+
 `in_addr_t inet_addr(const char *string);`：将点分十进制的ip转换为网络序
 - `string`：输入参数，点分十进制的ip地址
 - 返回值：成功返回网络序的ip地址，失败则返回INADDR_NONE
@@ -113,4 +114,67 @@ h就是host，也就是主机序，n就是network，也就是网络序，s表示
 };
 </script></code></pre>
 
-一般我们使用`h_addr`就行了，不过还要进行字节序的转换，别忘了
+一般我们使用`h_addr`就行了，如果你想用printf输出它指向的ip地址，别忘了进行字节序转换
+`h_addr`是一个指向`struct in_addr`结构体的指针，可以用inet_ntoa()进行转换
+如：`printf("host: %s, addr: %s\n", hostname, inet_ntoa(*(struct in_addr *)resolv->h_addr));`，resolv是一个`struct hostent`结构体的指针，即gethostbyname的返回值
+
+## 获取已连接的socket的本地、远程地址
+`int getsockname(int sockfd, struct sockaddr *localaddr, socklen_t *addrlen);`：获取本地地址信息
+- `sockfd`：输入参数，一个已连接的socket套接字
+- `localaddr`：输出参数，保存获取到的本地地址
+- `addrlen`：输入参数，指明本地地址的长度
+- 返回值：成功返回0，失败返回-1，并设置errno
+
+`int getpeername(int sockfd, struct sockaddr *peeraddr, socklen_t *addrlen);`：获取对方地址信息
+- `sockfd`：输入参数，一个已连接的socket套接字
+- `peeraddr`：输出参数，保存获取到的对方地址
+- `addrlen`：输入参数，指明对方地址的长度
+- 返回值：成功返回0，失败返回-1，并设置errno
+
+## socket阻塞与非阻塞
+**`tcp_socket`**：
+阻塞模式的读(recv)：`数据在不超过指定长度的时候有多少读多少，没有数据就一直等待`；
+非阻塞模式的读(recv)：`数据在不超过指定长度的时候有多少读多少，没有数据就立即返回，不等待`；
+
+阻塞模式的写(send)：`会一直等待，直到数据全部被发送完，才会返回`；
+非阻塞模式的写(send)：`采取可以写多少就写多少的原则，并不会一直等到将数据全部发送完才返回`；
+
+默认情况下，所有的tcp_socket的相关操作都是阻塞的，我们之前用的也都是阻塞模式的读写；
+读：阻塞和非阻塞，一般都会考虑循环读取的方式，因为一次读取不能保证读取到我们想要的长度；
+对于阻塞读：recv有一个参数`MSG_WAITALL`，会一直读取到指定长度的数据后才会返回，不过也是尽量读全，在有中断的情况下还是可能被打断，造成没有读到buf_size的长度；
+所以即使是采用`阻塞模式recv + MSG_WAITALL`的模式，也不保证可以读到buf_size的长度，还是需要考虑采取循环的方式；
+不过一般情况下，MSG_WAITALL还是可以读取到buf_size的长度的，这种方式的读取，性能会比单纯循环读的好一些；
+
+写：阻塞模式下，也不保证能够发送完全部数据，因为还是可能被中断，导致只发送了一部分数据，所以还是需要考虑循环的方式；
+不过通常情况下，一次调用还是能够发送完全部的数据
+
+**`udp_socket`**：
+对于udp的读，默认情况下也是阻塞的，会一直等待到一个完整的udp数据报的到来才会返回；
+对于udp的写，因为没有发送缓冲区，所以不会因为缓冲区而阻塞，不过还是可能因其他原因而阻塞；
+
+**将默认的阻塞套接字设置为非阻塞套接字**：
+获取当前socket的flags值：`int flags = fcntl(sockfd, F_GETFL, 0);`
+设置成非阻塞套接字：`fcntl(sockfd, F_SETFL, flags|O_NONBLOCK);`
+设置为阻塞套接字：`fcntl(sockfd, F_SETFL, flags&~O_NONBLOCK);`
+
+**非阻塞模式的注意事项**：
+`connect`发起连接：
+- 返回0，表示已建立连接
+- 返回-1，如果errno是`EINPROGRESS`，表示正在处理中
+- 返回-1，如果errno不是`EINPROGRESS`，表示connect出错
+
+`accept`接收连接：
+- 返回>0，表示成功接收一个连接
+- 返回-1，如果errno是`EAGAIN`，表示没有新链接
+- 返回-1，如果errno不是`EAGAIN`，表示accept出错
+
+`recv`接收数据：
+- 返回>0，表示已接收到了数据
+- 返回=0，表示收到了FIN报文
+- 返回-1，如果errno是`EAGAIN`，表示当前没有数据
+- 返回-1，如果errno不是`EAGAIN`，表示recv出错
+
+`send`发送数据：
+- 返回>0，表示已发送数据
+- 返回-1，如果errno是`EAGAIN`，表示当前发送buffer空间不足
+- 返回-1，如果errno不是`EAGAIN`，表示send出错
