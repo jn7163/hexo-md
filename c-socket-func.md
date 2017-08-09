@@ -160,21 +160,23 @@ h就是host，也就是主机序，n就是network，也就是网络序，s表示
 **非阻塞模式的注意事项**：
 `connect`发起连接：
 - 返回0，表示已建立连接
-- 返回-1，如果errno是`EINPROGRESS`，表示正在处理中
-- 返回-1，如果errno不是`EINPROGRESS`，表示connect出错
+- 返回-1，errno为`EINPROGRESS`，表示当前进程正在处理
+- 返回-1，errno是其它值，表示connect出错
 
 `accept`接收连接：
-- 返回>0，表示成功接收一个连接
-- 返回-1，如果errno是`EAGAIN`，表示没有新链接
-- 返回-1，如果errno不是`EAGAIN`，表示accept出错
+- 返回>0，表示成功接受连接
+- 返回-1，errno是`EAGAIN`，表示没有新连接
+- 返回-1，errno是其它值，表示accept出错
 
 `recv`接收数据：
-- 返回>0，表示已接收到了数据
-- 返回=0，表示收到了FIN报文
-- 返回-1，如果errno是`EAGAIN`，表示当前没有数据
-- 返回-1，如果errno不是`EAGAIN`，表示recv出错
+- 返回>0，表示已接收数据
+- 返回=0，表示已接收FIN报文(对方关闭了发送通道、关闭了连接等等)
+- 返回-1，errno是`EAGAIN`，表示当前没有数据可读，应该继续读取
+- 返回-1，errno是`EINTR`，表示当前操作被中断，应该继续读取
+- 返回-1，errno是其它值，表示recv出错
 
 `send`发送数据：
 - 返回>0，表示已发送数据
-- 返回-1，如果errno是`EAGAIN`，表示当前发送buffer空间不足
-- 返回-1，如果errno不是`EAGAIN`，表示send出错
+- 返回-1，errno是`EAGAIN`，表示当前发送buffer空间不足，应该继续发送
+- 返回-1，errno是`EINTR`，表示当前操作被中断，应该继续发送
+- 返回-1，errno是其它值，表示send出错
