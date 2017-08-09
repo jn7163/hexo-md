@@ -48,25 +48,25 @@ tcp保持长连接主要有两种方式：
 第二种，使用tcp协议自带的keepalive机制，让tcp自己发送心跳包，这里推荐这种方式，更清爽彻底
 <pre><code class="language-c line-numbers"><script type="text/plain">// 打开tcp keepalive选项
 int keepalive = 1;
-if(setsockopt(conn, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0 || setsockopt(server_fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0){
+if(setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0){
     perror("\033[1;35m[WARNING]\033[0m setsockopt_keepalive");
 }
 
 // 设置空闲时长(即多久不收发数据就开始触发心跳机制，发送心跳包)
 int idle = 30;
-if(setsockopt(conn, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle)) < 0 || setsockopt(server_fd, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle)) < 0){
+if(setsockopt(sockfd, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle)) < 0){
     perror("\033[1;35m[WARNING]\033[0m setsockopt_keepidle");
 }
 
 // 设置心跳包发送时间间隔(即两个心跳包之间的发送时间间隔)
 int interval = 60;
-if(setsockopt(conn, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval)) < 0 || setsockopt(server_fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval)) < 0){
+if(setsockopt(sockfd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval)) < 0){
     perror("\033[1;35m[WARNING]\033[0m setsockopt_keepintvl");
 }
 
 // 设置允许探测失败的最大次数(即连续3次探测失败，说明对方已断开连接)
 int cnt = 3;
-if(setsockopt(conn, SOL_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)) < 0 || setsockopt(server_fd, SOL_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)) < 0){
+if(setsockopt(sockfd, SOL_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)) < 0){
     perror("\033[1;35m[WARNING]\033[0m setsockopt_keepcnt");
 }
 </script></code></pre>
