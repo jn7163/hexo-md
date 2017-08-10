@@ -1196,8 +1196,190 @@ new conn 127.0.0.1:50366
 peer close conn...
 </script></code></pre>
 
+
 > 
 可以发现，ET模式所耗的时间比LT模式更长一些，不过这是因为echo回声程序的特性导致的；
 因为ET模式中的recv/send结果判断、循环，无疑加重了cpu的负担，适得其反；
 不过也可能是我的程序逻辑太辣鸡了(这是肯定的了(눈_눈))；
 所以说选对模型很重要，并不是所有的情况都适合用ET模式；
+
+不过我们可以只将listenfd设置为ET模式，其他的新连接使用默认的LT模式，我们来看一下：
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <errno.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/epoll.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <fcntl.h>
+
+#define LISTEN_PORT 8080
+#define MAX_CONN 1024
+#define MAX_EVENT 1024
+#define BUF_SIZE 512
+
+static int listenfd;
+static int epollfd;
+
+void handle_signal(int sig);
+
+int main(void){
+    signal(SIGHUP, handle_signal);
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+
+    if((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+        perror("create_listenfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    int reuseaddr = 1;
+    if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(reuseaddr)) < 0){
+        perror("setsockopt_listenfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    int flgs = fcntl(listenfd, F_GETFL, 0);
+    if(fcntl(listenfd, F_SETFL, flgs|O_NONBLOCK) < 0){
+        perror("setnonblock_listenfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in servaddr;
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(LISTEN_PORT);
+
+    if(bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0){
+        perror("bind_listenfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    if((epollfd = epoll_create1(0)) < 0){
+        perror("create_epollfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    struct epoll_event event, events[MAX_EVENT];
+    event.data.fd = listenfd;
+    event.events = EPOLLIN | EPOLLET;
+    if(epoll_ctl(epollfd, EPOLL_CTL_ADD, listenfd, &event) < 0){
+        perror("addevent_epollfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    if(listen(listenfd, MAX_CONN) < 0){
+        perror("listen_listenfd error");
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in peeraddr;
+    socklen_t peerlen = sizeof(peeraddr);
+    char buf[BUF_SIZE];
+    int nfds, fd, connfd, nbuf;
+    uint32_t ev;
+
+    for(;;){
+        nfds = epoll_wait(epollfd, events, MAX_EVENT, -1);
+        if(nfds < 0){
+            perror("wait_epollfd error");
+            continue;
+        }
+
+        for(int i=0; i<nfds; i++){
+            fd = events[i].data.fd;
+            ev = events[i].events;
+
+            if(ev & EPOLLERR || ev & EPOLLHUP || !(ev & EPOLLIN)){
+                continue;
+            }else if(fd == listenfd && (ev & EPOLLIN)){
+                for(;;){
+                    connfd = accept(fd, (struct sockaddr *)&peeraddr, &peerlen);
+                    if(connfd < 0 && errno == EAGAIN){
+                        break;
+                    }else if(connfd < 0 && (errno == EINTR || errno == ECONNABORTED || errno == EPROTO)){
+                        continue;
+                    }else if(connfd < 0){
+                        perror("accept_listenfd error");
+                        continue;
+                    }
+
+                    printf("new conn %s:%d\n", inet_ntoa(peeraddr.sin_addr), ntohs(peeraddr.sin_port));
+
+                    struct epoll_event ev;
+                    ev.data.fd = connfd;
+                    ev.events = EPOLLIN;
+                    if(epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &ev) < 0){
+                        perror("addevent_epollfd error");
+                        close(connfd);
+                        continue;
+                    }
+                }
+                continue;
+            }else if(ev & EPOLLIN){
+                nbuf = recv(fd, buf, BUF_SIZE, 0);
+                buf[nbuf] = 0;
+                printf("recv_msg: %s\n", buf);
+                send(fd, buf, nbuf, 0);
+                shutdown(fd, SHUT_WR);
+                close(fd);
+            }
+        }
+    }
+
+    return 0;
+}
+
+void handle_signal(int sig){
+    if(sig == SIGHUP){
+        fprintf(stderr, "signal: SIGHUP(%d)", sig);
+    }else if(sig == SIGINT){
+        fprintf(stderr, "signal: SIGINT(%d)", sig);
+    }else if(sig == SIGTERM){
+        fprintf(stderr, "signal: SIGTERM(%d)", sig);
+    }
+
+    fprintf(stderr, "   close server ... ");
+    close(listenfd);
+    close(epollfd);
+    fprintf(stderr, "done\n");
+
+    exit(EXIT_SUCCESS);
+}
+</script></code></pre>
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ localhost in ~/tmp [20:30:11] C:130
+$ time bash -c 'for((i=0; i<1000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.04s user 1.14s system 102% cpu 1.144 total
+
+# root @ localhost in ~/tmp [20:30:43]
+$ time bash -c 'for((i=0; i<1000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.05s user 1.13s system 104% cpu 1.137 total
+
+# root @ localhost in ~/tmp [20:30:45]
+$ time bash -c 'for((i=0; i<1000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.07s user 1.21s system 104% cpu 1.229 total
+
+# root @ localhost in ~/tmp [20:30:47]
+$ time bash -c 'for((i=0; i<5000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.37s user 5.90s system 104% cpu 6.019 total
+
+# root @ localhost in ~/tmp [20:31:00]
+$ time bash -c 'for((i=0; i<5000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.36s user 5.99s system 104% cpu 6.077 total
+
+# root @ localhost in ~/tmp [20:31:07]
+$ time bash -c 'for((i=0; i<5000; i++)); do ./client 'www.zfl9.com' > /dev/null ; done'
+bash -c   0.40s user 6.01s system 104% cpu 6.170 total
+</script></code></pre>
