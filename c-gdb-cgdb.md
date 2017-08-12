@@ -546,6 +546,73 @@ n/f/u 三个参数可以任意组合，可以都没有，也可以都指定
 
 `q`：退出gdb shell
 
+## gdb调试多进程
+默认设置下，在调试多进程程序时gdb只会调试主进程；
+gdb7以上的版本(gdb --version)支持多进程调试，只需要设置好`follow-fork-mode`(fork追踪模式)以及`detach-on-fork`(指示GDB在fork之后是否断开某个进程的调试)即可；
+
+这两个参数的设置命令分别是：
+`set follow-fork-mode [parent|child]`，默认值`parent`
+`set detach-on-fork [on|off]`，默认值`on`
+两者结合起来构成了GDB的调试模式；
+<pre><code class="language-bash line-numbers"><script type="text/plain">follow-fork-mode  detach-on-fork    说明
+    parent              on          GDB默认的调试模式：只调试主进程
+    child               on          只调试子进程
+    parent              off         同时调试两个进程，gdb跟主进程，子进程block在fork位置
+    child               off         同时调试两个进程，gdb跟子进程，主进程block在fork位置
+</script></code></pre>
+
+首先进行一个名词解释`inferior`，GDB将每个被调试程序的执行状态的记录结构称为一个`inferior`；
+一般情况下一个`inferior会对应一个进程`，当然嵌入式平台可能有不同情况；
+`inferior`有时候会在进程没有启动的情况下就存在(这在命令中会有所体现，后面会详细介绍)，每个`inferior`会有不同的地址空间，并且一个`inferior`里面可以包含多个线程；
+
+`info inferiors`：显示GDB调试的所有inferior
+前面有*的是当前inferior，直接发GDB命令控制的就是当前inferior；
+
+`inferior infno`：设置infno号inferior为当前inferior；
+
+`add-inferior [ -copies n ] [ -exec executable ]`：增加n个inferior并且其执行程序为executable
+如果不指定n则只增加一个inferior；如果不指定executable，则执行程序留空，增加后可使用file命令重新指定执行程序；
+注意：这时候创建的inferior其关联的进程并没有启动；
+
+`clone-inferior [ -copies n ] [ infno ]`：增加n个其执行程序为指定infno号的inferior
+如果不指定n则只增加一个inferior；如果不指定infno，则指定跟当前inferior一样的执行程序；
+注意：这个命令只是克隆了另一个infno的执行文件名称，和clone这个系统调用并没什么相关性(个人觉得用copy更不容易产生歧义)；
+
+`remove-inferior infno`：删除一个infno号inferior
+如果inferior在运行，则不能删除inferior，所以在删除以前需要先kill或者detach这个inferior；
+
+`detach inferior infno`：detach掉infno号inferior
+注意这个inferior仍然存在，可以再次用run等命令执行它，如果想删除结构需要用remove-inferior命令；
+
+`kill inferior infno`：kill掉infno号inferior
+注意这个inferior仍然存在，可以再次用run等命令执行它，如果想删除结构需要用remove-inferior命令；
+
+`set print inferior-events on|off`
+`show print inferior-events`
+这个选项用来打开和关闭inferior状态的提示信息；
+
+`set detach-on-fork on|off`
+`show detach-on-fork`
+这个选项用来控制fork的时候，是否detach掉父进程或者子进程(至于具体哪个就由下面的命令决定)，默认值是打开，所以想同时调试父进程和子进程的就需要关闭这个选项；
+
+`set follow-fork-mode parent|child`
+`show follow-fork-mode`
+这个选项用来设置fork的时候，GDB将继续调试父进程或者子进程，上面的命令也介绍了，如果`detach-on-fork`选项打开，不被调试的那个进程将被detach；
+
+`set follow-exec-mode new|same`
+`show follow-exec-mode`
+当发生exec的时候，如果这个选项是same(默认值)，因为父进程已经退出，所以自动在执行exec的inferior上控制子进程；
+如果选项是new，则新建一个inferior给执行起来的子进程，而父进程的inferior仍然保留，当前保留的inferior的程序状态是没有执行；
+
+`set schedule-multiple on|off`
+`show schedule-multiple`
+这个选项类似于多线程调试里的`set scheduler-locking`选项；
+当选项是off(默认值)的时候，GDB发出执行指令的时候，只有当前inferior会执行；
+而当选项是on的时候，GDB发出执行命令后，全部状态是执行状态的inferior都会执行；
+注意，如果scheduler-locking选项设置为lock的时候，即使schedule-multiple设置为on，也只有当前进程的当前线程会执行；
+
+`maint info program-spaces`：显示当前GDB一共管理了多少地址空间
+
 ## cgdb
 可能是我用惯了oh-my-zsh和vim，严重依赖语法高亮
 前面的gdb都是黑底白字，代码也没有高亮，后来找到一个叫cgdb的调试器
