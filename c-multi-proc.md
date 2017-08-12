@@ -215,7 +215,7 @@ vfork先保证子进程先执行，当子进程调用exit()或者exec后，父�
 `-1`：等待任意子进程；同wait()；
 `<-1`：等待组ID为pid绝对值的任意子进程；
 - `status`：输出参数，保存退出状态，可设置为NULL
-- `options`：输入参数，等待子进程的选项：
+- `options`：输入参数，等待子进程的选项，可以为0、宏或宏的组合(使用按位或`|`运算符)：
 `WNOHANG`：如果没有子进程终止就立即返回，返回值为0；
 `WUNTRACED`：如果一个子进程stoped且没有被traced，那么立即返回；
 `WCONTINUED`：如果stoped的子进程通过SIGCONT复苏，那么立即返回；
@@ -455,4 +455,324 @@ $ ./a.out
 <on_exit> exit_code: 0, arg: on_exit1
 <on_exit> exit_code: 0, arg: on_exit2
 <on_exit> exit_code: 0, arg: on_exit3
+</script></code></pre>
+
+## daemon守护进程
+Linux Daemon(守护进程)是运行在后台的一种特殊进程；
+
+它独立于控制终端并且周期性地执行某种任务或等待处理某些发生的事件，它不需要用户输入就能运行而且提供某种服务，不是对整个系统就是对某个用户程序提供服务；
+Linux系统的大多数服务器就是通过守护进程实现的，常见的守护进程包括系统日志进程syslogd、web服务器httpd、邮件服务器sendmail和数据库服务器mysqld等；
+
+守护进程一般在系统启动时开始运行，除非强行终止，否则直到系统关机都保持运行，守护进程经常以超级用户(root)权限运行，因为它们要使用特殊的端口(1-1024)或访问某些特殊的资源；
+
+一个守护进程的父进程是init进程，因为它真正的父进程在fork出子进程后就先于子进程exit退出了，所以它是一个由init继承的孤儿进程；
+守护进程是非交互式程序，没有控制终端，所以任何输出，无论是向标准输出设备stdout还是标准出错设备stderr的输出都需要特殊处理；
+
+守护进程的名称通常以d结尾，比如sshd、xinetd、crond等；
+
+**创建守护进程的一般步骤**
+- 在父进程中执行fork并exit退出；
+- 在子进程中调用setsid函数创建新的会话；
+- 在子进程中调用chdir函数，让根目录 ”/” 成为子进程的工作目录；
+- 在子进程中调用umask函数，设置进程的umask为0；
+- 在子进程中关闭任何不需要的文件描述符
+
+其实我们完全可以用库函数`daemon()`来创建守护进程：
+头文件：`unistd.h`
+`int daemon(int nochdir, int noclose);`
+- `nochdir`：输入参数，当该参数为0时，改变进程的工作目录为根目录，否则不改变工作目录；
+- `noclose`：输入参数，当该参数为0时，stdin、stdout、stderr均重定向至/dev/null，否则不变；
+- 返回值：成功返回0，失败返回-1，并设置errno
+
+**daemon例子**
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+int main(void){
+    printf("before daemon ... \n");
+
+    if(daemon(0, 0) < 0){
+        perror("daemon error");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("after daemon ... \n");
+
+    FILE *fp = fopen("/root/test.log", "a");
+    if(fp == NULL){
+        perror("fopen error");
+        exit(EXIT_FAILURE);
+    }
+
+    for(;;){
+        fprintf(fp, "A");
+        fflush(fp);
+        sleep(2);
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ localhost in ~ [9:26:03]
+$ gcc a.c
+
+# root @ localhost in ~ [9:26:20]
+$ ./a.out
+before daemon ...
+
+# root @ localhost in ~ [9:26:21]
+$ ps -ef | grep a.out
+root       6538      1  0 09:26 ?        00:00:00 ./a.out
+root       6545   1005  0 09:26 pts/0    00:00:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn a.out
+
+# root @ localhost in ~ [9:26:25]
+$ pstree
+systemd─┬─NetworkManager───2*[{NetworkManager}]
+        ├─a.out
+        ├─agetty
+        ├─auditd───{auditd}
+        ├─chronyd
+        ├─crond
+        ├─dbus-daemon
+        ├─irqbalance
+        ├─lvmetad
+        ├─polkitd───5*[{polkitd}]
+        ├─rsyslogd───2*[{rsyslogd}]
+        ├─sshd─┬─sshd───zsh───pstree
+        │      └─sshd───zsh
+        ├─systemd-journal
+        ├─systemd-logind
+        ├─systemd-udevd
+        └─tuned───4*[{tuned}]
+
+# root @ localhost in ~ [9:26:54]
+$ cat /root/test.log
+AAAAAAAAAAAAAAAAAA#
+</script></code></pre>
+
+## system和popen
+**system()**
+头文件：`stdlib.h`
+`int system(const char *command);`：执行shell命令
+
+system()函数调用/bin/sh来执行参数指定的命令，/bin/sh一般是一个软连接，指向某个具体的shell，比如bash；
+-c选项是告诉shell从字符串command中读取并执行命令；
+
+在该command执行期间，SIGCHLD是被阻塞的，好比在说："hi，内核，这会不要给我发送SIGCHLD信号，等我忙完再说"；
+在该command执行期间，SIGINT和SIGQUIT是被忽略的，意思是进程收到这两个信号后没有任何动作；
+
+实际上system()函数执行了三步操作：
+- fork一个子进程；
+- 在子进程中调用exec函数去执行command；
+- 在父进程中调用wait去等待子进程结束；
+
+但是system的返回值太过复杂，一般我都会选择使用popen函数，popen函数随后介绍；
+
+而且，对于system()，并不能获取命令执行的输出结果，只能得到执行的返回值；
+
+system函数的例子：`system("cat /etc/sysctl.conf");`；
+
+**popen()**
+标准I/O函数库提供了popen函数，它启动另外一个进程去执行一个shell命令行；
+这里我们称调用popen的进程为父进程，由popen启动的进程称为子进程；
+
+popen函数还创建一个管道用于父子进程间通信；父进程要么从管道读信息，要么向管道写信息，至于是读还是写取决于父进程调用popen时传递的参数；
+
+下在给出popen、pclose的定义：
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+
+FILE *popen(const char *command, const char *type);
+/*
+函数功能：popen()会调用fork()产生子进程，然后从子进程中调用/bin/sh -c来执行参数command的指令;
+          参数type可使用"r"代表读取，"w"代表写入;
+          依照此type值，popen()会建立管道连到子进程的标准输出设备或标准输入设备，然后返回一个文件指针;
+          随后进程便可利用此文件指针来读取子进程的输出设备或是写入到子进程的标准输入设备中;
+返回值：若成功则返回文件指针，否则返回NULL，错误原因存于errno中
+*/
+
+int pclose(FILE *stream);
+/*
+函数功能：pclose()用来关闭由popen所建立的管道及文件指针；参数stream为先前由popen()所返回的文件指针;
+返回值：若成功则返回shell的终止状态(也即子进程的终止状态)，若出错返回-1，错误原因存于errno中;
+*/
+</script></code></pre>
+
+例子：
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char *argv[]){
+    if(argc < 2){
+        fprintf(stderr, "usage: %s <cmd>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char output[1024+1];
+
+    FILE *pp = popen(argv[1], "r");
+    if(pp == NULL){
+        perror("popen error");
+        exit(EXIT_FAILURE);
+    }
+
+    int nread = fread(output, 1, 1024, pp);
+    int status = pclose(pp);
+    if(status < 0){
+        perror("pclose error");
+        exit(EXIT_FAILURE);
+    }
+
+    output[nread] = 0;
+    if(WIFEXITED(status)){
+        printf("status: %d\n%s", WEXITSTATUS(status), output);
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ localhost in ~ [11:16:54] C:1
+$ gcc a.c
+
+# root @ localhost in ~ [11:16:56]
+$ ./a.out
+usage: ./a.out <cmd>
+
+# root @ localhost in ~ [11:16:57] C:1
+$ ./a.out 'll 2>&1'
+status: 127
+sh: ll: command not found
+
+# root @ localhost in ~ [11:17:17]
+$ ./a.out 'ls 2>&1'
+status: 0
+a.c
+a.out
+code
+fproxy
+include
+lib
+tmp
+work
+</script></code></pre>
+
+## signal信号
+> 
+信号(signal)是一种软中断，信号机制是进程间通信的一种方式，采用异步通信方式
+
+Linux系统共定义了64种信号，分为两大类：可靠信号与不可靠信号，前32种信号为不可靠信号，后32种为可靠信号；
+- 不可靠信号：也称为非实时信号，不支持排队，信号可能会丢失，比如发送多次相同的信号，进程只能收到一次；信号值取值区间为1~31；
+- 可靠信号：也称为实时信号，支持排队，信号不会丢失，发多少次，就可以收到多少次；信号值取值区间为32~64；
+
+在终端，可通过`kill -l`查看所有的signal信号：
+|取值|名称|解释|默认动作|
+|:---:|:---:|:---:|:---:|
+|1|SIGHUP|挂起||
+|2|SIGINT|中断||
+|3|SIGQUIT|退出||
+|4|SIGILL|非法指令||
+|5|SIGTRAP|断点或陷阱指令||
+|6|SIGABRT|abort发出的信号||
+|7|SIGBUS|非法内存访问||
+|8|SIGFPE|浮点异常||
+|9|SIGKILL|kill信号|不能被忽略、处理和阻塞|
+|10|SIGUSR1|用户信号1||
+|11|SIGSEGV|无效内存访问||
+|12|SIGUSR2|用户信号2||
+|13|SIGPIPE|管道破损，没有读端的管道写数据||
+|14|SIGALRM|alarm发出的信号||
+|15|SIGTERM|终止信号||
+|16|SIGSTKFLT|栈溢出||
+|17|SIGCHLD|子进程退出|默认忽略|
+|18|SIGCONT|进程继续||
+|19|SIGSTOP|进程停止|不能被忽略、处理和阻塞|
+|20|SIGTSTP|进程停止||
+|21|SIGTTIN|进程停止，后台进程从终端读数据时||
+|22|SIGTTOU|进程停止，后台进程想终端写数据时||
+|23|SIGURG|I/O有紧急数据到达当前进程|默认忽略|
+|24|SIGXCPU|进程的CPU时间片到期||
+|25|SIGXFSZ|文件大小的超出上限||
+|26|SIGVTALRM|虚拟时钟超时||
+|27|SIGPROF|profile时钟超时||
+|28|SIGWINCH|窗口大小改变|默认忽略|
+|29|SIGIO|I/O相关||
+|30|SIGPWR|关机|默认忽略|
+|31|SIGSYS|系统调用异常||
+
+对于signal信号，绝大部分的默认处理都是终止进程或停止进程，或dump内核映像转储；
+上述的31的信号为非实时信号，其他的信号32-64 都是实时信号；
+
+信号来源分为硬件类和软件类：
+- 硬件方式
+ - 用户输入：比如在终端上按下组合键ctrl+c，产生SIGINT信号；
+ - 硬件异常：CPU检测到内存非法访问等异常，通知内核生成相应信号，并发送给发生事件的进程；
+- 软件方式
+ - 通过系统调用，发送signal信号：kill()、raise()、sigqueue()、alarm()、setitimer()、abort()；
+ - kernel，使用 kill_proc_info() 等；
+ - native，使用 kill() 或者 raise() 等；
+ - java，使用 Procees.sendSignal() 等；
+
+进程对信号的处理方式有3种：
+- 默认：接收到信号后按默认的行为处理该信号；这是多数应用采取的处理方式；
+- 自定义：用自定义的信号处理函数来执行特定的动作；
+- 忽略：接收到信号后不做任何反应；
+
+进程处理某个信号前，需要先在进程中安装此信号；安装过程主要是建立信号值和进程对相应信息值的动作；
+signal()：不支持信号传递信息，主要用于非实时信号安装；
+sigaction()：支持信号传递信息，可用于所有信号安装；
+
+**signal()**
+头文件：`signal.h`
+`void (*signal(int signum, void (*handler)(int)))(int);`
+
+如果该函数原型不容易理解的话，可以参考下面的分解方式来理解：
+`typedef void (*sighandler_t)(int);`
+`sighandler_t signal(int signum, sighandler_t handler);`
+
+第一个参数指定信号的值，可参照上表；
+第二个参数指定对应的信号处理函数：
+- `SIG_IGN`：忽略该信号；
+- `SIG_DFL`：采用系统默认方式处理信号；
+- `void (*func)(int)`：自定义的信号处理函数；
+
+如果signal()调用成功，返回最后一次为安装信号signum而调用signal()时的handler值；失败则返回SIG_ERR；
+
+**signal例子**
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+
+void handle_signal(int signum){
+    printf("received signal: %d\n", signum);
+    exit(0);
+}
+
+int main(void){
+    signal(SIGINT, handle_signal);
+
+    for(;;){
+        printf("running ... \n");
+        sleep(1);
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ localhost in ~ [12:08:34] C:127
+$ gcc a.c
+
+# root @ localhost in ~ [12:08:36]
+$ ./a.out
+running ...
+running ...
+running ...
+running ...
+^Creceived signal: 2
 </script></code></pre>
