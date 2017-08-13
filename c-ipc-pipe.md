@@ -201,9 +201,9 @@ PIPE_BUF的大小为4096字节，注意，这不是管道的缓冲区大小，�
 - 非阻塞模式时且`n>PIPE_BUF`：不具有原子性，如果管道满的，则立即失败，一个都不写入，返回错误，如果不满，则返回写入的字节数，即部分写入，写入时可能有其他进程穿插写入；
 
 **设置为非阻塞模式**
-获取fd的flags值：`int flags = fcntl(sockfd, F_GETFL, 0);`
-设置为非阻塞fd：`fcntl(sockfd, F_SETFL, flags|O_NONBLOCK);`
-设置为阻塞fd：`fcntl(sockfd, F_SETFL, flags&~O_NONBLOCK);`
+获取fd的flags值：`int flags = fcntl(fd, F_GETFL, 0);`
+设置为非阻塞fd：`fcntl(fd, F_SETFL, flags | O_NONBLOCK);`
+设置为阻塞fd：`fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);`
 
 ## 命名管道fifo
 前面介绍的匿名管道中，我们看到了如何使用匿名管道来在进程之间传递数据，同时也看到了这个方式的一个缺陷，就是这些进程都由一个共同的祖先进程启动，这给我们在不相关的的进程之间交换数据带来了不方便；这里将会介绍进程的另一种通信方式：`命名管道`，来解决不相关进程间的通信问题；
