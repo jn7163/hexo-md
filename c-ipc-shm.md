@@ -195,15 +195,15 @@ Linux提供了一组精心设计的信号量接口来对信号进行操作，它
 
 `int semget(key_t sem_key, int sem_nums, int sem_flg);`：创建信号量
 - `sem_key`：输入参数，IPC键值，一个key确定一组信号量；同shmget()中的key；
-- `sem_nums`：输入参数，要创建的信号量数目；通常为1；
+- `sem_nums`：输入参数，要创建的信号量数目；通常我们只需要一个，即为1；
 - `sem_flg`：输入参数，一组标志位flgs，同shmget()中的flgs；
 - 返回值：成功返回一个sem_id，失败返回-1，并设置errno
 
 `int semop(int sem_id, struct sembuf *sem_opa, size_t sem_opa_len);`：操作信号量的值
 - `sem_id`：输入参数，semget()的返回值；
 - `sem_opa`：输入参数，`struct sembuf []`类型的数组，通常只有一个元素；
-- `sem_opa_len`：输入参数，数组的长度，一般为1；
-- 返回值：成功返回sem_id，失败返回-1，并设置errno
+- `sem_opa_len`：输入参数，数组的长度；通常只有一个元素，即为1；
+- 返回值：成功返回0，失败返回-1，并设置errno
 
 `struct sembuf`结构体：
 <pre><code class="language-c line-numbers"><script type="text/plain">struct sembuf
@@ -211,16 +211,27 @@ Linux提供了一组精心设计的信号量接口来对信号进行操作，它
   unsigned short int sem_num;	/* semaphore number */
   short int sem_op;		/* semaphore operation */
   short int sem_flg;		/* operation flag */
+  // 有两种状态: SEM_UNDO、SEM_NOWAIT；
+  // SEM_NOWAIT  对信号的操作不能满足时，semop()函数就会阻塞，并立即返回，同时设置错误信息;
+  // SEM_UNDO    程序结束时(无论是否正常结束)，保证信号值会被重新设为semop()调用前的值;
+  //             这样做的目的在于避免在异常情况下结束时未将锁定资源解锁，造成该资源永远锁定;
 };
 </script></code></pre>
 
 `int semctl(int sem_id, int sem_num, int command, ...);`：控制信号量的属性
 - `sem_id`：输入参数，semget()的返回值；
-- `sem_num`：输入参数，信号量编号，一般为0；
+- `sem_num`：输入参数，信号量的下标值；
 - `command`：输入参数，操作方式：
-`IPC_STAT`：获取该信号量的`semid_ds`结构，并保存至第四个参数`struct semid_ds *buf`中；
-`IPC_SET`：将第四个参数`struct semid_ds *buf`设置为当前信号量的`semid_ds`结构；
-`IPC_RMID`：删除信号量（集），忽略第四个参数`struct semid_ds *buf`；
+`IPC_STAT`：读取一个信号量集的数据结构semid_ds，并将其存储在semun中的buf参数中；
+`IPC_SET`：设置信号量集的数据结构semid_ds中的元素ipc_perm，其值取自semun中的buf参数；
+`IPC_RMID`：将信号量集从内存中删除；
+`GETALL`：用于读取信号量集中的所有信号量的值；
+`GETNCNT`：返回正在等待资源的进程数目；
+`GETPID`：返回最后一个执行semop操作的进程的PID；
+`GETVAL`：返回信号量集中的一个单个的信号量的值；
+`GETZCNT`：返回这在等待完全空闲的资源的进程数目；
+`SETALL`：设置信号量集中的所有的信号量的值；
+`SETVAL`：设置信号量集中的一个单独的信号量的值；
 - 返回值：成功返回值大于等于0，失败返回-1，并设置errno
 
 **共享内存和信号量的简单示例**
