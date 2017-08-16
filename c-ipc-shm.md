@@ -32,7 +32,7 @@ shm_key为`0`或`IPC_PRIVATE`，则会建立新的共享内存；
 注意内存分配的单位是页（一般为4kb，可通过`getpagesize()`获取）；
 也就是说如果shm_size为1，那么也会分配4096字节的内存；
 只获取共享内存时，shm_size可指定为0；
-- `shm_flg`：输入参数，flags，通常还会指定权限（同文件的权限，如`0644`），通常为`0644 | IPC_CREAT`：
+- `shm_flg`：输入参数，一组标志位flgs，通常还会指定权限（同文件的权限，如`0644`），通常为`0644 | IPC_CREAT`：
 `0`：取共享内存标识符，若不存在则函数会报错；
 `IPC_CREAT`：如果内核中不存在键值与shm_key相等的共享内存，则新建一个共享内存；如果存在这样的共享内存，返回此共享内存的标识符；
 `IPC_CREAT | IPC_EXCL`：如果内核中不存在键值与shm_key相等的共享内存，则新建一个共享内存；如果存在这样的共享内存则报错；
@@ -172,4 +172,229 @@ $ ./write www.zfl9.com
 # root @ arch in ~/work on git:master x [10:40:34]
 $ ./read
 data: www.zfl9.com
+</script></code></pre>
+
+## 信号量
+**什么是信号量**
+为了防止出现因多个程序同时使用一个共享资源而引发的一系列问题，我们需要一种方法，它可以通过生成并使用令牌来授权，在任一时刻只能有一个执行线程访问代码的临界区域；临界区域是指执行数据更新的代码需要独占式地执行；
+而信号量就可以提供这样的一种访问机制，让一个临界区同一时间只有一个线程在访问它，也就是说信号量是用来调协进程对共享资源的访问的；
+
+信号量是一个特殊的变量，程序对其访问都是`原子操作`，且只允许对它进行等待（即`P(sem_val)`）和发送（即`V(sem_val)`）操作；
+最简单的信号量是只能取0和1的变量，这也是信号量最常见的一种形式，叫做二进制信号量；而可以取多个正整数的信号量被称为通用信号量；这里主要讨论二进制信号量；
+
+**信号量的工作原理**
+由于信号量只能进行两种操作：等待和发送信号，即`P(sv)`和`V(sv)`：
+- `P(sv)`：如果sv的值大于零，就给它减1；如果它的值为零，就挂起该进程的执行；
+- `V(sv)`：如果有其他进程因等待sv而被挂起，就让它恢复运行，如果没有进程因等待sv而挂起，就给它加1；
+
+举个例子，就是两个进程共享信号量sv，一旦其中一个进程执行了P(sv)操作，它将得到信号量，并可以进入临界区，使sv减1；
+而第二个进程将被阻止进入临界区，因为当它试图执行P(sv)时，sv为0，它会被挂起以等待第一个进程离开临界区域并执行V(sv)释放信号量，这时第二个进程就可以恢复执行；
+
+**Linux的信号量机制**
+Linux提供了一组精心设计的信号量接口来对信号进行操作，它们不只是针对二进制信号量，下面将会对这些函数进行介绍，但请注意，这些函数都是用来对成组的信号量值进行操作的；它们声明在头文件`sys/sem.h`中：
+
+`int semget(key_t sem_key, int sem_nums, int sem_flg);`：创建信号量
+- `sem_key`：输入参数，IPC键值，一个key确定一组信号量；同shmget()中的key；
+- `sem_nums`：输入参数，要创建的信号量数目；通常为1；
+- `sem_flg`：输入参数，一组标志位flgs，同shmget()中的flgs；
+- 返回值：成功返回一个sem_id，失败返回-1，并设置errno
+
+`int semop(int sem_id, struct sembuf *sem_opa, size_t sem_opa_len);`：操作信号量的值
+- `sem_id`：输入参数，semget()的返回值；
+- `sem_opa`：输入参数，`struct sembuf []`类型的数组，通常只有一个元素；
+- `sem_opa_len`：输入参数，数组的长度，一般为1；
+- 返回值：成功返回sem_id，失败返回-1，并设置errno
+
+`struct sembuf`结构体：
+<pre><code class="language-c line-numbers"><script type="text/plain">struct sembuf
+{
+  unsigned short int sem_num;	/* semaphore number */
+  short int sem_op;		/* semaphore operation */
+  short int sem_flg;		/* operation flag */
+};
+</script></code></pre>
+
+`int semctl(int sem_id, int sem_num, int command, ...);`：控制信号量的属性
+- `sem_id`：输入参数，semget()的返回值；
+- `sem_num`：输入参数，信号量编号，一般为0；
+- `command`：输入参数，操作方式：
+`IPC_STAT`：获取该信号量的`semid_ds`结构，并保存至第四个参数`struct semid_ds *buf`中；
+`IPC_SET`：将第四个参数`struct semid_ds *buf`设置为当前信号量的`semid_ds`结构；
+`IPC_RMID`：删除信号量（集），忽略第四个参数`struct semid_ds *buf`；
+- 返回值：成功返回值大于等于0，失败返回-1，并设置errno
+
+**共享内存和信号量的简单示例**
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+#include <sys/wait.h>
+
+#define FILENAME "/dev/null"
+
+union semun{
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;
+};
+
+int sem_set(int sem_id);
+int sem_p(int sem_id);
+int sem_v(int sem_id);
+int sem_del(int sem_id);
+
+int main(void){
+    key_t shm_key = ftok(FILENAME, 0);
+    if(shm_key == -1){
+        perror("ftok");
+        exit(EXIT_FAILURE);
+    }
+
+    int shm_size = getpagesize();
+    int shm_id = shmget(shm_key, shm_size, 0644 | IPC_CREAT);
+    if(shm_id == -1){
+        perror("shmget");
+        exit(EXIT_FAILURE);
+    }
+
+    char *data = (char *)shmat(shm_id, NULL, 0);
+    if(data == (char *)-1){
+        perror("shmat");
+        exit(EXIT_FAILURE);
+    }
+    memset(data, 0, shm_size);
+
+    key_t sem_key = shm_key;
+    int sem_id = semget(sem_key, 1, 0644 | IPC_CREAT);
+    if(sem_id == -1){
+        perror("semget");
+        exit(EXIT_FAILURE);
+    }
+
+    if(sem_set(sem_id) == -1){
+        perror("sem_set");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t pid = fork();
+    if(pid < 0){
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }else if(pid > 0){
+        if(sem_p(sem_id) == -1){
+            perror("sem_p");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("parent_proc(%d) writing now ... \n", getpid());
+        for(int i=0; i<3; i++){
+            sprintf(data + 5*i, "www%d ", i);
+            sleep(1);
+        }
+        printf("parent_proc(%d) writing complete\n", getpid());
+
+        if(sem_v(sem_id) == -1){
+            perror("sem_v");
+            exit(EXIT_FAILURE);
+        }
+
+        if(shmdt(data) == -1){
+            perror("shmdt");
+            exit(EXIT_FAILURE);
+        }
+
+        wait(NULL);
+        if(sem_del(sem_id) == -1){
+            perror("sem_del");
+            exit(EXIT_FAILURE);
+        }
+        if(shmctl(shm_id, IPC_RMID, NULL) == -1){
+            perror("shmctl");
+            exit(EXIT_FAILURE);
+        }
+    }else if(pid == 0){
+        usleep(3);
+
+        printf("child_proc(%d) waiting to read ... \n", getpid());
+        if(sem_p(sem_id) == -1){
+            perror("sem_p");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("child_proc(%d) read_data: %s\n", getpid(), data);
+
+        if(sem_v(sem_id) == -1){
+            perror("sem_v");
+            exit(EXIT_FAILURE);
+        }
+
+        if(shmdt(data) == -1){
+            perror("shmdt");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return 0;
+}
+
+int sem_set(int sem_id){
+    union semun sem_u;
+    sem_u.val = 1;
+
+    if(semctl(sem_id, 0, SETVAL, sem_u) == -1){
+        return -1;
+    }else{
+        return 0;
+    }
+}
+
+int sem_p(int sem_id){
+    struct sembuf sem_b[1];
+    sem_b[0].sem_num = 0;
+    sem_b[0].sem_op = -1;
+    sem_b[0].sem_flg = SEM_UNDO;
+
+    if(semop(sem_id, sem_b, 1) == -1){
+        return -1;
+    }else{
+        return 0;
+    }
+}
+
+int sem_v(int sem_id){
+    struct sembuf sem_b[1];
+    sem_b[0].sem_num = 0;
+    sem_b[0].sem_op = 1;
+    sem_b[0].sem_flg = SEM_UNDO;
+
+    if(semop(sem_id, sem_b, 1) == -1){
+        return -1;
+    }else{
+        return 0;
+    }
+}
+
+int sem_del(int sem_id){
+    if(semctl(sem_id, 0, IPC_RMID) == -1){
+        return -1;
+    }else{
+        return 0;
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:17:59]
+$ gcc -o shm_sem shm_sem.c
+
+# root @ arch in ~/work on git:master x [17:18:08]
+$ ./shm_sem
+parent_proc(1360) writing now ...
+child_proc(1361) waiting to read ...
+parent_proc(1360) writing complete
+child_proc(1361) read_data: www0 www1 www2
 </script></code></pre>
