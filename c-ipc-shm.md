@@ -208,9 +208,9 @@ Linux提供了一组精心设计的信号量接口来对信号进行操作，它
 `struct sembuf`结构体：
 <pre><code class="language-c line-numbers"><script type="text/plain">struct sembuf
 {
-  unsigned short int sem_num;	/* semaphore number */
-  short int sem_op;		/* semaphore operation */
-  short int sem_flg;		/* operation flag */
+  unsigned short int sem_num;   /* semaphore number */
+  short int sem_op;             /* semaphore operation */
+  short int sem_flg;            /* operation flag */
   // 有两种状态: SEM_UNDO、SEM_NOWAIT；
   // SEM_NOWAIT  对信号的操作不能满足时，semop()函数就会阻塞，并立即返回，同时设置错误信息;
   // SEM_UNDO    程序结束时(无论是否正常结束)，保证信号值会被重新设为semop()调用前的值;
