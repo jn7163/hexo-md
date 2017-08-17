@@ -153,9 +153,9 @@ h就是host，也就是主机序，n就是network，也就是网络序，s表示
 对于udp的写，因为没有发送缓冲区，所以不会因为缓冲区而阻塞，不过还是可能因其他原因而阻塞；
 
 **将默认的阻塞套接字设置为非阻塞套接字**：
-获取当前socket的flags值：`int flags = fcntl(sockfd, F_GETFL, 0);`
-设置成非阻塞套接字：`fcntl(sockfd, F_SETFL, flags|O_NONBLOCK);`
-设置为阻塞套接字：`fcntl(sockfd, F_SETFL, flags&~O_NONBLOCK);`
+获取socket的flags：`int flags = fcntl(sockfd, F_GETFL, 0);`
+设置为非阻塞套接字：`fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);`
+设置为阻塞套接字：`fcntl(sockfd, F_SETFL, flags & ~O_NONBLOCK);`
 
 **非阻塞模式的注意事项**：
 `connect`发起连接：
