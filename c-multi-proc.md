@@ -777,3 +777,96 @@ running ...
 running ...
 ^Creceived signal: 2
 </script></code></pre>
+
+**sigaction()**
+`int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);`：安装信号处理函数
+- `signum`：输入参数，要处理的信号值；
+- `act`：输入参数，新的处理方式，可为NULL；
+- `oldact`：输出参数，旧的处理方式，可为NULL；
+- 返回值：成功返回0，失败返回-1，并设置errno
+
+`struct sigaction`结构体：
+<pre><code class="language-c line-numbers"><script type="text/plain">/* Structure describing the action to be taken when a signal arrives.  */
+struct sigaction
+  {
+    /* Signal handler.  */
+#ifdef __USE_POSIX199309
+    union
+      {
+	/* Used if SA_SIGINFO is not set.  */
+	__sighandler_t sa_handler;
+	/* Used if SA_SIGINFO is set.  */
+	void (*sa_sigaction) (int, siginfo_t *, void *);
+      }
+    __sigaction_handler;
+# define sa_handler	__sigaction_handler.sa_handler
+# define sa_sigaction	__sigaction_handler.sa_sigaction
+#else
+    __sighandler_t sa_handler;
+#endif
+
+    /* Additional set of signals to be blocked.  */
+    __sigset_t sa_mask;
+
+    /* Special flags.  */
+    int sa_flags;
+
+    /* Restore handler.  */
+    void (*sa_restorer) (void);
+  };
+</script></code></pre>
+
+
+主要看这三个成员：`sa_handler`、`sa_mask`、`sa_flags`：
+- `sa_handler`：函数指针，同signal()的第二个参数；
+- `sa_mask`：指定信号处理程序执行过程中需要阻塞的信号；
+- `sa_flags`：标示位，多个flag可用按位或`|`连接，当使用`sa_handler`时，通常将此参数置为0：
+`SA_RESTART`：使被信号打断的syscall重新发起；
+`SA_NOCLDSTOP`：使父进程在它的子进程暂停或继续运行时不会收到`SIGCHLD`信号；
+`SA_NOCLDWAIT`：使父进程在它的子进程退出时不会收到`SIGCHLD`信号，这时子进程如果退出也不会成为僵尸进程；
+`SA_NODEFER`：使对信号的屏蔽无效，即在信号处理函数执行期间仍能发出这个信号；
+`SA_RESETHAND`：信号处理之后重新设置为默认的处理方式；
+`SA_SIGINFO`：使用sa_sigaction成员而不是sa_handler作为信号处理函数；
+
+**信号集函数**
+`sigemptyset(sigset_t *set)`：信号集全部清0；
+`sigfillset(sigset_t *set)`：信号集全部置1，则信号集包含linux支持的64种信号；
+`sigaddset(sigset_t *set, int signum)`：向信号集中加入signum信号；
+`sigdelset(sigset_t *set, int signum)`：向信号集中删除signum信号；
+`sigismember(const sigset_t *set, int signum)`：判定信号signum是否存在信号集中；
+
+**信号的发送**
+`kill()`：用于向进程或进程组发送信号；
+`sigqueue()`：只能向一个进程发送信号，不能像进程组发送信号；主要针对实时信号提出，与sigaction()组合使用，当然也支持非实时信号的发送；
+`alarm()`：用于调用进程指定时间后发出`SIGALARM`信号；
+`setitimer()`：设置定时器，计时达到后给进程发送`SIGALRM`信号，功能比alarm更强大；
+`abort()`：向进程发送`SIGABORT`信号，默认进程会异常退出；
+`raise()`：用于向进程自身发送信号；
+
+**sigaction例子**
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+
+void handle_sig(int signo){
+    printf("got signal: %d\n", signo);
+    exit(0);
+}
+
+int main(void){
+    struct sigaction act;
+    act.sa_handler = handle_sig;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+
+    sigaction(SIGINT, &act, NULL);
+
+    while(1){
+        printf("running ... \n");
+        sleep(1);
+    }
+
+    return 0;
+}
+</script></code></pre>
