@@ -13,7 +13,7 @@ c语言 - 进程间通信 共享内存
 
 <!-- more -->
 
-## 共享内存
+## 共享内存 System V
 **什么是共享内存**
 顾名思义，共享内存就是允许两个不相关的进程访问同一个逻辑内存；共享内存是在两个正在运行的进程之间共享和传递数据的一种非常有效的方式；
 不同进程之间共享的内存通常安排为同一段物理内存，进程可以将同一段共享内存连接到它们自己的地址空间中，所有进程都可以访问共享内存中的地址；
@@ -174,7 +174,7 @@ $ ./read
 data: www.zfl9.com
 </script></code></pre>
 
-## 信号量
+## 信号量 System V
 **什么是信号量**
 为了防止出现因多个程序同时使用一个共享资源而引发的一系列问题，我们需要一种方法，它可以通过生成并使用令牌来授权，在任一时刻只能有一个执行线程访问代码的临界区域；临界区域是指执行数据更新的代码需要独占式地执行；
 而信号量就可以提供这样的一种访问机制，让一个临界区同一时间只有一个线程在访问它，也就是说信号量是用来调协进程对共享资源的访问的；
@@ -408,4 +408,379 @@ parent_proc(1360) writing now ...
 child_proc(1361) waiting to read ...
 parent_proc(1360) writing complete
 child_proc(1361) read_data: www0 www1 www2
+</script></code></pre>
+
+## 共享内存 Posix
+**概念**
+共享内存区，按标准可分为Posix共享内存区和System V共享内存区，两者在概念上类似；
+
+Posix表示可移植操作系统接口（Portable Operating System Interface，缩写为POSIX），POSIX标准定义了操作系统应该为应用程序提供的接口标准，是IEEE为要在各种UNIX操作系统上运行的软件而定义的一系列API标准的总称，其正式称呼为IEEE 1003，而国际标准名称为ISO/IEC 9945；
+
+System V，曾经也被称为AT&T System V，是Unix操作系统众多版本中的一支；它最初由AT&T开发，在1983年第一次发布；一共发行了4个System V的主要版本：版本1、2、3和4；
+
+Posix.1提供了两种在无亲缘关系进程间共享内存区的方法
+- `内存映射文件`(memory-mapped file)：由open函数打开，由mmap函数把所得到的描述符映射到当前进程空间地址中的一个文件；
+- `共享内存区对象`(shared-memory object)：由shm_open函数打开一个Posix.1 IPC名字，所返回的描述符由mmap函数映射到当前进程的地址空间；
+
+这两种共享内存区的区别在于共享的数据的载体(底层支撑对象)不一样：
+- `内存映射文件`：数据载体是`物理文件`；
+- `共享内存区对象`：数据载体是`物理内存`；
+
+**我们经常说的共享内存，一般是指`共享内存区对象`，也就是共享物理内存**
+
+Posix共享内存区涉及以下两个步骤要求：
+（1）指定一个名字参数调用shm_open，以创建一个新的共享内存区对象或打开一个已存在的共享内存区对象；
+（2）调用mmap把这个共享内存区映射到调用进程的地址空间；
+
+调用`shm_open`创建或打开的对象其实都是存在于`/dev/shm/`目录下的一个文件，该挂载点的文件系统是`tmpfs`，即内存中的文件系统；
+
+`int shm_open(const char *name, int oflag, mode_t mode);`：创建共享内存
+- 头文件：`sys/mman.h`、`sys/stat.h`、`fcntl.h`，须链接库`-lrt`；
+- `name`：输入参数，实质为一个文件名，存在于`/dev/shm/`，创建成功后可查看到该文件；
+- `oflag`：输入参数，一组flags，多个flag可用按位或`|`连接：
+`O_RDONLY`：只读方式打开；
+`O_RDWR`：读写模式打开；
+`O_CREAT`：如果文件不存在则新建，存在则打开；
+`O_CREAT | O_EXCL`：如果文件不存在则新建，存在则返回错误信息；
+`O_TRUNC`：清空文件的原有内容；
+- `mode`：输入参数，文件的权限，如`0644`，如果打开已有文件，则权限应为`0`；
+- 返回值：成功返回文件描述符fd，失败返回-1，并设置errno；
+
+`int shm_unlink(const char *name);`：删除一个共享内存区对象的名字，删除一个名字不会影响对于其底层支撑对象的现有引用，直到对于该对象的引用全部关闭为止
+- 头文件：`sys/mman.h`、`sys/stat.h`、`fcntl.h`，须链接库`-lrt`；
+- `name`：输入参数，文件名；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+`int ftruncate(int fd, off_t length);`：修改共享内存对象的大小
+- 头文件：`sys/types.h`、`unistd.h`；
+- `fd`：输入参数，文件描述符；
+- `length`：输入参数，修改后的大小（单位：byte）；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+`void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);`：挂载共享内存
+- 头文件：`sys/mman.h`；
+- `addr`：输入参数，挂载的地址，若设置为NULL，则让系统自动选择合适的地址；
+- `length`：输入参数，共享内存的长度；
+- `prot`：输入参数，一组flags，读写权限，多个可用按位或`|`连接，通常设置为`PROT_READ | PROT_WRITE`：
+`PROT_READ`：可读；
+`PROT_WRITE`：可写；
+`PROT_EXEC`：可执行；
+`PROT_NONE`：无权限；
+- `flags`：输入参数，一组flags，是否共享：
+`MAP_SHARED`：共享的；
+`MAP_PRIVATE`：私有的；
+- `fd`：输入参数，文件描述符；
+- `offset`：输入参数，文件指针偏移量，一般为0；
+- 返回值：成功返回挂载的首地址，失败返回`MAP_FAILED`（`(void *)-1`），并设置errno；
+
+**mmap成功返回后，fd参数可以关闭；该操作对由于mmap建立的映射关系没有影响**
+
+`int munmap(void *addr, size_t length);`：分离共享内存
+- 头文件：`sys/mman.h`；
+- `addr`：输入参数，要分离的共享内存首地址；
+- `length`：输入参数，共享内存的长度；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+**shm实例**
+`write.c`
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+
+#define FILENAME "shm"
+#define MAXSIZE 1024*4
+
+int main(void){
+    int fd = shm_open(FILENAME, O_CREAT | O_EXCL | O_RDWR, 0644);
+    if(fd == -1){
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+
+    if(ftruncate(fd, MAXSIZE) == -1){
+        perror("ftruncate");
+        exit(EXIT_FAILURE);
+    }
+
+    char *data = (char *)mmap(NULL, MAXSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if(data == MAP_FAILED){
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+    close(fd);
+
+    strcpy(data, "www.zfl9.com");
+
+    if(munmap(data, MAXSIZE) == -1){
+        perror("munmap");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+
+`read.c`
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+
+#define FILENAME "shm"
+#define MAXSIZE 1024*4
+
+int main(void){
+    int fd = shm_open(FILENAME, O_RDWR, 0);
+    if(fd == -1){
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+
+    if(ftruncate(fd, MAXSIZE) == -1){
+        perror("ftruncate");
+        exit(EXIT_FAILURE);
+    }
+
+    char *data = (char *)mmap(NULL, MAXSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if(data == MAP_FAILED){
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+    close(fd);
+
+    printf("data: %s\n", data);
+
+    if(munmap(data, MAXSIZE) == -1){
+        perror("munmap");
+        exit(EXIT_FAILURE);
+    }
+
+    if(shm_unlink(FILENAME) == -1){
+        perror("shm_unlink");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [18:37:38]
+$ gcc -o write -lrt write.c
+
+# root @ arch in ~/work on git:master x [18:37:57]
+$ gcc -o read -lrt read.c
+
+# root @ arch in ~/work on git:master x [18:38:02]
+$ ./write
+
+# root @ arch in ~/work on git:master x [18:38:03]
+$ ./read
+data: www.zfl9.com
+</script></code></pre>
+
+## 信号量 Posix
+**基本概念**
+`信号量（semaphore）`是一种用于提供不同进程间或一个给定进程的不用线程间`同步手段的原语`；
+
+共有三种类型的信号量：
+1)`Posix有名信号量`：使用Posix IPC名字标识，可用于进程或线程间的同步；
+2)`Posix基于内存的信号量`：存放在共享内存区中，可用于进程或线程间的同步；
+3)`System V信号量`：在内核中维护，可用于进程或者线程间同步；
+
+一个进程可以在某个信号量上执行三种操作：
+1）`创建（create）一个信号量`：这还要求调用者指定初始值；
+2）`等待（wait）一个信号量`：该操作会测试这个信号量的值，如果其值小于或等于0，那就等待（阻塞），一旦值变为大于0就将它减1，这两个步骤是一个原子操作；
+3）`挂出（post）一个信号量`：该操作将信号量的值加1，挂出操作同样是原子的；
+
+有了互斥锁和条件变量还提供信号量的原因是：
+“本标准提供信号量的主要目的是提供一种进程间同步方式；这些进程可能共享也可能不共享内存区；互斥锁和条件变量是作为线程间的同步机制说明的，这些线程总是共享（某个）内存区；这两者都是已广泛使用了多年的同步范式；每组原语都特别适合于特定的问题”；
+
+尽管信号量的意图在于进程间同步，互斥锁和条件变量的意图则在于线程间同步，但是信号量也可用于线程间，互斥锁和条件变量也可用于进程间；我们应该使用适合具体应用的那组原语；
+
+上面提到Posix提供两类信号量：`有名（named）信号量`和`基于内存的（memory-based）信号量`，后者也称为`无名（unnamed）信号量`；
+
+有名信号量的创建：`sem_open()`
+无名信号量的创建：`sem_init()`
+有名/无名信号量的操作：`sem_wait()`、`sem_trywait()`、`sem_post()`、`sem_getvalue()`
+有名信号量的销毁：`sem_close()`、`sem_unlink()`
+无名信号量的销毁：`sem_destroy()`
+
+**多线程编程通常使用互斥锁、读写锁、条件变量、自旋锁，所以下面不再对基于内存的信号量展开**
+
+**有名信号量**
+若信号量名为`somename`，则创建的信号量在`/dev/shm/`中，被命名为`sem.somename`；
+
+`sem_t *sem_open(const char *name, int oflag);`：打开一个已存在的信号量
+`sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value);`：创建一个信号量
+- 头文件：`sys/stat.h`、`fcntl.h`、`semaphore.h`，须链接库`-lpthread`；
+- `name`：输入参数，名称；
+- `oflag`：输入参数，一组打开标志位，可用按位或`|`连接，同shm_open的参数；
+- `mode`：输入参数，文件权限，同shm_open的参数；
+- `value`：输入参数，信号量的初始值；通常为1；
+- 返回值：成功返回信号量指针，失败返回`SEM_FAILED`（`(void *)-1`），并设置errno；
+
+`int sem_close(sem_t *sem);`：关闭信号量
+- 头文件：`semaphore.h`，须链接库`-lpthread`；
+- `sem`：输入参数，信号量指针；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+`int sem_unlink(const char *name);`：删除信号量
+- 头文件：`semaphore.h`，须链接库`-lpthread`；
+- `name`：信号量文件名；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+`int sem_wait(sem_t *sem);`：等待，阻塞
+`int sem_trywait(sem_t *sem);`：等待，不阻塞
+`int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout);`：等待，超时
+头文件：`semaphore.h`，须链接库`-lpthread`；
+成功返回0，失败返回-1，并设置errno；
+
+`int sem_post(sem_t *sem);`：挂出
+- 头文件：`semaphore.h`，须链接库`-lpthread`；
+- `sem`：输入参数，信号量指针；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+`int sem_getvalue(sem_t *sem, int *sval);`：测试
+- 头文件：`semaphore.h`，须链接库`-lpthread`；
+- `sem`：输入参数，信号量指针；
+- `sval`：输出参数，获取的值；
+- 返回值：成功返回0，失败返回-1，并设置errno；
+
+**共享内存和信号量的简单示例**
+<pre><code class="language-c line-numbers"><script type="text/plain">#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+
+#define SHM_NAME "shm.test"
+#define SEM_NAME "test"
+#define SHM_SIZE 1024*4
+
+int main(void){
+    int fd = shm_open(SHM_NAME, O_CREAT | O_EXCL | O_RDWR, 0644);
+    if(fd == -1){
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+
+    if(ftruncate(fd, SHM_SIZE) == -1){
+        perror("ftruncate");
+        exit(EXIT_FAILURE);
+    }
+
+    char *data = (char *)mmap(NULL, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if(data == MAP_FAILED){
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+    close(fd);
+
+    sem_t *sem = sem_open(SEM_NAME, O_CREAT | O_EXCL | O_RDWR, 0644, 1);
+    if(sem == SEM_FAILED){
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t pid = fork();
+    if(pid < 0){
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }else if(pid > 0){
+        if(sem_wait(sem) == -1){
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("parent_proc(%d) writing now ... \n", getpid());
+        for(int i=0; i<3; i++){
+            sprintf(data + 5*i, "www%d ", i);
+            sleep(1);
+        }
+        printf("parent_proc(%d) writing complete\n", getpid());
+
+        if(sem_post(sem) == -1){
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+
+        if(sem_close(sem) == -1){
+            perror("sem_close");
+            exit(EXIT_FAILURE);
+        }
+
+        if(munmap(data, SHM_SIZE) == -1){
+            perror("munmap");
+            exit(EXIT_FAILURE);
+        }
+
+        wait(NULL);
+        if(sem_unlink(SEM_NAME) == -1){
+            perror("sem_unlink");
+            exit(EXIT_FAILURE);
+        }
+        if(shm_unlink(SHM_NAME) == -1){
+            perror("shm_unlink");
+            exit(EXIT_FAILURE);
+        }
+    }else if(pid == 0){
+        usleep(3);
+
+        printf("child_proc(%d) waiting to read ... \n", getpid());
+        if(sem_wait(sem) == -1){
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("child_proc(%d) read_data: %s\n", getpid(), data);
+
+        if(sem_post(sem) == -1){
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+
+        if(sem_close(sem) == -1){
+            perror("sem_close");
+            exit(EXIT_FAILURE);
+        }
+
+        if(munmap(data, SHM_SIZE) == -1){
+            perror("munmap");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return 0;
+}
+</script></code></pre>
+
+
+<pre><code class="language-c line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [19:17:58]
+$ gcc -o sem sem.c -lrt -lpthread
+
+# root @ arch in ~/work on git:master x [19:18:20]
+$ ./sem
+parent_proc(9484) writing now ...
+child_proc(9485) waiting to read ...
+parent_proc(9484) writing complete
+child_proc(9485) read_data: www0 www1 www2
 </script></code></pre>
