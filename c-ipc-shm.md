@@ -417,6 +417,7 @@ child_proc(1361) read_data: www0 www1 www2
 Posix表示可移植操作系统接口（Portable Operating System Interface，缩写为POSIX），POSIX标准定义了操作系统应该为应用程序提供的接口标准，是IEEE为要在各种UNIX操作系统上运行的软件而定义的一系列API标准的总称，其正式称呼为IEEE 1003，而国际标准名称为ISO/IEC 9945；
 
 System V，曾经也被称为AT&T System V，是Unix操作系统众多版本中的一支；它最初由AT&T开发，在1983年第一次发布；一共发行了4个System V的主要版本：版本1、2、3和4；
+
 创建的System V共享内存和信号量，可在shell中使用命令`ipcs`查看；
 创建的Posix共享内存和信号量，可在`/dev/shm/`中查看到相应文件；
 
