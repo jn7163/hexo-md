@@ -153,7 +153,7 @@ pthread_cond_wait调用相当复杂，它是如下执行序列的一个组合：
 
 #define gettid() syscall(__NR_gettid)
 
-static int flag = 0;
+static volatile int flag = 0;
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
