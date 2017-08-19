@@ -45,8 +45,9 @@ c语言 - 多线程编程
 
 `pthread_t pthread_self(void);`：获取当前线程ID
 
-`int pthread_detach (pthread_t tid);`：分离线程
-- 变为分离状态的线程，如果线程退出，它的所有资源将全部释放；而如果不是分离状态，线程必须保留它的线程ID，退出状态直到其它线程对它调用了pthread_join；
+`int pthread_detach(pthread_t tid);`：分离线程
+- 变为分离状态的线程，如果线程退出，它的所有资源将全部释放；
+而如果不是分离状态，线程必须保留它的线程ID，退出状态直到其它线程对它调用了pthread_join；
 - `tid`：输入参数，指定的线程ID；
 - 返回值：成功返回0，失败返回errno值；
 
@@ -113,13 +114,17 @@ main执行完之后, 会调用exit()，exit()会让整个进程终止，那所�
 如果两进程共享可读写的内存，条件变量可以被用来实现这两进程间的线程同步；
 
 **相关函数**
-`int pthread_cond_init(pthread_cond_t *cond, pthread_condattr_t *cond_attr);`：初始化
+`int pthread_cond_init(pthread_cond_t *cond, pthread_condattr_t *cond_attr);`：动态初始化
 `int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);`：等待条件，阻塞
 `int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex *mutex, const timespec *abstime);`：等待条件，超时
 `int pthread_cond_signal(pthread_cond_t *cond);`：通知条件，只唤醒单个等待线程
 `int pthread_cond_broadcast(pthread_cond_t *cond);`：通知条件，唤醒所有等待线程
 `int pthread_cond_destroy(pthread_cond_t *cond);`：销毁
 返回值：成功返回0，失败返回errno值；
+
+静态初始化、动态初始化（和互斥锁相似）：
+`static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;`：静态初始化
+`int pthread_cond_init(pthread_cond_t *cond, pthread_condattr_t *cond_attr);`：动态初始化
 
 **pthread_cond_wait执行流程**
 ![pthread_cond_wait执行流程](/images/pthread_cond_wait.jpg)
