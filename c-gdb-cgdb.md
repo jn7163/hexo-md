@@ -613,6 +613,24 @@ gdb7以上的版本(gdb --version)支持多进程调试，只需要设置好`fol
 
 `maint info program-spaces`：显示当前GDB一共管理了多少地址空间
 
+## gdb调试多线程
+`info threads`：显示当前可调试的所有线程，每个线程会有一个GDB为其分配的ID，后面操作线程的时候会用到这个ID；前面有*的是当前调试的线程；
+
+`thread <ID>`：切换当前调试的线程为指定ID的线程；
+
+`break test.c:123 thread all`：在所有线程中相应的行上设置断点；
+
+`thread apply ID1 ID2 command`：让一个或者多个线程执行GDB命令command；
+
+`thread apply all command`：让所有被调试线程执行GDB命令command；
+
+`set scheduler-locking off|on|step`：
+默认情况下，在使用step或者continue命令调试当前线程时，其他线程也是同时执行的；
+怎么只让被调试的线程执行呢？通过这个命令就可以实现这个需求；
+`off`：不锁定任何线程，也就是所有线程都执行，这是默认值；
+`on`：只有当前被调试的线程会执行；
+`step`：在单步的时候，除了next过一个函数的情况以外，只有当前线程会执行；
+
 ## cgdb
 可能是我用惯了oh-my-zsh和vim，严重依赖语法高亮
 前面的gdb都是黑底白字，代码也没有高亮，后来找到一个叫cgdb的调试器
