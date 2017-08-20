@@ -108,7 +108,7 @@ map &lt;F3&gt; :TlistToggle&lt;CR&gt;
 &quot; 让taglist窗口出现在Vim的右边
 let Tlist_Use_Right_Window=1
 &quot; 当同时显示多个文件中的tag时，可使taglist只显示当前文件tag，其它文件的tag都被折叠起来
-let Tlist_File_Fold_Auto_Close=1
+&quot; let Tlist_File_Fold_Auto_Close=1
 &quot; 只显示一个文件中的tag，默认为显示多个
 let Tlist_Show_One_File=1
 &quot; Tag的排序规则，以名字排序；默认是以在文件中出现的顺序排序
@@ -122,7 +122,7 @@ let Tlist_Exit_OnlyWindow=1
 &quot; 设置窗体宽度，可以根据自己喜好设置
 let Tlist_WinWidth=24
 &quot; 缺省情况下，双击一个tag时，才会跳到该tag定义的位置，设置单击tag就跳转
-let Tlist_Use_SingleClick=1
+&quot; let Tlist_Use_SingleClick=1
 
 ### xterm和vim开启256色
 # 查看终端类型
@@ -256,7 +256,7 @@ map <F3> :TlistToggle<CR>
 " 让taglist窗口出现在Vim的右边
 let Tlist_Use_Right_Window=1
 " 当同时显示多个文件中的tag时，可使taglist只显示当前文件tag，其它文件的tag都被折叠起来
-let Tlist_File_Fold_Auto_Close=1
+" let Tlist_File_Fold_Auto_Close=1
 " 只显示一个文件中的tag，默认为显示多个
 let Tlist_Show_One_File=1
 " Tag的排序规则，以名字排序；默认是以在文件中出现的顺序排序
@@ -270,7 +270,7 @@ let Tlist_Exit_OnlyWindow=1
 " 设置窗体宽度，可以根据自己喜好设置
 let Tlist_WinWidth=24
 " 缺省情况下，双击一个tag时，才会跳到该tag定义的位置，设置单击tag就跳转
-let Tlist_Use_SingleClick=1
+" let Tlist_Use_SingleClick=1
 
 " map快捷键映射
 " map <A-o> :tabnew<CR>
@@ -367,7 +367,7 @@ map &lt;F3&gt; :TlistToggle&lt;CR&gt;
 &quot; 让taglist窗口出现在Vim的右边
 let Tlist_Use_Right_Window=1
 &quot; 当同时显示多个文件中的tag时，可使taglist只显示当前文件tag，其它文件的tag都被折叠起来
-let Tlist_File_Fold_Auto_Close=1
+&quot; let Tlist_File_Fold_Auto_Close=1
 &quot; 只显示一个文件中的tag，默认为显示多个
 let Tlist_Show_One_File=1
 &quot; Tag的排序规则，以名字排序；默认是以在文件中出现的顺序排序
@@ -381,7 +381,7 @@ let Tlist_Exit_OnlyWindow=1
 &quot; 设置窗体宽度，可以根据自己喜好设置
 let Tlist_WinWidth=24
 &quot; 缺省情况下，双击一个tag时，才会跳到该tag定义的位置，设置单击tag就跳转
-let Tlist_Use_SingleClick=1
+&quot; let Tlist_Use_SingleClick=1
 </code></pre>
 
 ### vimrc_windows
@@ -499,7 +499,7 @@ map <F3> :TlistToggle<CR>
 " 让taglist窗口出现在Vim的右边
 let Tlist_Use_Right_Window=1
 " 当同时显示多个文件中的tag时，可使taglist只显示当前文件tag，其它文件的tag都被折叠起来
-let Tlist_File_Fold_Auto_Close=1
+" let Tlist_File_Fold_Auto_Close=1
 " 只显示一个文件中的tag，默认为显示多个
 let Tlist_Show_One_File=1
 " Tag的排序规则，以名字排序；默认是以在文件中出现的顺序排序
@@ -513,7 +513,7 @@ let Tlist_Exit_OnlyWindow=1
 " 设置窗体宽度，可以根据自己喜好设置
 let Tlist_WinWidth=24
 " 缺省情况下，双击一个tag时，才会跳到该tag定义的位置，设置单击tag就跳转
-let Tlist_Use_SingleClick=1
+" let Tlist_Use_SingleClick=1
 
 " map快捷键映射
 map <A-o> :tabnew<CR>
