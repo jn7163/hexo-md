@@ -224,6 +224,9 @@ set guicursor+=a:blinkon0   " 设置光标不闪烁
 set showcmd " 状态栏显示当前执行的命令
 set fdm=indent
 
+" 记忆上次的光标位置
+au BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" | endif
+
 " ========= Plugin 配置 =========
 " NERDTree 打开/关闭快捷键
 map <F2> :NERDTreeToggle<CR>
@@ -465,6 +468,9 @@ set cursorline  " 启用光标行
 set guicursor+=a:blinkon0   " 设置光标不闪烁
 set showcmd " 状态栏显示当前执行的命令
 set fdm=indent
+
+" 记忆上次的光标位置
+au BufReadPost * if line("'\"") > 0 && line ("'\"") <= line("$") | exe "normal g'\"" | endif
 
 " ========= Plugin 配置 =========
 " NERDTree 打开/关闭快捷键
