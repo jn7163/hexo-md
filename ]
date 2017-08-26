@@ -66,7 +66,7 @@ $ ./a.out
 
 对于上面的`+`运算符重载：`complex operator+(const complex &A) const;`
 函数名为`operator+`，返回值类型为`complex`，参数为`const complex &`，并且是一个const成员；
-在 25 行中，`C = A + B;`会被转换为类似的函数调用形式：`C = A.operator+(B);`，这实质上就是调用对象的成员函数；
+在 26 行中，`C = A + B;`会被转换为类似的函数调用形式：`C = A.operator+(B);`，这实质上就是调用对象的成员函数；
 
 **运算符重载函数除了函数名有特定的格式，其它地方和普通函数并没有区别**；
 
@@ -435,6 +435,8 @@ C++ 规定，`箭头运算符->`、`下标运算符[]`、`函数调用运算符(
 
 cout 是 istream 类的对象，cin 是 ostream 类的对象，要想达到这个目标，就必须以全局函数（友元函数）的形式重载`<<`和`>>`，否则就要修改标准库中的类，这显然不是我们所期望的；
 
+**重载输入运算符`>>`**
+下面我们以全局函数的形式重载`>>`，使它能够读入两个 double 类型的数据，并分别赋值给复数的实部和虚部：
 <pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
 
 using namespace std;
