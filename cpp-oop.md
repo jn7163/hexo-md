@@ -1,11 +1,1047 @@
 ---
-title:
-date: 2017-04-26 12:04:00
+title: C++ 面向对象进阶
+date: 2017-08-29 10:48:00
 categories:
+- cpp
 tags:
-keywords:
+- cpp
+keywords: C++ 面向对象进阶
 ---
 
 > 
+C++ 面向对象进阶，拷贝构造函数、重载赋值运算符、转换构造函数、类型转换函数、C++的类型转换运算符
 
 <!-- more -->
+
+## 拷贝构造函数
+在 C++ 中，`拷贝`是指**用已经存在的对象创建出一个新的对象**；从本质上讲，对象也是一份数据，因为它会占用内存；
+
+严格来说，**对象的创建包括两个阶段，首先要`分配内存空间`，然后再`进行初始化`**：
+- **分配内存**：很好理解，就是在堆区、栈区或者全局数据区留出足够多的字节；
+这个时候的内存还比较“原始”，没有被“教化”，它所包含的数据一般是零值或者随机值，没有实际的意义；
+- **初始化**：就是`首次对内存赋值`，让它的数据有意义；注意是首次赋值，再次赋值不叫初始化；
+初始化的时候还可以为对象分配其他的资源（打开文件、连接网络、动态分配内存等），或者提前进行一些计算（根据价格和数量计算出总价、根据长度和宽度计算出矩形的面积等）等；说白了，**初始化就是调用`构造函数`**；
+
+很明显，这里所说的**拷贝是在初始化阶段进行的，也就是用其它对象的数据来初始化新对象的内存**；
+
+那么，如何用拷贝的方式来初始化一个对象呢？其实这样的例子比比皆是，string 类就是一个典型的例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">string s1 = "https://www.zfl9.com";
+string s2(s1);
+string s3 = s1;
+string s4 = s1 + " " + s2;
+</script></code></pre>
+
+
+s1、s2、s3、s4 都是以拷贝的方式进行初始化的；
+对于 s1，表面上看起来是将一个字符串直接赋值给了 s1，实际上在内部进行了类型转换，将`const char *`类型转换为 string 类型后才赋值的，这点我们将在“C++转换构造函数”一节中详细讲解；s4 也是类似的道理；
+
+**当以拷贝的方式初始化一个对象时，会调用一个特殊的构造函数，就是`拷贝构造函数（Copy Constructor）`**
+> 
+拷贝构造函数只有一个参数，它的类型是当前类的引用，而且一般都是 const 引用；
+
+拷贝构造函数的例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+#include <string>
+
+using namespace std;
+
+class Student {
+public:
+    Student(string name = "", int age = 0, float score = 0.0f); // 普通构造函数
+    Student(const Student &stu);    // 拷贝构造函数
+public:
+    void print() const;
+private:
+    string m_name;
+    int m_age;
+    float m_score;
+};
+
+Student::Student(string name, int age, float score) : m_name(name), m_age(age), m_score(score) {}
+
+Student::Student(const Student &stu) {
+    m_name = stu.m_name;
+    m_age = stu.m_age;
+    m_score = stu.m_score;
+    printf("copy constructor\n");
+}
+
+void Student::print() const {
+    printf("name: %s, age: %d, score: %g\n", m_name.c_str(), m_age, m_score);
+}
+
+int main() {
+    Student s1("zhang3", 15, 132);
+    Student s2 = s1;    // 调用拷贝构造函数
+    Student s3(s1);     // 调用拷贝构造函数
+    s1.print();
+    s2.print();
+    s3.print();
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:16:36] C:130
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [11:16:38]
+$ ./a.out
+copy constructor
+copy constructor
+name: zhang3, age: 15, score: 132
+name: zhang3, age: 15, score: 132
+name: zhang3, age: 15, score: 132
+</script></code></pre>
+
+
+1) **为什么必须是当前类的引用呢**？
+如果拷贝构造函数的参数不是当前类的引用，而是当前类的对象，那么在调用拷贝构造函数时，会将另外一个对象直接传递给形参，这本身就是一次拷贝，会再次调用拷贝构造函数，然后又将一个对象直接传递给了形参，将继续调用拷贝构造函数……这个过程会一直持续下去，没有尽头，陷入死循环；
+
+只有当参数是当前类的引用时，才不会导致再次调用拷贝构造函数，这不仅是逻辑上的要求，也是 C++ 语法的要求；
+
+2) **为什么是 const 引用呢**？
+拷贝构造函数的目的是用其它对象的数据来初始化当前对象，并没有期望更改其它对象的数据，添加 const 限制后，这个含义更加明确了；
+
+另外一个原因是，添加 const 限制后，可以将 const 对象和非 const 对象传递给形参了，因为非 const 类型可以转换为 const 类型；
+如果没有 const 限制，就不能将 const 对象传递给形参，因为 const 类型不能转换为非 const 类型，这就意味着，不能使用 const 对象来初始化当前对象了；
+
+**默认拷贝构造函数**
+在前面的教程中，我们还没有讲解拷贝构造函数，但是却已经在使用拷贝的方式创建对象了，并且也没有引发什么错误；
+这是因为，如果程序员没有显式地定义拷贝构造函数，那么编译器会自动生成一个默认的拷贝构造函数；
+这个默认的拷贝构造函数很简单，就是使用“老对象”的成员变量对“新对象”的成员变量进行一一赋值，和上面 Student 类的拷贝构造函数非常类似；
+
+对于简单的类，**默认拷贝构造函数一般是够用的，我们也没有必要再显式地定义一个功能类似的拷贝构造函数**；
+但是当类持有其它资源时，如动态分配的内存、打开的文件、指向其他数据的指针、网络连接等，默认拷贝构造函数就不能拷贝这些资源，我们必须显式地定义拷贝构造函数，以完整地拷贝对象的所有数据；
+
+## 拷贝构造函数的调用时机
+**当以拷贝的方式初始化对象时会调用拷贝构造函数**
+这里有两个关键点，分别是「`以拷贝的方式`」和「`初始化对象`」
+
+**初始化对象**
+初始化对象是指，为对象分配内存后第一次向内存中填充数据，这个过程会调用构造函数；
+对象被创建后必须立即被初始化，换句话说，只要创建对象，就会调用构造函数；
+
+**初始化和赋值的区别**
+初始化和赋值都是将数据写入内存中，并且从表面上看起来，初始化在很多时候都是以赋值的方式来实现的，所以很容易混淆；
+**在定义的同时进行赋值叫做`初始化（Initialization）`**；
+**定义完成以后再赋值（不管在定义的时候有没有赋值）就叫做`赋值（Assignment）`**；
+**初始化只能有一次，赋值可以有多次**；
+
+对于基本类型的数据，我们很少会区分「初始化」和「赋值」这两个概念，即使将它们混淆，也不会出现什么错误；
+但是对于类，它们的区别就非常重要了，因为**`初始化`时会调用`构造函数`（以`拷贝的方式`初始化时会调用`拷贝构造函数`）**，而**`赋值`时会调用`重载过的赋值运算符`**
+
+请看下面的例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+#include <string>
+
+using namespace std;
+
+class Student {
+public:
+    Student(string name = "", int age = 0, float score = 0.0f); // 普通构造函数
+    Student(const Student &stu);    // 拷贝构造函数
+public:
+    void operator=(const Student &stu); // 重载赋值运算符
+    void print() const;
+private:
+    string m_name;
+    int m_age;
+    float m_score;
+};
+
+Student::Student(string name, int age, float score) : m_name(name), m_age(age), m_score(score) {}
+
+Student::Student(const Student &stu) {
+    m_name = stu.m_name;
+    m_age = stu.m_age;
+    m_score = stu.m_score;
+    printf("copy constructor\n");
+}
+
+void Student::operator=(const Student &stu) {
+    m_name = stu.m_name;
+    m_age = stu.m_age;
+    m_score = stu.m_score;
+    printf("operator=() called\n");
+}
+
+void Student::print() const {
+    printf("name: %s, age: %d, score: %g\n", m_name.c_str(), m_age, m_score);
+}
+
+int main() {
+    // 调用普通构造函数
+    Student s1("zhang1", 11, 111);
+    Student s2("zhang2", 12, 112);
+    Student s3("zhang3", 13, 113);
+
+    Student s4 = s1;    // 调用拷贝构造函数
+    s4 = s2;    // 调用operator=()
+    s4 = s3;    // 调用operator=()
+
+    Student s5; // 调用普通构造函数, 使用默认参数
+    s5 = s1;    // 调用operator=()
+    s5 = s2;    // 调用operator=()
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:39:59]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [11:40:13]
+$ ./a.out
+copy constructor
+operator=() called
+operator=() called
+operator=() called
+operator=() called
+</script></code></pre>
+
+
+**以拷贝的方式初始化对象**
+初始化对象时会调用构造函数，不同的初始化方式会调用不同的构造函数：
+- 如果用传递进来的实参初始化对象，那么会调用**普通构造函数**，我们不妨将此称为`普通初始化`；
+- 如果用其它对象（现有对象）的数据来初始化对象，那么会调用**拷贝构造函数**，这就是`拷贝方式初始化`；
+
+具体有哪些情况是以拷贝的方式来初始化对象呢？
+1) **将其它对象作为实参**
+以上面的 Student 类为例，我们可以这样来创建一个新的对象：
+`Student stu1("小明", 16, 90.5);`：普通初始化
+`Student stu2(stu1);`：以拷贝的方式初始化
+
+即使我们不在类中显式地定义拷贝构造函数，这种初始化方式也是有效的，因为编译器会生成默认的拷贝构造函数；
+
+2) **在创建对象的同时赋值**
+接着使用 Student 类，请看下面的例子：
+`Student stu1("小明", 16, 90.5);`：普通初始化
+`Student stu2 = stu1;`：以拷贝的方式初始化
+
+这是最常见的一种以拷贝的方式初始化对象的情况，非常容易理解，我们也已经多次使用；
+
+3) **函数的形参为类类型**
+如果函数的形参为类类型（也就是一个对象），那么调用函数时要将另外一个对象作为实参传递进来赋值给形参，这也是以拷贝的方式初始化形参对象；请看下面的代码：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+#include <string>
+
+using namespace std;
+
+class Student {
+public:
+    Student(string name = "", int age = 0, float score = 0.0f); // 普通构造函数
+    Student(const Student &stu);    // 拷贝构造函数
+public:
+    void operator=(const Student &stu); // 重载赋值运算符
+    void print() const;
+private:
+    string m_name;
+    int m_age;
+    float m_score;
+};
+
+Student::Student(string name, int age, float score) : m_name(name), m_age(age), m_score(score) {}
+
+Student::Student(const Student &stu) {
+    m_name = stu.m_name;
+    m_age = stu.m_age;
+    m_score = stu.m_score;
+    printf("copy constructor\n");
+}
+
+void Student::operator=(const Student &stu) {
+    m_name = stu.m_name;
+    m_age = stu.m_age;
+    m_score = stu.m_score;
+    printf("operator=() called\n");
+}
+
+void Student::print() const {
+    printf("name: %s, age: %d, score: %g\n", m_name.c_str(), m_age, m_score);
+}
+
+void func(Student stu) {
+    // TODO
+}
+
+int main() {
+    // 调用普通构造函数
+    Student s1("zhang1", 11, 111);
+    Student s2("zhang2", 12, 112);
+    Student s3("zhang3", 13, 113);
+
+    Student s4 = s1;    // 调用拷贝构造函数
+    s4 = s2;    // 调用operator=()
+    s4 = s3;    // 调用operator=()
+
+    Student s5; // 调用普通构造函数, 使用默认参数
+    s5 = s1;    // 调用operator=()
+    s5 = s2;    // 调用operator=()
+
+    func(s1);   // 调用拷贝构造函数
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:47:38]
+$ g++ a.cpp
+a.cpp: In function ‘void func(Student)’:
+a.cpp:39:19: warning: unused parameter ‘stu’ [-Wunused-parameter]
+ void func(Student stu) {
+                   ^~~
+
+# root @ arch in ~/work on git:master x [11:47:56]
+$ ./a.out
+copy constructor
+operator=() called
+operator=() called
+operator=() called
+operator=() called
+copy constructor
+</script></code></pre>
+
+
+4) **函数返回值为类类型**
+当函数的返回值为类类型时，return 语句会返回一个对象，不过为了防止局部对象被销毁，也为了防止通过返回值修改原来的局部对象，编译器并不会直接返回这个对象，而是根据这个对象先创建出一个临时对象（匿名对象），再将这个临时对象返回；而创建临时对象的过程，就是以拷贝的方式进行的，会调用拷贝构造函数；
+
+比如这种情况：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">Student func() {
+    Student s("小明", 16, 90.5);
+    return s;
+}
+Student stu = func();
+</script></code></pre>
+
+
+理论上讲，运行代码后会调用两次拷贝构造函数，一次是返回 s 对象时，另外一次是创建 stu 对象时；
+
+在较老的编译器上，你或许真的能够看到调用两次拷贝构造函数；
+但是在现代编译器上，只会调用一次拷贝构造函数，或者一次也不调用；
+
+例如在 VS2010 下会调用一次拷贝构造函数；在 GCC、Xcode 下一次也不会调用；
+这是因为，现代编译器都支持返回值优化技术，会尽量避免拷贝对象，以提高程序运行效率；
+
+## 深拷贝和浅拷贝
+对于基本类型的数据以及简单的对象，它们之间的拷贝非常简单，就是按位复制内存；
+
+`按位复制`这种默认的拷贝行为就是`浅拷贝`，这和调用 memcpy() 函数的效果非常类似；
+
+对于简单的类，默认的拷贝构造函数一般就够用了，我们也没有必要再显式地定义一个功能类似的拷贝构造函数；
+但是当类持有其它资源时，例如动态分配的内存、指向其他数据的指针等，默认的拷贝构造函数就不能拷贝这些资源了，我们必须显式地定义拷贝构造函数，以完整地拷贝对象的所有数据；
+
+**这种将对象所持有的其它资源一并拷贝的行为叫做`深拷贝`，我们必须显式地定义拷贝构造函数才能达到深拷贝的目的**
+
+例如，自己实现一个变长数组 Array：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <cstdlib>
+#include <cstring>
+
+using namespace std;
+
+class Array {
+public:
+    Array(int len);
+    Array(const Array &arr);    // 拷贝构造函数
+    ~Array();
+public:
+    int length() const { return m_len; }
+    int operator[](int i) const { return m_ptr[i]; }    // 读取
+    int & operator[](int i) { return m_ptr[i]; }  // 读取/写入
+    friend ostream & operator<<(ostream &out, const Array &arr);
+private:
+    int m_len;
+    int *m_ptr;
+};
+
+Array::Array(int len) : m_len(len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+}
+
+Array::Array(const Array &arr) : m_len(arr.m_len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+    memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+}
+
+Array::~Array() {
+    free(m_ptr);
+}
+
+ostream & operator<<(ostream &out, const Array &arr) {
+    out << "Array[" << arr.m_len << "] = { ";
+    for (int i=0; i<arr.m_len; i++) {
+        out << arr.m_ptr[i] << ", ";
+    }
+    out << "\b\b }" << endl;
+    return out;
+}
+
+int main() {
+    Array arr1(10);
+    for (int i=0; i<10; i++) {
+        arr1[i] = i;
+    }
+    cout << arr1;
+
+    Array arr2 = arr1;
+    arr1[5] = 9;
+    arr2[5] = 10;
+    cout << arr1 << arr2;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:16:50]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [13:18:01]
+$ ./a.out
+Array[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
+Array[10] = { 0, 1, 2, 3, 4, 9, 6, 7, 8, 9 }
+Array[10] = { 0, 1, 2, 3, 4, 10, 6, 7, 8, 9 }
+</script></code></pre>
+
+
+这里就必须使用深拷贝，不然默认的浅拷贝只会拷贝 arr1 的 m_ptr 的值，也即 m_ptr 的指向，使用的依旧是同一块内存；
+
+**到底是浅拷贝还是深拷贝**
+如果一个类拥有`指针类型`的成员变量，那么绝大部分情况下就需要`深拷贝`；
+因为只有这样，才能将指针指向的内容再复制出一份来，让原有对象和新生对象相互独立，彼此之间不受影响；
+
+如果类的成员变量没有指针，一般`浅拷贝`足以；
+
+另外一种需要深拷贝的情况就是在创建对象时进行一些预处理工作，比如统计创建过的对象的数目、记录对象创建的时间等；
+
+## 重载赋值运算符
+初始化和赋值的区别：
+**在定义的同时进行赋值**叫做`初始化（Initialization）`；
+**定义完成以后再赋值（不管在定义的时候有没有赋值）**就叫做`赋值（Assignment）`；
+初始化只能有一次，赋值可以有多次；
+
+当以拷贝的方式初始化一个对象时，会调用`拷贝构造函数`；当给一个对象赋值时，会调用重载过的`赋值运算符`
+
+即使我们没有显式的重载赋值运算符，编译器也会以默认地方式重载它；
+默认重载的赋值运算符功能很简单，就是将原有对象的所有成员变量一一赋值给新对象，这和默认拷贝构造函数的功能类似；
+
+**对于简单的类，默认的赋值运算符一般就够用了，我们也没有必要再显式地重载它**；
+但是当类持有其它资源时，例如动态分配的内存、打开的文件、指向其他数据的指针、网络连接等，默认的赋值运算符就不能处理了，我们必须显式地重载它，这样才能将原有对象的所有数据都赋值给新对象；
+
+仍然以上节的 Array 类为例，该类拥有一个指针成员，指向动态分配的内存；为了让 Array 类的对象之间能够正确地赋值，我们必须重载赋值运算符；请看下面的代码：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <cstdlib>
+#include <cstring>
+
+using namespace std;
+
+class Array {
+public:
+    Array(int len = 0);
+    Array(const Array &arr);    // 拷贝构造函数
+    ~Array();
+public:
+    int length() const { return m_len; }
+    int operator[](int i) const { return m_ptr[i]; }    // 读取
+    int & operator[](int i) { return m_ptr[i]; }  // 读取/写入
+    friend ostream & operator<<(ostream &out, const Array &arr);    // 重载 << 运算符
+    Array & operator=(const Array &arr);    // 重载 = 运算符
+private:
+    int m_len;
+    int *m_ptr;
+};
+
+Array::Array(int len) : m_len(len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+}
+
+Array::Array(const Array &arr) : m_len(arr.m_len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+    memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+}
+
+Array::~Array() {
+    free(m_ptr);
+}
+
+ostream & operator<<(ostream &out, const Array &arr) {
+    out << "Array[" << arr.m_len << "] = { ";
+    for (int i=0; i<arr.m_len; i++) {
+        out << arr.m_ptr[i] << ", ";
+    }
+    out << "\b\b }" << endl;
+    return out;
+}
+
+Array & Array::operator=(const Array &arr) {
+    if (this != &arr) {
+        m_len = arr.m_len;
+        m_ptr = (int *)calloc(m_len, sizeof(int));
+        memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+    }
+    return *this;
+}
+
+int main() {
+    Array arr1(10); // 默认构造函数
+    for (int i=0; i<10; i++) {
+        arr1[i] = i;
+    }
+    cout << arr1;
+
+    Array arr2 = arr1;  // 拷贝构造函数
+    arr1[5] = 9;
+    arr2[5] = 10;
+    cout << arr1 << arr2;
+
+    Array arr3; // 默认构造函数
+    arr3 = arr1;    // 调用operator=()
+    arr3[0] = -1;
+    cout << arr3;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:44:29]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [13:45:42]
+$ ./a.out
+Array[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
+Array[10] = { 0, 1, 2, 3, 4, 9, 6, 7, 8, 9 }
+Array[10] = { 0, 1, 2, 3, 4, 10, 6, 7, 8, 9 }
+Array[10] = { -1, 1, 2, 3, 4, 9, 6, 7, 8, 9 }
+</script></code></pre>
+
+
+下面我们就来分析一下重载过的赋值运算符：
+1) `operator=()`的返回值类型为`Array &`，这样不但能够避免在返回数据时调用拷贝构造函数，还能够达到连续赋值的目的；
+
+2) `if (this != &arr)`语句的作用是「判断是否是给同一个对象赋值」：
+
+3) `return *this`表示返回当前对象（新对象）；
+
+4) `operator=()`的形参类型为`const Array &`，这样不但能够避免在传参时调用拷贝构造函数，还能够同时接收 const 类型和非 const 类型的实参；
+
+5) 赋值运算符重载函数除了能有对象引用这样的参数之外，也能有其它参数；但是**其它参数必须给出默认值**；
+
+## 拷贝控制操作（三/五法则）
+当定义一个类时，我们显式地或隐式地指定了此类型的对象在`拷贝`、`赋值`和`销毁`时做什么；
+一个类通过定义三种特殊的成员函数来控制这些操作，分别是`拷贝构造函数`、`赋值运算符`和`析构函数`；
+
+`拷贝构造函数`定义了当用同类型的另一个对象初始化新对象时做什么；
+`赋值运算符`定义了将一个对象赋予同类型的另一个对象时做什么；
+`析构函数`定义了此类型的对象销毁时做什么；
+
+我们将这些操作称为**拷贝控制操作**；
+
+由于拷贝控制操作是由三个特殊的成员函数来完成的，所以我们称此为“C++三法则”；
+在较新的 C++11 标准中，为了支持移动语义，又增加了`移动构造函数`和`移动赋值运算符`，这样共有五个特殊的成员函数，所以又称为“C++五法则”；
+
+也就是说，“三法则”是针对较旧的 C++89 标准说的，“五法则”是针对较新的 C++11 标准说的；为了统一称呼，后来人们干把它叫做“C++ 三/五法则”；
+
+如果一个类没有定义所有这些拷贝控制成员，编译器会自动为它定义默认的操作，因此很多类会忽略这些拷贝控制操作；
+但是，对于一些持有其他资源（例如动态分配的内存、打开的文件、指向其他数据的指针、网络连接等）的类来说，依赖这些默认的操作会导致灾难，我们必须显式的定义这些操作；
+
+C++ 并不要求我们定义所有的这些操作，你可以只定义其中的一个或两个；
+但是，这些操作通常应该被看做一个整体，只需要定义其中一个操作，而不需要定义其他操作的情况很少见；
+
+**需要析构函数的类也需要拷贝和赋值操作**
+当我们决定是否要为一个类显式地定义`拷贝构造函数`和`赋值运算符`时，一个基本原则是首先确定这个类是否需要一个`析构函数`；
+通常，对析构函数的需求要比拷贝构造函数和赋值运算符的需求更加明显；
+
+如果一个类需要定义析构函数，那么几乎可以肯定这个类也需要一个拷贝构造函数和一个赋值运算符；
+
+**需要拷贝操作的类也需要赋值操作，反之亦然**
+虽然很多类需要定义所有（或是不需要定义任何）拷贝控制成员，但某些类所要完成的工作，只需要拷贝或者赋值操作，不需要析构操作；
+
+如果一个类需要一个拷贝构造函数，几乎可以肯定它也需要一个赋值运算符；反之亦然；
+然而，无论需要拷贝构造函数还是需要复制运算符，都不必然意味着也需要析构函数；
+
+## 转换构造函数
+在 C/C++ 中，不同的数据类型之间可以相互转换；
+无需用户指明如何转换的称为`自动类型转换（隐式类型转换）`，需要用户显式地指明如何转换的称为`强制类型转换`；
+
+不管是自动类型转换还是强制类型转换，前提必须是编译器知道如何转换；
+例如，将小数转换为整数会抹掉小数点后面的数字，将`int *`转换为`float *`只是简单地复制指针的值，这些规则都是编译器内置的，我们并没有告诉编译器；
+
+换句话说，如果编译器不知道转换规则就不能转换，使用强制类型也无用；
+比如：`Complex c = (Complex)10;`；
+编译器并不知道转换规则，超出了编译器的处理能力，即使是强制类型转换也没用；
+
+幸运的是，C++ 允许我们自定义类型转换规则，用户可以将其它类型转换为当前类类型，也可以将当前类类型转换为其它类型；
+这种自定义的类型转换规则只能以类的`成员函数`的形式出现，换句话说，这种转换规则只适用于类；
+
+本节我们先讲解如何将其它类型转换为当前类类型，下节再讲解如何将当前类类型转换为其它类型；
+
+**转换构造函数**
+将其它类型转换为当前类类型需要借助`转换构造函数（Conversion constructor）`；
+转换构造函数也是一种构造函数，它遵循构造函数的一般规则；转换构造函数只有一个参数；
+
+以 Complex 类为例，我们为它添加转换构造函数：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+class Complex {
+public:
+    Complex();  // 无参构造函数
+    Complex(double real, double imag);  // 普通构造函数
+    Complex(double real); // 转换构造函数
+public:
+    friend ostream & operator<<(ostream &out, const Complex &c);    // 重载 << 运算符
+private:
+    double m_real;
+    double m_imag;
+};
+
+Complex::Complex() : m_real(0), m_imag(0) {}
+
+Complex::Complex(double real, double imag) : m_real(real), m_imag(imag) {}
+
+Complex::Complex(double real) : m_real(real), m_imag(0) {}
+
+ostream & operator<<(ostream &out, const Complex &c) {
+    out << c.m_real << " + " << c.m_imag << "i";
+    return out;
+}
+
+int main() {
+    Complex a(1, 2);
+    cout << a << endl;
+
+    a = 11;
+    cout << a << endl;
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:39:05]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [14:39:18]
+$ ./a.out
+1 + 2i
+11 + 0i
+</script></code></pre>
+
+
+`Complex(double real);`就是转换构造函数，它的作用是将 double 类型的参数 real 转换成 Complex 类的对象，并将 real 作为复数的实部，将 0 作为复数的虚部；
+
+这样一来，`a = 11`整体上的效果相当于：`a.Complex(11);`
+
+在进行数学运算、赋值、拷贝等操作时，如果遇到类型不兼容、需要将 double 类型转换为 Complex 类型时，编译器会检索当前的类是否定义了转换构造函数，如果没有定义的话就转换失败，如果定义了的话就调用转换构造函数；
+
+转换构造函数也是构造函数的一种，它除了可以用来将其它类型转换为当前类类型，还可以用来初始化对象，这是构造函数本来的意义；
+
+需要注意的是，为了获得目标类型，编译器会“不择手段”，会综合使用内置的转换规则和用户自定义的转换规则，并且会进行多级类型转换，例如：
+- 编译器会根据内置规则先将 int 转换为 double，再根据用户自定义规则将 double 转换为 Complex（int --> double --> Complex）；
+- 编译器会根据内置规则先将 char 转换为 int，再将 int 转换为 double，最后根据用户自定义规则将 double 转换为 Complex（char --> int --> double --> Complex）；
+
+从本例看，只要一个类型能转换为 double 类型，就能转换为 Complex 类型；
+
+**再谈构造函数**
+构造函数的本意是在创建对象的时候初始化对象，编译器会根据传递的实参来匹配不同的（重载的）构造函数；
+
+回顾一下以前的章节，到目前为止我们已经学习了以下几种构造函数：
+1) `默认构造函数`：编译器自动生成的构造函数；
+以 Complex 类为例，它的原型为：`Complex();`
+
+2) `普通构造函数`：用户自定义的构造函数；
+以 Complex 类为例，它的原型为：`Complex(double real, double imag);`
+
+3) `拷贝构造函数`：以拷贝的方式初始化对象时调用；
+以 Complex 类为例，它的原型为：`Complex(const Complex &c);`
+
+4) `转换构造函数`：将其它类型转换为当前类类型时调用；
+以 Complex 为例，它的原型为：`Complex(double real);`
+
+不管哪一种构造函数，都能够用来初始化对象，这是构造函数的本意；
+
+假设 Complex 类定义了以上所有的构造函数，那么下面创建对象的方式都是正确的：
+`Complex c1();`：调用Complex()
+`Complex c2(10, 20);`：调用Complex(double real, double imag)
+`Complex c3(c2);`：调用Complex(const Complex &c)
+`Complex c4(25.7);`：调用Complex(double real)
+
+这些代码都体现了构造函数的本意 —— 在创建对象时初始化对象；
+
+除了在创建对象时初始化对象，其他情况下也会调用构造函数：
+例如，以拷贝的的方式初始化对象时会调用拷贝构造函数，将其它类型转换为当前类类型时会调用转换构造函数；
+这些在其他情况下调用的构造函数，就成了特殊的构造函数了；特殊的构造函数并不一定能体现出构造函数的本意；
+
+**对 Complex 类的进一步精简**
+上面的 Complex 类中我们定义了三个构造函数，其中包括两个普通的构造函数和一个转换构造函数；
+其实，借助函数的默认参数，我们可以将这三个构造函数简化为一个，请看下面的代码：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+class Complex {
+public:
+    Complex(double real = 0, double imag = 0);  // 包含了转换构造函数
+public:
+    friend ostream & operator<<(ostream &out, const Complex &c);    // 重载 << 运算符
+private:
+    double m_real;
+    double m_imag;
+};
+
+Complex::Complex(double real, double imag) : m_real(real), m_imag(imag) {}
+
+ostream & operator<<(ostream &out, const Complex &c) {
+    out << c.m_real << " + " << c.m_imag << "i";
+    return out;
+}
+
+int main() {
+    Complex c1(1, 2);   // 传递两个实参，不使用默认参数
+    Complex c2(11); // 传递一个实参，使用一个默认参数
+    Complex c3; // 使用两个默认参数
+    c3 = 3.14;  // 相当于 Complex(3.14)，使用一个默认参数
+    return 0;
+}
+</script></code></pre>
+
+
+## 类型转换函数
+`转换构造函数`能够将其它类型转换为当前类类型（例如将 double 类型转换为 Complex 类型）；但是不能反过来将当前类类型转换为其它类型（例如将 Complex 类型转换为 double 类型）；
+
+C++ 提供了`类型转换函数（Type conversion function）`来解决这个问题：
+`类型转换函数`的作用就是将`当前类类型`转换为`其它类型`，它只能以`成员函数`的形式出现，也就是只能出现在类中；
+
+类型转换函数的语法格式为：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">operator type() {
+    //TODO
+    return data;
+}
+</script></code></pre>
+
+
+`operator`是 C++ 关键字，`type`是要转换的**目标类型**，data 是要返回的 type 类型的数据；
+
+> 类型转换函数和运算符的重载非常相似，都使用 operator 关键字，因此也把类型转换函数称为`类型转换运算符`
+
+因为要转换的目标类型是 type，所以返回值 data 也必须是 type 类型；
+既然已经知道了要返回 type 类型的数据，所以没有必要再像普通函数一样明确地给出返回值类型；
+这样做导致的结果是：类型转换函数看起来没有返回值类型，其实是隐式地指明了返回值类型；
+
+类型转换函数也没有参数；不过因为是成员函数，会隐式的传入 this 指针指向当前对象；
+
+为 Complex 类添加类型转换函数，使得 Complex 类型能够转换为 double 类型；
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+class Complex {
+public:
+    Complex(double real = 0, double imag = 0);
+public:
+    friend ostream & operator<<(ostream &out, const Complex &c);
+    friend Complex operator+(const Complex &c1, const Complex &c2);
+    operator double() const { return m_real; }  // 类型转换函数
+private:
+    double m_real;
+    double m_imag;
+};
+
+Complex::Complex(double real, double imag) : m_real(real), m_imag(imag) {}
+
+ostream & operator<<(ostream &out, const Complex &c) {
+    out << c.m_real << " + " << c.m_imag << "i";
+    return out;
+}
+
+Complex operator+(const Complex &c1, const Complex &c2) {
+    return Complex(c1.m_real + c2.m_real, c1.m_imag + c2.m_imag);
+}
+
+int main() {
+    Complex c1(24.6, 100);
+    double f = c1;  //相当于 double f = c1.operator double();
+    cout << "f = " << f << endl;
+
+    f = 12.5 + (double)c1 + 6;  //相当于 f = 12.5 + c1.operator double() + 6;
+    f = (Complex)12.5 + c1 + (Complex)6;    // 相当于 f = (Complex(12.5) + c1 + Complex(6)).operator double();
+//  f = 12.5 + c1 + 6;  // 二义性错误，编译器不知道该将 c1 转换为 double，还是该将 12.5、6 转换为 Complex
+    cout << "f = " << f << endl;
+
+    int n = Complex(43.2, 9.3);  //先转换为 double，再转换为 int
+    cout << "n = " << n << endl;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:28:43] C:130
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [15:30:03]
+$ ./a.out
+f = 24.6
+f = 43.1
+n = 43
+</script></code></pre>
+
+
+**关于类型转换函数的说明**
+1) type 可以是内置类型、类类型以及由 typedef 定义的类型别名，任何可作为函数返回类型的类型（void 除外）都能够被支持；
+一般而言，**不允许转换为`数组`或`函数类型`**，转换为`指针`类型或`引用`类型是可以的；
+
+2) 类型转换函数一般不会更改被转换的对象，所以通常被定义为`const 成员`；
+
+3) 类型转换函数可以被继承，可以是虚函数；
+
+4) 一个类虽然可以有多个类型转换函数（类似于函数重载），但是如果多个类型转换函数要转换的目标类型本身又可以相互转换（类型相近），那么有时候就会产生二义性；
+
+以 Complex 类为例，假设它有两个类型转换函数：
+`operator double() const { return m_real; }`：转换为 double 类型
+`operator int() const { return (int)m_real; }`：转换为 int 类型
+
+那么下面的写法就会引发二义性：
+`Complex c1(24.6, 100);`
+`float f = 12.5 + c1;`
+编译器可以调用 operator double() 将 c1 转换为 double 类型；
+也可以调用 operator int() 将 c1 转换为 int 类型；
+这两种类型都可以跟 12.5 进行加法运算，并且从 Complex 转换为 double 与从 Complex 转化为 int 是平级的，没有谁的优先级更高；
+所以这个时候编译器就不知道该调用哪个函数了，干脆抛出一个**二义性错误**，让用户解决；
+
+## 转换构造函数和类型转换函数
+`转换构造函数`和`类型转换函数`的作用是相反的：转换构造函数会将其它类型转换为当前类类型，类型转换函数会将当前类类型转换为其它类型；
+
+如果没有这两个函数，Complex 类和 int、double、bool 等基本类型的四则运算、逻辑运算都将变得非常复杂，要编写大量的运算符重载函数；
+
+但是，如果一个类同时存在这两个函数，就有可能产生二义性；
+
+这样的二义性例子，在前面一节中已经进行了相应的演示；
+
+解决二义性问题的办法也很简单粗暴，**要么只使用转换构造函数，要么只使用类型转换函数**；
+实践证明，**用户对`转换构造函数`的需求往往更加强烈，这样能增加编码的灵活性**；
+
+例如，可以将一个字符串字面量或者一个字符数组直接赋值给 string 类的对象，可以将一个 int、double、bool 等基本类型的数据直接赋值给 Complex 类的对象；
+
+那么，如果我们想把当前类类型转换为其它类型怎么办呢？
+很简单，增加一个普通的成员函数即可，例如，string 类使用 c_str() 函数转换为 C 风格的字符串，complex 类使用 real() 和 imag() 函数来获取复数的实部和虚部；
+
+## C/C++类型转换的本质
+在 C/C++ 中，不同的数据类型之间可以相互转换：
+无需用户指明如何转换的称为`自动类型转换（隐式类型转换）`，需要用户显式地指明如何转换的称为`强制类型转换（显式类型转换）`；
+
+`隐式类型转换`利用的是编译器**内置的转换规则**，或者用户**自定义的转换构造函数以及类型转换函数**（这些都可以认为是已知的转换规则）；
+
+`type *`是一个具体类型的指针，例如`int *`、`double *`、`Student *`等，它们都可以直接赋值给`void *`指针；
+而反过来是不行的，必须使用强制类型转换才能将`void *`转换为`type *`；
+
+例如，malloc() 分配内存后返回的就是一个`void *`指针，我们必须进行强制类型转换后才能赋值给指针变量；
+
+当隐式转换不能完成类型转换工作时，我们就必须使用`强制类型转换`了；
+强制类型转换的语法也很简单，只需要在表达式的前面增加新类型的名称，格式为：`(new_type)expression`
+
+**类型转换的本质**
+我们知道，数据是放在内存中的，变量（以及指针、引用）是给这块内存起的名字，有了变量就可以找到并使用这份数据；
+
+但问题是，该如何使用呢？
+
+诸如数字、文字、符号、图形、音频、视频等数据都是以二进制形式存储在内存中的，它们并没有本质上的区别，那么，00010000 该理解为数字 16 呢，还是图像中某个像素的颜色呢，还是要发出某个声音呢？如果没有特别指明，我们并不知道；
+
+也就是说，内存中的数据有多种解释方式，使用之前必须要确定；
+这种「确定数据的解释方式」的工作就是由`数据类型（Data Type）`来完成的；
+例如`int a;`表明，a 这份数据是整数，不能理解为像素、声音、视频等；
+
+顾名思义，数据类型用来说明数据的类型，确定了数据的解释方式，让计算机和程序员不会产生歧义；
+C/C++ 支持多种数据类型，包括内置类型（例如 int、double、bool 等）和自定义类型（结构体类型和类类型）；
+
+所谓数据类型转换，就是对数据所占用的二进制位做出重新解释；如果有必要，在重新解释的同时还会修改数据，改变它的二进制位；
+
+对于`隐式类型转换`，编译器可以根据**已知的转换规则**来决定是否需要修改数据的二进制位；
+而对于`强制类型转换`，由于没有对应的转换规则，所以能做的事情仅仅是**重新解释数据的二进制位**，但无法对数据的二进制位做出修正；
+这就是隐式类型转换和强制类型转换最根本的区别；
+
+这里说的修改数据并不是修改原有的数据，而是修改它的副本（先将原有数据拷贝到另外一个地方再修改）；
+
+修改数据的二进制位非常重要，它能把转换后的数据调整到正确的值，所以这种修改时常会发生，例如：
+1) 整数和浮点数在内存中的存储形式大相径庭，将浮点数 f 赋值给整数 i 时，不能原样拷贝 f 的二进制位，也不能截取部分二进制位，必须先将 f 的二进制位读取出来，以浮点数的形式呈现，然后直接截掉小数部分，把剩下的整数部分再转换成二进制形式，拷贝到 i 所在的内存中；
+
+2) short 一般占用两个字节，int 一般占用四个字节，将 short 类型的 s 赋值给 int 类型的 i 时，如果仅仅是将 s 的二进制位拷贝给 i，那么 i 最后的两个字节会原样保留，这样会导致赋值结束后 i 的值并不等于 s 的值，所以这样做是错误的；
+正确的做法是，先给 s 添加 16 个二进制位（两个字节）并全部置为 0，然后再拷贝给 i 所在的内存；
+
+3) 当存在多重继承时，如果把派生类指针 pd 赋值给基类指针 pb，就必须考虑基类子对象在派生类对象中的偏移，偏移不为 0 时就要调整 pd 的值，让它加上或减去偏移量，这样赋值后才能让 pb 恰好指向基类子对象；
+
+4) Complex 类型占用 16 个字节，double 类型占用 8 个字节，将 double 类型的数据赋值给 Complex 类型的变量（对象）时，必须调用转换构造函数，否则剩下的 8 个字节就不知道如何填充了；
+
+以上这些都是隐式类型转换，它对数据的调整都是有益的，能够让程序更加安全稳健地运行；
+
+隐式类型转换必须使用已知的转换规则，虽然灵活性受到了限制，但是由于能够对数据进行恰当地调整，所以更加安全（几乎没有风险）；
+强制类型转换能够在更大范围的数据类型之间进行转换，例如不同类型指针（引用）之间的转换、从 const 到非 const 的转换、从 int 到指针的转换等；这虽然增加了灵活性，但是由于不能恰当地调整数据，所以也充满了风险，程序员要小心使用；
+
+**为什么会有隐式类型转换和强制类型转换之分**？
+隐式类型转换和显式类型转换最根本的区别是：隐式类型转换除了会重新解释数据的二进制位，还会利用已知的转换规则对数据进行恰当地调整；而显式类型转换只能简单粗暴地重新解释二进制位，不能对数据进行任何调整；
+
+其实，能不能对数据进行调整是显而易见地事情，有转换规则就可以调整，没有转换规则就不能调整，当进行数据类型转换时，编译器明摆着是知道有没有转换规则的；
+站在这个角度考虑，强制类型转换的语法就是多此一举，编译器完全可以自行判断是否需要调整数据；
+例如从`int *`转换到`float *`，加不加强制类型转换的语法都不能对数据进行调整；
+
+C/C++ 之所以增加强制类型转换的语法，是为了提醒程序员这样做存在风险，一定要谨慎小心；说得通俗一点，你现在的类型转换存在风险，你自己一定要知道；
+
+**强制类型转换也不是万能的**
+类型转换只能发生在相关类型或者相近类型之间，两个毫不相干的类型不能相互转换，即使使用强制类型转换也不行；
+例如，两个没有继承关系的类不能相互转换，基类不能向派生类转换（向下转型），类类型不能向基本类型转换，指针和类类型之间不能相互转换；
+
+## 四种类型转换运算符
+上节讲到，隐式类型转换是安全的，显式类型转换是有风险的，C语言之所以增加强制类型转换的语法，就是为了强调风险，让程序员意识到自己在做什么；
+
+但是，这种强调风险的方式还是比较粗放，粒度比较大，它并没有表明存在什么风险，风险程度如何；
+
+为了使潜在风险更加细化，使问题追溯更加方便，使书写格式更加规范，C++ 对类型转换进行了分类，并新增了四个关键字来予以支持，它们分别是：
+
+关键字|说明
+:---:|:---:
+static_cast|用于`良性转换`，一般不会导致意外发生，风险很低；
+const_cast|用于 const 与非 const、volatile 与非 volatile 之间的转换；
+reinterpret_cast|`高度危险的转换`，这种转换仅仅是**对二进制位的重新解释**，不会借助已有的转换规则对数据进行调整，但是可以实现最灵活的 C++ 类型转换；
+dynamic_cast|借助 RTTI，用于类型安全的`向下转型（Downcasting）`；
+
+这四个关键字的语法格式都是一样的，具体为：`xxx_cast<newType>(data)`
+`newType`是要转换成的新类型，`data`是被转换的数据；
+
+比如：`score`为 double 类型的数据，将其转换为 int：`int n = static_cast<int>(score);`
+
+**static_cast 关键字**
+static_cast 只能用于良性转换，这样的转换风险较低，一般不会发生什么意外；
+
+例如原有的自动类型转换，short 转 int、int 转 double、const 转非 const、向上转型等；
+void 指针和具体类型指针之间的转换，例如`void *`转`int *`、`char *`转`void *`等；
+有转换构造函数或者类型转换函数的类与其它类型之间的转换，例如 double 转 Complex（调用转换构造函数）、Complex 转 double（调用类型转换函数）；
+
+需要注意的是，static_cast 不能用于无关类型之间的转换，因为这些转换都是有风险的，例如：
+两个具体类型指针之间的转换，例如`int *`转`double *`、`Student *`转`int *`等；
+int 和指针之间的转换，将一个具体的地址赋值给指针变量是非常危险的，因为该地址上的内存可能没有分配，也可能没有读写权限，恰好是可用内存反而是小概率事件；
+
+static_cast 也不能用来去掉表达式的 const 修饰和 volatile 修饰；换句话说，不能将 const/volatile 类型转换为非 const/volatile 类型；
+
+static_cast 是“静态转换”的意思，也就是在**编译期间转换**，转换失败的话会抛出一个编译错误；
+
+**const_cast 关键字**
+const_cast 比较好理解，它用来去掉表达式的 const 修饰或 volatile 修饰；
+换句话说，const_cast 就是用来将 const/volatile 类型转换为非 const/volatile 类型；
+
+**reinterpret_cast 关键字**
+reinterpret 是“重新解释”的意思，顾名思义，reinterpret_cast 这种转换仅仅是对二进制位的重新解释，不会借助已有的转换规则对数据进行调整，非常简单粗暴，所以风险很高；
+
+reinterpret_cast 可以认为是 static_cast 的一种补充，一些 static_cast 不能完成的转换，就可以用 reinterpret_cast 来完成，例如两个具体类型指针之间的转换、int 和指针之间的转换；
+
+**dynamic_cast 关键字**
+dynamic_cast 用于在类的继承层次之间进行类型转换，它既允许`向上转型（Upcasting）`，也允许`向下转型（Downcasting）`；
+
+向上转型是无条件的，不会进行任何检测，所以都能成功；向下转型的前提必须是安全的，要借助 RTTI 进行检测，所有只有一部分能成功；
+
+dynamic_cast 与 static_cast 是相对的，dynamic_cast 是“动态转换”的意思，static_cast 是“静态转换”的意思；
+dynamic_cast 会在程序运行期间借助 RTTI 进行类型转换，这就要求**基类必须包含`虚函数`**；
+static_cast 在编译期间完成类型转换，能够更加及时地发现错误；
+
+dynamic_cast 的语法格式为：`dynamic_cast<newType>(expression)`
+`newType`和`expression`必须同时是**指针类型**或者**引用类型**；
+换句话说，dynamic_cast 只能转换指针类型和引用类型，其它类型（int、double、数组、类、结构体等）都不行；
+
+对于指针，如果转换失败将返回 NULL；对于引用，如果转换失败将抛出std::bad_cast异常；
+
+1) **向上转型（Upcasting）**
+向上转型时，只要待转换的两个类型之间存在继承关系，并且基类包含了虚函数（这些信息在编译期间就能确定），就一定能转换成功；
+因为向上转型始终是安全的，所以 dynamic_cast 不会进行任何运行期间的检查，这个时候的 dynamic_cast 和 static_cast 就没有什么区别了；
+
+2) **向下转型（Downcasting）**
+向下转型是有风险的，dynamic_cast 会借助 RTTI 信息进行检测，确定安全的才能转换成功，否则就转换失败；
+那么，哪些向下转型是安全的呢，哪些又是不安全的呢？下面我们通过一个例子来演示：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+
+using namespace std;
+
+class A {
+public:
+    virtual void func() { printf("class A\n"); }
+    virtual ~A() {}
+};
+
+class B : public A {
+public:
+    virtual void func() override { printf("class B\n"); }
+};
+
+class C : public B {
+public:
+    virtual void func() override { printf("class C\n"); }
+};
+
+class D : public C {
+public:
+    virtual void func() override { printf("class D\n"); }
+};
+
+int main() {
+    A *pa = nullptr;
+    B *pb = nullptr;
+    C *pc = nullptr;
+    D *pd = nullptr;
+
+    pa = new A;
+    pb = dynamic_cast<B *>(pa); // 向下转型失败
+    if (pb == nullptr) {
+        printf("Downcasting failed: A * to B *\n");
+    } else {
+        printf("Downcasting successfully: A * to B *\n");
+    }
+
+    pd = dynamic_cast<D *>(pa); // 向下转型失败
+    if (pd == nullptr) {
+        printf("Downcasting failed: A * to D *\n");
+    } else {
+        printf("Downcasting successfully: A * to D *\n");
+    }
+
+    delete pa;
+    printf("----------------------------------\n");
+
+    pa = new C;
+    pb = dynamic_cast<B *>(pa); // 向下转型成功
+    if (pb == nullptr) {
+        printf("Downcasting failed: A * to B *\n");
+    } else {
+        printf("Downcasting successfully: A * to B *\n");
+    }
+
+    pd = dynamic_cast<D *>(pa); // 向下转型失败
+    if (pd == nullptr) {
+        printf("Downcasting failed: A * to D *\n");
+    } else {
+        printf("Downcasting successfully: A * to D *\n");
+    }
+
+    delete pa;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [16:37:27]
+$ g++ a.cpp
+a.cpp: In function ‘int main()’:
+a.cpp:29:8: warning: unused variable ‘pc’ [-Wunused-variable]
+     C *pc = nullptr;
+        ^~
+
+# root @ arch in ~/work on git:master x [16:37:56]
+$ ./a.out
+Downcasting failed: A * to B *
+Downcasting failed: A * to D *
+----------------------------------
+Downcasting successfully: A * to B *
+Downcasting failed: A * to D *
+</script></code></pre>
+
+
+当使用 dynamic_cast 对指针进行类型转换时，程序会先找到该指针指向的对象，再根据对象找到当前类（指针指向的对象所属的类）的类型信息；
+并从此节点开始沿着继承链向上遍历，如果找到了要转化的目标类型，那么说明这种转换是安全的，就能够转换成功；
+如果没有找到要转换的目标类型，那么说明这种转换存在较大的风险，就不能转换；
+
+表面上看起来 dynamic_cast 确实能够向下转型，本例也很好地证明了这一点；
+但是从本质上讲，dynamic_cast 还是只允许向上转型，因为它只会向上遍历继承链；
