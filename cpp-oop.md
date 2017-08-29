@@ -141,7 +141,7 @@ public:
     Student(string name = "", int age = 0, float score = 0.0f); // 普通构造函数
     Student(const Student &stu);    // 拷贝构造函数
 public:
-    void operator=(const Student &stu); // 重载赋值运算符
+    Student & operator=(const Student &stu); // 重载赋值运算符
     void print() const;
 private:
     string m_name;
@@ -158,11 +158,12 @@ Student::Student(const Student &stu) {
     printf("copy constructor\n");
 }
 
-void Student::operator=(const Student &stu) {
+Student & Student::operator=(const Student &stu) {
     m_name = stu.m_name;
     m_age = stu.m_age;
     m_score = stu.m_score;
     printf("operator=() called\n");
+    return *this;
 }
 
 void Student::print() const {
@@ -232,7 +233,7 @@ public:
     Student(string name = "", int age = 0, float score = 0.0f); // 普通构造函数
     Student(const Student &stu);    // 拷贝构造函数
 public:
-    void operator=(const Student &stu); // 重载赋值运算符
+    Student & operator=(const Student &stu); // 重载赋值运算符
     void print() const;
 private:
     string m_name;
@@ -249,11 +250,12 @@ Student::Student(const Student &stu) {
     printf("copy constructor\n");
 }
 
-void Student::operator=(const Student &stu) {
+Student & Student::operator=(const Student &stu) {
     m_name = stu.m_name;
     m_age = stu.m_age;
     m_score = stu.m_score;
     printf("operator=() called\n");
+    return *this;
 }
 
 void Student::print() const {
@@ -823,7 +825,7 @@ n = 43
 那么，如果我们想把当前类类型转换为其它类型怎么办呢？
 很简单，增加一个普通的成员函数即可，例如，string 类使用 c_str() 函数转换为 C 风格的字符串，complex 类使用 real() 和 imag() 函数来获取复数的实部和虚部；
 
-## C/C++类型转换的本质
+## 类型转换的本质
 在 C/C++ 中，不同的数据类型之间可以相互转换：
 无需用户指明如何转换的称为`自动类型转换（隐式类型转换）`，需要用户显式地指明如何转换的称为`强制类型转换（显式类型转换）`；
 
