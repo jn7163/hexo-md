@@ -645,16 +645,16 @@ $ ./a.out
 
 一般情况下，内建的内存管理运算符就够用了，只有在需要自己管理内存时才会重载；
 
-**以成员函数的形式重载 new 运算符**：`void * class_name::operator new(size_t size);`
-**以全局函数的形式重载 new 运算符**：`void * operator new(size_t size);`
+**重载 new 运算符**：`void * operator new(size_t size);`
+**重载 new[] 运算符**：`void * operator new[](size_t size);`
 
-两种重载形式的返回值相同，都是`void *`类型，并且都有一个参数，为`size_t`类型；
-在重载`new`或`new[]`时，无论是作为成员函数还是作为全局函数，它的第一个参数必须是`size_t`类型；`size_t`表示的是要分配空间的大小，对于`new[]`的重载函数而言，`size_t`则表示所需要分配的所有空间的总和；
+返回值是`void *`类型，并且都有一个参数，为`size_t`类型；
+重载`new`或`new[]`时，无论是作为成员函数还是作为全局函数，它的第一个参数必须是`size_t`类型；
+`size_t`表示的是要分配空间的大小，对于`new[]`的重载函数而言，`size_t`则表示所需要分配的所有空间的总和；
 
 当然，重载函数也可以有其他参数，但都必须有默认值，并且第一个参数的类型必须是`size_t`；
 
-同样的，delete 运算符也有两种重载形式；
-**以成员函数的形式重载 delete 运算符**：`void class_name::operator delete(void *ptr);`
-**以全局函数的形式重载 delete 运算符**：`void operator delete(void *ptr);`
+**重载 delete 运算符**：`void operator delete(void *ptr);`
+**重载 delete[] 运算符**：`void operator delete[](void *ptr);`
 
-两种重载形式的返回值都是`void`类型，并且都必须有一个`void`类型的指针作为参数，该指针指向需要释放的内存空间；
+两种重载形式的返回值都是`void`类型，并且都必须有一个`void *`类型的指针作为参数，该指针指向需要释放的内存空间；

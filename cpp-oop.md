@@ -324,6 +324,53 @@ Student stu = func();
 例如在 VS2010 下会调用一次拷贝构造函数；在 GCC、Xcode 下一次也不会调用；
 这是因为，现代编译器都支持返回值优化技术，会尽量避免拷贝对象，以提高程序运行效率；
 
+不过我们可以在 g++ 中使用参数`-fno-elide-constructors`，不启用返回值优化，我们来看这个例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+class Test {
+public:
+    Test() { cout << "constructor" << endl; }
+    Test(const Test &) { cout << "copy constructor" << endl; }
+    ~Test() { cout << "destructor" << endl; }
+};
+
+Test func() {
+    return Test();
+}
+
+int main() {
+    Test t = func();
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:45:34]
+$ g++ a.cpp -fno-elide-constructors
+
+# root @ arch in ~/work on git:master x [13:45:50]
+$ ./a.out
+constructor
+copy constructor
+destructor
+copy constructor
+destructor
+destructor
+</script></code></pre>
+
+
+我们来仔细分析一下运行的结果：
+首先从 main() 函数开始运行，遇到第一行语句：`Test t = func();`，转而进入 func() 函数；
+遇到语句：`return Test();`，创建一个类 Test 的匿名对象，该匿名对象的生存范围在 func() 内；
+为了防止该匿名对象被销毁，编译器创建一个它的副本，这个创建副本的过程就会调用一次拷贝构造函数；
+当 func() 函数返回后，原来的匿名对象自动调用析构函数进行销毁；
+然后再将它的副本拷贝给 main() 函数中的 t，这又调用一次拷贝构造函数，然后副本的使命完成，调用析构函数，最后 main() 函数返回，t 调用析构函数；
+
+> 
+如此一个简单的函数调用，居然调用了两次拷贝构造函数，如果类的成员比较多的话，那么开销是非常大的；
+不过这个问题在 C++11 中得到了改善，C++11 引入了移动构造函数的概念，避免了这种无意义的内存拷贝操作；
+
 ## 深拷贝和浅拷贝
 对于基本类型的数据以及简单的对象，它们之间的拷贝非常简单，就是按位复制内存；
 

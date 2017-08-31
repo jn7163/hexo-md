@@ -278,6 +278,15 @@ C++ 语言本身以及标准库中的函数抛出的异常，都是`exception`�
 
 这样只会将异常类型和 catch 所能处理的类型进行匹配，不会传递异常数据了；
 
+如果想匹配任何类型的异常，那么可以这样写：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">try {
+    // 可能抛出异常的语句
+} catch (...) {
+    // 处理异常的语句
+}
+</script></code></pre>
+
+
 **多级 catch**
 前面的例子中，一个 try 对应一个 catch，这只是最简单的形式；其实，一个 try 后面可以跟多个 catch：
 <pre><code class="language-cpp line-numbers"><script type="text/plain">try {
@@ -378,6 +387,38 @@ C++ 异常处理的流程，具体为：`抛出（Throw）` --> `检测（Try）
 在 C++ 中，我们使用 throw 关键字来显式地抛出异常，它的用法为：`throw exceptionData;`
 `exceptionData`是异常数据，它可以包含任意的信息，完全有程序员决定；
 `exceptionData`可以是 int、float、bool 等基本类型，也可以是指针、数组、字符串、结构体、类等聚合类型；
+
+**向上层抛出异常数据**
+如果当前`catch`捕获到了异常，但是并不想处理，可以将其继续往外层抛出，被外层的`catch`再次捕获，让他们处理：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+void func() {
+    try {
+        throw "exception data";
+    } catch (...) {
+        throw;  // 不作处理，直接往上层抛出
+    }
+}
+
+int main() {
+    try {
+        func();
+    } catch (const char * &e) {
+        cout << e << endl;
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:33:14]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [13:33:38]
+$ ./a.out
+exception data
+</script></code></pre>
+
 
 **throw 用作异常规范**
 > 

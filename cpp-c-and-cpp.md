@@ -169,9 +169,7 @@ C++ 开发人员想了一个好办法，保留原来的库和头文件，它们�
 很显然，第三种方式最方便，但是这样也就违背了C++引入命名空间的初衷；
 因为C++的标准库都在命名空间`std`中，C++的标准库是非常庞大的，极易导致命名冲突；
 
-**推荐使用`std::cout`或`using std::cout`形式，不推荐使用`using namespace std`**
-
-不过为了方便，我还是忍不住选择了第三种，并且尽量不与标准库的命名产生冲突；
+**推荐使用`std::cout`或`using std::cout;`形式，不推荐使用`using namespace std;`**
 
 ## C++标准输入输出
 在C语言中，我们通常使用`scanf/printf`系列函数进行数据的输入输出操作；
@@ -229,7 +227,7 @@ class Student {
         Student(string name = "", int age = 0, float score = 0.0f) : m_name(name), m_age(age), m_score(score) {}
     public:
         friend istream & operator>>(istream &in, Student &stu);
-        friend ostream & operator<<(ostream &out, Student &stu);
+        friend ostream & operator<<(ostream &out, const Student &stu);
     private:
         string m_name;
         int m_age;
@@ -241,7 +239,7 @@ istream & operator>>(istream &in, Student &stu) {
     return in;
 }
 
-ostream & operator<<(ostream &out, Student &stu) {
+ostream & operator<<(ostream &out, const Student &stu) {
     out << "name: " << stu.m_name << ", age: " << stu.m_age << ", score: " << stu.m_score << endl;
     return out;
 }
