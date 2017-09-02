@@ -13,7 +13,7 @@ C++11 新特性，auto/decltype自动类型推导、lambda表达式、移动语�
 
 <!-- more -->
 
-## auto/decltype自动类型推导
+## 自动类型推导
 ### auto
 auto 这个关键字 C++ 原先就有，用来指定存储器；但是这明显是多余的，没有必要；
 因为很少有人去用这个东西，所以在 C++11 中就把原有的 auto 功能给废弃掉了，而变成了现在的类型推导关键字；
@@ -665,7 +665,7 @@ public:
 </script></code></pre>
 
 
-## 统一的初始化语法
+## 初始化语法
 C++ 之前的初始化语法很乱，有四种初始化方式，而且每种之前甚至不能相互转换；让人有种剪不断，理还乱的感觉；
 
 1) 小括号初始化方法：`int a = int(5);`
@@ -755,3 +755,805 @@ C++ 新的标准中提倡使用匿名命名空间，而不推荐使用 static，
 
 比如：带 static 的类成员为类共享，而变量前的 static 又表示内部链接、存储范围；
 另外，static 不能修饰 class 定义，那样就可以将类定义放在匿名命名空间中达到同样的效果；
+
+## 智能指针
+**什么是智能指针**？
+智能指针是一个`RAII（Resource Acquisition is initialization）`类模型，用来动态的分配内存；它提供所有普通指针提供的接口，却很少发生异常；
+在构造中，它分配内存，当离开作用域时，它会自动释放已分配的内存；这样的话，程序员就从手动管理动态内存的繁杂任务中解放出来了；
+
+**设计思想**
+将基本类型指针封装为类对象指针（这个类肯定是个模板，以适应不同基本类型的需求），并在析构函数里编写 delete 语句删除指针指向的内存空间；
+
+### unique_ptr
+头文件：`memory`
+unique_ptr 遵循着**独占语义**：在任何时间点，资源只能唯一地被一个 unique_ptr 占有；
+当 unique_ptr 离开作用域时，所包含的资源被释放；如果资源被其它资源重写了，之前拥有的资源将被释放；所以它保证了他所关联的资源总是能被释放；
+
+**创建**
+**`new`**形式：`unique_ptr<int> uptr(new int);`
+**`new[]`**形式：`unique_ptr<int[]> uptr(new int[5]);`
+
+`unique_ptr`是具有以下特性的智能指针：
+- 通过指针保留了唯一的对象的所有权，并且 unique_ptr 离开作用域时，会析构指向的对象；
+- unique_ptr 不能复制或者复制赋值，两个 unique_ptr 实例不能管理同一个对象；
+- 一个非 const 的 unique_ptr 可以将所管理对象的所有权转移到另一个 unique_ptr；
+- 一个 const unique_ptr 不能转让，而是将所管理对象的生命周期限制在指针所创建的作用域之中；
+
+
+**成员函数**
+构造函数：构造新的 unique_ptr
+析构函数：析构所管理的对象
+`operator=`：为 unique_ptr 赋值
+`release`：返回一个指向被管理对象的指针，并释放所有权
+`reset`：替换所管理的对象
+`swap`：交换所管理的对象
+`get`：返回指向被管理对象的指针
+`get_deleter`：返回删除器，用于被管理对象的析构
+`operator bool`：检查是否有关联的被管理对象
+`operator*`、`operator->`：解引用操作
+`operator[]`：提供对所管理数组的按索引访问
+
+**非成员函数**
+`make_unique`：创建管理对象的唯一指针（C++14）
+`swap(unique_ptr)`：特化 swap 算法
+`operator==`、`operator!=`、`operator<`、`operator<=`、`operator>`、`operator>=`：比较操作
+
+例1：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <memory>
+
+using namespace std;
+
+class Foo {
+public:
+    Foo() { cout << "Foo::Foo()" << endl; }
+    ~Foo() { cout << "Foo::~Foo()" << endl; }
+    void bar() { cout << "Foo::bar()" << endl; }
+};
+
+void func(const Foo &) {
+    cout << "func(const Foo &)" << endl;
+}
+
+int main() {
+    // unique_ptr<Foo> p1(new Foo());    // C++11
+    unique_ptr<Foo> p1 = make_unique<Foo>(); // C++14
+
+    if (p1) {
+        cout << "p1_address: " << p1.get() << endl;
+        p1 -> bar();
+    }
+
+    {
+        unique_ptr<Foo> p2(move(p1));
+
+        if (p1) {
+            cout << "move fail" << endl;
+        } else if (p2) {
+            cout << "move success" << endl;
+            cout << "p2_address: " << p2.get() << endl;
+            p2 -> bar();
+            func(*p2);
+        }
+
+        p1 = move(p2);
+    }
+
+    if (p1) p1 -> bar();
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:03:07]
+$ g++ -v
+Using built-in specs.
+COLLECT_GCC=g++
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/lto-wrapper
+Target: x86_64-pc-linux-gnu
+Configured with: /build/gcc/src/gcc/configure --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugs.archlinux.org/ --enable-languages=c,c++,ada,fortran,go,lto,objc,obj-c++ --enable-shared --enable-threads=posix --enable-libmpx --with-system-zlib --with-isl --enable-__cxa_atexit --disable-libunwind-exceptions --enable-clocale=gnu --disable-libstdcxx-pch --disable-libssp --enable-gnu-unique-object --enable-linker-build-id --enable-lto --enable-plugin --enable-install-libiberty --with-linker-hash-style=gnu --enable-gnu-indirect-function --disable-multilib --disable-werror --enable-checking=release --enable-default-pie --enable-default-ssp
+Thread model: posix
+gcc version 7.1.1 20170630 (GCC)
+
+# root @ arch in ~/work on git:master x [11:03:41]
+$ alias g++
+g++='g++ -std=c++14 -Wall -Wextra'
+
+# root @ arch in ~/work on git:master x [11:03:49]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [11:03:54]
+$ ./a.out
+Foo::Foo()
+p1_address: 0x2264f90c20
+Foo::bar()
+move success
+p2_address: 0x2264f90c20
+Foo::bar()
+func(const Foo &)
+Foo::bar()
+Foo::~Foo()
+</script></code></pre>
+
+
+例2：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <memory>
+
+using namespace std;
+
+int main() {
+    unique_ptr<int[]> p = make_unique<int[]>(5); // 拥有5个元素的int数组
+
+    for (int i=0; i<5; i++) {
+        p[i] = i + 1;
+    }
+
+    for (int i=0; i<5; i++) {
+        cout << p[i] << ", ";
+    }
+
+    cout << "\b\b " << endl;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:12:51] C:1
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [11:12:52]
+$ ./a.out
+1, 2, 3, 4, 5
+</script></code></pre>
+
+
+### shared_ptr
+头文件：`memory`
+`shared_ptr`是通过指针保持某个对象的**共享拥有权**的智能指针；
+若干个 shared_ptr 对象可以拥有同一个对象；最后一个指向该对象的 shared_ptr 被销毁或重置时，该对象被销毁；
+销毁该对象时使用的是 delete 表达式或者是在构造 shared_ptr 时传入的自定义删除器（deleter）；
+
+shared_ptr 也可以不拥有对象，称作空（empty）；
+shared_ptr 满足 CopyConstructible 和 CopyAssignable 的要求；
+
+**成员函数**
+构造函数：构造新的 shared_ptr
+析构函数：如果没有更多 shared_ptr 指向持有的对象，则析构对象
+`operator=`：为 shared_ptr 赋值
+`reset`：替换所管理的对象
+`swap`：交换所管理的对象
+`get`：返回指向被管理对象的指针
+`operator*`、`operator->`：对所存储的指针进行解引用
+`use_count`：返回 shared_ptr 所指对象的引用计数
+`unique`：检查所管理对象是否仅由当前 shared_ptr 的实例管理
+`operator bool`：检查是否有关联的管理对象
+`owner_before`：提供基于拥有者的共享指针排序
+
+**非成员函数**
+`make_shared`：从参数创建并返回 shared_ptr，便于类型推断
+`get_deleter`：返回指定类型的删除器，如果拥有的话
+`operator==`、`operator!=`、`operator<`、`operator<=`、`operator>`、`operator>=`：比较操作
+`operator<<`：将所管理指针的值输出到输出流中
+`swap(shared_ptr)`：特化 swap 算法
+
+**实现说明**
+在典型的实现中，shared_ptr 只保存两个指针：
+- 指向被管理对象的指针
+- 指向`控制块（control block）`的指针
+
+
+控制块是一个动态分配的对象，其中包含：
+- 指向被管理对象的指针或被管理对象本身
+- 删除器
+- 分配器（allocator）
+- 拥有被管理对象的 shared_ptr 的数量
+- 引用被管理对象的 weak_ptr 的数量
+
+
+通过 make_shared 和 allocate_shared 创建 shared_ptr 时，控制块将被管理对象本身作为其数据成员；而通过构造函数创建 shared_ptr 时则保存指针；
+
+shared_ptr 持有的指针是通过 get() 返回的；而控制块所持有的指针/对象则是最终引用计数归零时会被删除的那个；两者并不一定相等；
+
+shared_ptr 的析构函数会将控制块中的 shared_ptr 计数器减一，如果减至零，控制块就会调用被管理对象的析构函数；但控制块本身直到 weak_ptr 计数器同样归零时才会释放；
+
+例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <memory>
+
+using namespace std;
+
+class Foo {
+public:
+    Foo() { cout << "constructor" << endl; }
+    Foo(int) { cout << "Foo::Foo(int)" << endl; }
+    Foo(int, float) { cout << "Foo::Foo(int, float)" << endl; }
+    ~Foo() { cout << "destructor" << endl; }
+};
+
+int main() {
+    shared_ptr<Foo> p(new Foo[5], [](Foo *p){delete[] p;}); // 自定义删除器(数组)
+    p.reset();  // 释放资源
+
+    cout << "-------------------------" << endl;
+
+    p = make_shared<Foo>(/*(完美转发)Foo构造函数参数列表*/);    // 调用 Foo::Foo()
+    p.reset();
+
+    p = make_shared<Foo>(100);  // 调用 Foo::Foo(int)
+    p.reset();
+
+    p = make_shared<Foo>(100, 100.12f);  // 调用 Foo::Foo(int, float)
+    p.reset();
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:55:58]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [13:56:00]
+$ ./a.out
+constructor
+constructor
+constructor
+constructor
+constructor
+destructor
+destructor
+destructor
+destructor
+destructor
+-------------------------
+constructor
+destructor
+Foo::Foo(int)
+destructor
+Foo::Foo(int, float)
+destructor
+</script></code></pre>
+
+
+### weak_ptr
+头文件：`memory`
+`weak_ptr`是一种智能指针，它对被 shared_ptr 管理的对象存在非拥有性（“弱”）引用；在访问所引用的对象前必须先转换为 shared_ptr；
+
+weak_ptr 用来表达临时所有权的概念：
+当某个对象只有存在时才需要被访问，而且随时可能被他人删除时，可以使用 weak_ptr 来跟踪该对象；
+需要获得临时所有权时，则将其转换为 shared_ptr，此时如果原来的 shared_ptr 被销毁，则该对象的生命期将被延长至这个临时的 shared_ptr 同样被销毁为止；
+
+此外，weak_ptr 还可以用来避免 shared_ptr 的循环引用；
+
+**成员函数**
+构造函数：构造新的weak_ptr
+析构函数：析构weak_ptr
+`operator=`：为weak_ptr赋值
+`reset`：释放被管理对象的所有权
+`swap`：交换所管理的对象
+`use_count`：返回shared_ptr所管理对象的引用计数
+`expired`：检查被引用的对象是否已删除
+`lock`：创建管理被引用的对象的shared_ptr
+`owner_before`：提供基于拥有者的弱指针排序
+
+**非成员函数**
+`swap(weak_ptr)`：特化 swap 算法
+
+将一个 weak_ptr 赋给另一个 weak_ptr 会增加`弱引用计数(weak reference count)`；
+
+从 weak_ptr 调用 lock() 可以得到 shared_ptr；
+
+当 shared_ptr 离开作用域时，其内的资源释放了，这时候指向该 shared_ptr 的 weak_ptr 将会`过期（expired）`；
+
+判断 weak_ptr 是否指向有效资源，有两种方法：
+- 调用`use_count`去获取引用计数，该方法只返回`强引用计数`，并不返回`弱引用计数`；
+- 调用`expired`方法；比调用`use_count`方法速度更快；
+
+
+例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <memory>
+
+using namespace std;
+
+weak_ptr<int> wp;
+
+int main() {
+    auto func = [] () {
+        if (!wp.expired()) {
+            auto sp = wp.lock();
+            cout << "*sp = " << *sp << endl;
+        } else {
+            cout << "wp is expired" << endl;
+        }
+    };
+
+    {
+        auto sp = make_shared<int>(100);
+        wp = sp;
+        func();
+    }
+    func();
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:35:59]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [14:36:23]
+$ ./a.out
+*sp = 100
+wp is expired
+</script></code></pre>
+
+
+## 右值引用
+**左值、右值**
+在 C++11 中所有的值必属于`左值`、`右值`两者之一，`右值`又可以细分为`纯右值`、`将亡值`；
+在 C++11 中**可以取地址的、有名字的**就是`左值`；反之，**不能取地址的、没有名字的**就是`右值（将亡值或纯右值）`；
+
+**右值、将亡值**
+在理解 C++11 的右值前，先看看 C++98 中右值的概念：
+C++98 中右值是纯右值，**纯右值**指的是`临时变量值`、`不跟对象关联的字面量值`；临时变量指的是`非引用返回的函数返回值`、`表达式`等；
+
+C++11 对 C++98 中的右值进行了扩充；在 C++11 中右值又分为`纯右值（prvalue，Pure Rvalue）`和`将亡值（xvalue，eXpiring Value）`：
+其中**纯右值的概念等同于我们在 C++98 标准中右值的概念**，指的是`临时变量`和`不跟对象关联的字面量值`；
+**将亡值**则是 C++11 新增的跟`右值引用`相关的表达式，这样表达式通常是**将要被移动的对象（移为他用）**；
+
+**左值引用、右值引用**
+`左值引用`就是`对一个左值进行引用的类型`；`右值引用`就是`对一个右值进行引用的类型`；
+事实上，由于右值通常不具有名字，我们也只能通过引用的方式找到它的存在；
+
+**右值引用和左值引用都是属于引用类型**；无论是声明一个左值引用还是右值引用，都**必须立即进行初始化**；
+
+左值引用通常也不能绑定到右值，但`常量左值引用`是个“万能”的引用类型；它可以接受`非常量左值`、`常量左值`、`右值`对其进行初始化；
+不过`常量左值`所引用的右值在它的“余生”中只能是只读的；相对地，**非常量左值只能接受非常量左值对其进行初始化**；
+
+右值引用通常不能绑定到任何的左值，要想绑定一个左值到右值引用，通常需要`std::move()`将左值强制转换为右值；
+
+
+探究一下右值引用：
+例一：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+int func() {
+    int n = 100;
+    cout << "n = " << n << ", &n = " << &n << endl;
+    return n;
+}
+
+int main() {
+//  int &lr = func();   // 编译错误，左值引用不能绑定到右值
+    const int &clr = func(); // 常量左值引用是所谓的"万能引用类型"
+    cout << "clr = " << clr << ", &clr = " << &clr << endl;
+    const_cast<int &>(clr) = 200;    // 去掉 const 修饰
+    cout << "clr = " << clr << ", &clr = " << &clr << endl;
+    cout << "--------------------------" << endl;
+
+    int &&rr = func();   // 右值引用
+    cout << "rr = " << rr << ", &rr = " << &rr << endl;
+    rr = 200;
+    cout << "rr = " << rr << ", &rr = " << &rr << endl;
+    cout << "--------------------------" << endl;
+
+    const int &&crr = func();   // 常量右值引用
+    cout << "crr = " << crr << ", &crr = " << &crr << endl;
+    const_cast<int &>(crr) = 200;
+    cout << "crr = " << crr << ", &crr = " << &crr << endl;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:42:40]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [15:42:53]
+$ ./a.out
+n = 100, &n = 0x7ffdebc0b294
+clr = 100, &clr = 0x7ffdebc0b2b4
+clr = 200, &clr = 0x7ffdebc0b2b4
+--------------------------
+n = 100, &n = 0x7ffdebc0b294
+rr = 100, &rr = 0x7ffdebc0b2b8
+rr = 200, &rr = 0x7ffdebc0b2b8
+--------------------------
+n = 100, &n = 0x7ffdebc0b294
+crr = 100, &crr = 0x7ffdebc0b2bc
+crr = 200, &crr = 0x7ffdebc0b2bc
+</script></code></pre>
+
+
+例二：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+int g_num = 10;
+
+class Foo {
+public:
+    Foo() : lr(g_num), rr(move(g_num)) {}
+private:
+    int &lr;
+    int &&rr;
+};
+
+int main() {
+    cout << sizeof(Foo) << endl;
+    Foo foo;
+    *(int *)*(long *)&foo = 100;
+    cout << g_num << endl;
+    *(int *)*((long *)&foo + 1) = 200;
+    cout << g_num << endl;
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:59:16]
+$ g++ b.cpp
+
+# root @ arch in ~/work on git:master x [15:59:19]
+$ ./a.out
+16
+100
+200
+</script></code></pre>
+
+
+如果你了解传统引用（左值引用）的实现原理，那么相信聪明的你，一定能够看出这其中的奥妙：
+不管是左值引用还是右值引用，本质都是由指针实现的，非常量左值引用之所以不能绑定诸如函数返回值（非引用）、表达式结果、字面量，是因为无法使用`&`取到它们的地址，因为它们要么存储在寄存器中（函数返回值、表达式结果），要么被硬编码到代码区（字面量）；
+
+而对于常量左值引用，编译器会创建一个临时变量，并将上述的值拷贝到该临时变量，因为不需要考虑引用与原数据之前的同步问题，所以创建一个临时变量反而增加了引用的灵活度和通用性；
+
+而右值引用，本质上还是与左值引用一样，如果要绑定的数据不是临时数据（如例二中的move()语句），那么就等同于左值引用，并不会创建一个临时变量；如果要绑定的数据是临时数据，那么采取的机制和常量左值引用一样；
+
+## 移动语义
+C++11 新标准重新定义了 lvalue 和 rvalue ，并允许函数依照这两种不同的类型进行重载；
+通过对于`右值（rvalue）`的重新定义，语言实现了`移动语义（move semantic）`和`完美转发（perfect forwarding）`；
+通过这种方法，C++ 实现了在保留原有的语法并不改动已存在的代码的基础上提升代码性能的目的；
+
+C++11 引入右值引用的概念，就是为了实现移动语义和完美转发；
+
+对于类 Foo 来说：
+`CopyConstructible`：拷贝构造函数，`Foo(const Foo &foo);`
+`CopyAssignable`：拷贝赋值运算符，`Foo & operator=(const Foo &foo);`
+`MoveConstructible`：移动构造函数，`Foo(Foo &&foo);`
+`MoveAssignable`：移动赋值运算符，`Foo & operator=(Foo &&foo);`
+
+如果一个类没有显示定义移动构造函数、移动赋值运算符，编译器并不会自动生成；而是使用拷贝构造函数、拷贝赋值运算符；
+
+移动语义的使用场景：
+我们先来看一下Copy语义的弊端：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+
+using namespace std;
+
+class Array {
+public:
+    explicit Array(int len = 0); // 普通构造函数
+    Array(const Array &arr);    // 拷贝构造函数
+    ~Array();   //  析构函数
+public:
+    int length() const { return m_len; }
+    Array & operator=(const Array &arr);    // 拷贝赋值运算符
+    int & operator[](int i) const { return m_ptr[i]; }   // 下标运算符
+    friend ostream & operator<<(ostream &out, const Array &arr);    // 流输出符
+private:
+    int *m_ptr;
+    int m_len;
+};
+
+Array::Array(int len) : m_len(len) {
+    if (len == 0) {
+        m_ptr = nullptr;
+    } else {
+        m_ptr = (int *)calloc(m_len, sizeof(int));
+    }
+    cout << "constructor" << endl;
+}
+
+Array::Array(const Array &arr) : m_len(arr.m_len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+    memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+    cout << "copy constructor" << endl;
+}
+
+Array::~Array() {
+    free(m_ptr);
+    cout << "destructor" << endl;
+}
+
+Array & Array::operator=(const Array &arr) {
+    if (this != &arr) {
+        m_len = arr.m_len;
+        m_ptr = (int *)calloc(m_len, sizeof(int));
+        memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+    }
+    cout << "copy assignment" << endl;
+    return *this;
+}
+
+ostream & operator<<(ostream &out, const Array &arr) {
+    if (arr.m_len == 0) {
+        out << "Array is empty" << endl;
+    } else {
+        out << "Array[" << arr.m_len << "] = { ";
+        for (int i=0; i<arr.m_len; i++) {
+            out << arr.m_ptr[i] << ", ";
+        }
+        out << "\b\b }" << endl;
+    }
+    return out;
+}
+
+Array get_array(int len) {
+    return Array(len);
+}
+
+int main() {
+    Array arr = get_array(10000);
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:27:26]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [17:27:48]
+$ ./a.out
+constructor
+destructor
+
+# root @ arch in ~/work on git:master x [17:27:49]
+$ g++ a.cpp -fno-elide-constructors
+
+# root @ arch in ~/work on git:master x [17:27:52]
+$ ./a.out
+constructor
+copy constructor
+destructor
+copy constructor
+destructor
+destructor
+</script></code></pre>
+
+
+先不管第一次编译出来的 a.out 的运行结果，我们看第二次的运行结果；
+C/C++ 程序都是从 main 函数开始的，所以，当遇到语句`Array arr = get_array(10000);`时：
+先执行赋值符号右边的语句，即调用函数 get_array，因为函数 get_array 直接 return 一个匿名的 Array 实例，为了防止离开函数 get_array 时自动调用 Array 的析构函数，编译器会创建一个临时变量，将 get_array 中的匿名对象拷贝过去（深拷贝）；
+而在函数 get_array 返回时，函数内的匿名对象将会被析构；然后再次将拷贝出来的临时变量赋值给 main 函数中的 arr，这又是一次深拷贝；拷贝结束后，这个临时变量的使命就完成了，于是调用析构函数，终结了自己的生命；最后 main 函数返回，arr 被析构；
+
+注意到没有，使用Copy语义的情况下，函数 get_array 将会产生两次深拷贝的操作，这个开销是不容小觑的；
+
+那为什么第一次编译的结果却只调用了构造函数和析构函数呢，并没有所谓的临时变量的产生过程？
+那是因为现代编译器都采用了返回值优化技术，尽量避免了这种无意义的拷贝操作；
+
+那既然有了返回值优化技术，为什么还需要Move语义？
+因为仅仅依靠返回值优化技术不一定每次都能将该问题处理的很好，我们必须在语言层次上进行优化；
+
+**使用了移动语义的Array**
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+
+using namespace std;
+
+class Array {
+public:
+    explicit Array(int len = 0); // 普通构造函数
+    Array(const Array &arr);    // 拷贝构造函数
+    Array(Array &&arr);     // 移动构造函数
+    ~Array();   //  析构函数
+public:
+    int length() const { return m_len; }
+    Array & operator=(const Array &arr);    // 拷贝赋值运算符
+    Array & operator=(Array &&arr);     // 移动赋值运算符
+    int & operator[](int i) const { return m_ptr[i]; }   // 下标运算符
+    friend ostream & operator<<(ostream &out, const Array &arr);    // 流输出符
+private:
+    int *m_ptr;
+    int m_len;
+};
+
+Array::Array(int len) : m_len(len) {
+    if (len == 0) {
+        m_ptr = nullptr;
+    } else {
+        m_ptr = (int *)calloc(m_len, sizeof(int));
+    }
+    cout << "constructor" << endl;
+}
+
+Array::Array(const Array &arr) : m_len(arr.m_len) {
+    m_ptr = (int *)calloc(m_len, sizeof(int));
+    memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+    cout << "copy constructor" << endl;
+}
+
+Array::Array(Array &&arr) : m_ptr(arr.m_ptr), m_len(arr.m_len) {
+    arr.m_ptr = nullptr;
+    cout << "move constructor" << endl;
+}
+
+Array::~Array() {
+    if (m_ptr != nullptr) {
+        free(m_ptr);
+    }
+    cout << "destructor" << endl;
+}
+
+Array & Array::operator=(const Array &arr) {
+    if (this != &arr) {
+        m_len = arr.m_len;
+        m_ptr = (int *)calloc(m_len, sizeof(int));
+        memcpy(m_ptr, arr.m_ptr, m_len * sizeof(int));
+    }
+    cout << "copy assignment" << endl;
+    return *this;
+}
+
+Array & Array::operator=(Array &&arr) {
+    if (this != &arr) {
+        m_ptr = arr.m_ptr;
+        m_len = arr.m_len;
+        arr.m_ptr = nullptr;
+    }
+    cout << "move assignment" << endl;
+    return *this;
+}
+
+ostream & operator<<(ostream &out, const Array &arr) {
+    if (arr.m_len == 0) {
+        out << "Array is empty" << endl;
+    } else {
+        out << "Array[" << arr.m_len << "] = { ";
+        for (int i=0; i<arr.m_len; i++) {
+            out << arr.m_ptr[i] << ", ";
+        }
+        out << "\b\b }" << endl;
+    }
+    return out;
+}
+
+Array get_array(int len) {
+    return Array(len);
+}
+
+int main() {
+    Array arr1 = get_array(10000);
+    cout << "--------------------" << endl;
+    Array arr2;
+    arr2 = get_array(20000);
+    cout << "--------------------" << endl;
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:58:43]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [17:59:02]
+$ ./a.out
+constructor
+--------------------
+constructor
+constructor
+move assignment
+destructor
+--------------------
+destructor
+destructor
+
+# root @ arch in ~/work on git:master x [17:59:04]
+$ g++ a.cpp -fno-elide-constructors
+
+# root @ arch in ~/work on git:master x [17:59:07]
+$ ./a.out
+constructor
+move constructor
+destructor
+move constructor
+destructor
+--------------------
+constructor
+constructor
+move constructor
+destructor
+move assignment
+destructor
+--------------------
+destructor
+destructor
+</script></code></pre>
+
+
+因为函数 get_array 的返回值是一个右值，所以匹配到的构造函数就是`Array::Array(Array &&arr)`，也就是所谓的移动构造函数
+而对于 arr2 也是一样的道理，赋值操作的参数是一个右值（get_array 的返回值），匹配到的赋值函数就是`Array & Array::operator=(Array &&arr)`，也就是所谓的移动赋值运算符；
+
+如果你仔细观察这两个Move语义的成员函数，可以发现，这其实就是我们前面讲的"浅拷贝"，而Copy语义的成员函数就是"深拷贝"；
+
+注意一个细节，arr.m_ptr 需要指向 nullptr，如果不这样做，可能导致拷贝出来的成员变量 m_ptr 变成悬置指针，因为被自动 free 掉了；
+
+> 
+事实上左值和右值与类型是没有关系的，区别左值和右值的唯一方法就是其定义，即能否取到地址；也就是说，但凡有名字的“右值”，其实都是左值；使用`std::move()`可以将左值转换成右值；
+
+
+## 完美转发
+`完美转发（perfect forwarding）`问题是指函数模板在向其他函数传递参数时该如何保留该参数的左右值属性的问题；
+
+也就是说函数模板在向其他函数传递自身形参时，如果相应实参是左值，它就应该被转发为左值；同样如果相应实参是右值，它就应该被转发为右值；
+这样做是为了保留在其他函数针对转发而来的参数的左右值属性进行不同处理（比如参数为左值时实施拷贝语义；参数为右值时实施移动语义）的可能性；
+
+如果将自身参数不分左右值一律转发为左值，其他函数就只能将转发而来的参数视为左值，从而失去针对该参数的左右值属性进行不同处理的可能性；
+
+使用完美转发的典型场景：`make_shared<T>(param...)`、`make_unique<T>(param...)`，就必须使用完美转发；
+
+例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+template <typename T>
+void func(T &) {
+    cout << "lvalue refer" << endl;
+}
+
+template <typename T>
+void func(T &&) {
+    cout << "rvalue refer" << endl;
+}
+
+template <typename T>
+void func(const T &) {
+    cout << "const lvalue refer" << endl;
+}
+
+template <typename T>
+void func(const T &&) {
+    cout << "const rvalue refer" << endl;
+}
+
+template <typename T>
+void perfect_forward(T &&t) {
+    func(forward<T>(t));
+}
+
+int main() {
+    int n = 10;
+    perfect_forward(n);         // lvalue refer
+    perfect_forward(move(n));   // rvalue refer
+    perfect_forward(10);        // rvalue refer
+
+    const int &clr = n;
+    perfect_forward(clr);       // const lvalue refer
+    perfect_forward(move(clr)); // const rvalue refer
+    const int &&crr = 10;
+    perfect_forward(crr);       // const lvalue refer
+    perfect_forward(move(crr)); // const rvalue refer
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:06:39]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [20:06:51]
+$ ./a.out
+lvalue refer
+rvalue refer
+rvalue refer
+const lvalue refer
+const rvalue refer
+const lvalue refer
+const rvalue refer
+</script></code></pre>
