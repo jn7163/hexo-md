@@ -1106,7 +1106,7 @@ C++11 对 C++98 中的右值进行了扩充；在 C++11 中右值又分为`纯�
 `左值引用`就是`对一个左值进行引用的类型`；`右值引用`就是`对一个右值进行引用的类型`；
 事实上，由于右值通常不具有名字，我们也只能通过引用的方式找到它的存在；
 
-**右值引用和左值引用都是属于引用类型**；无论是声明一个左值引用还是右值引用，都**必须立即进行初始化**；
+**左值引用和右值引用都是属于引用类型**；无论是声明一个左值引用还是右值引用，都**必须立即进行初始化**；
 
 左值引用通常也不能绑定到右值，但`常量左值引用`是个“万能”的引用类型；它可以接受`非常量左值`、`常量左值`、`右值`对其进行初始化；
 不过`常量左值`所引用的右值在它的“余生”中只能是只读的；相对地，**非常量左值只能接受非常量左值对其进行初始化**；
@@ -1557,3 +1557,62 @@ const rvalue refer
 const lvalue refer
 const rvalue refer
 </script></code></pre>
+
+
+## static_assert断言
+在 C++11 中，有 3 种错误处理机制：`#error`、`assert()`、`static_assert()`
+- `#error`：`#error`指令在预处理时有效，它将无条件地发出用户指定的消息并导致编译因错误而失败；该消息可包含由预处理器指令操作的文本，但不会计算任何生成的表达式；
+`#error`可看做预编译期断言，甚至都算不上断言，仅仅能在预编译时显示一个错误信息，它能做的不多，可以参与预编译的条件检查，由于它无法获得编译信息，当然就做不了更进一步分析了；
+- `assert`：`assert`是运行期断言，它用来发现运行期间的错误，不能提前到编译期发现错误，也不具有强制性，也谈不上改善编译信息的可读性，既然是运行期检查，对性能当然是有影响的，所以经常在发行版本中，assert都会被关掉；
+- `static_assert`：进行编译时断言检查，语法格式：`static_assert(bool_constexpr, message)`；`bool_constexpr`为常量表达式，`message`为字符串字面量；
+若 bool_constexpr 返回 true ，则此声明没有效果；否则发布一个编译时错误，而且若存在 message，则其文本被包含于诊断消息中；
+由于 static_assert 是编译期间断言，不生成目标代码，因此 static_assert 不会造成任何运行期性能损失；
+
+## 强类型枚举
+枚举类（“新的枚举”/“强类型的枚举”）主要用来解决传统的 C/C++ 枚举的三个问题：
+- 传统 C++ 枚举会被隐式转换为 int，这在那些不应被转换为 int 的情况下可能导致错误
+- 传统 C++ 枚举的每一枚举值在其作用域范围内都是可见的，容易导致名称冲突(同名冲突)
+- 不可以指定枚举的底层数据类型，这可能会导致代码不容易理解、兼容性问题以及不可以进行前向声明
+
+
+`枚举类（enum class）`（“强类型枚举”）是强类型的，并且具有类域：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+
+using namespace std;
+
+enum class week : char {    // 指明底层数据类型为char
+    Mon,
+    Tues,
+    Wed,
+    Thur,
+    Fri,
+    Sat,
+    Sun
+};
+
+void func(week &day) {
+    switch (day) {
+        case week::Mon : cout << "Monday" << endl; break;
+        case week::Tues : cout << "Tuesday" << endl; break;
+        case week::Wed : cout << "Wednesday" << endl; break;
+        case week::Thur : cout << "Thursday" << endl; break;
+        case week::Fri : cout << "Friday" << endl; break;
+        case week::Sat : cout << "Saturday" << endl; break;
+        case week::Sun : cout << "Sunday" << endl; break;
+    }
+}
+
+int main () {
+    week day = week::Fri;
+    func(day);
+    return 0;
+}
+</script></code></pre>
+
+
+枚举类的底层数据类型必须是`有符号`或`无符号`的`整型`，默认情况下是`int`；
+
+同时，由于能够指定枚举值的底层数据类型，所以前向声明得以成为可能；
+所谓前向声明就是在枚举类定义之前就使用这个枚举类的名字声明指针或引用变量；
+
+比如上面例子中的 week 枚举类，可以这样做前向声明：`enum class week : char;`
