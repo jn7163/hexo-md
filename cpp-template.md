@@ -682,61 +682,74 @@ Array[5] = { 1, 2, 3, 4, 5 }
 
 **在类模板中使用非类型参数**
 <pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <string>
 
 using namespace std;
 
-template <typename T, int len>
+template <typename T, int LEN>
 class Array {
 public:
     Array();
     ~Array();
 public:
-    // 类模板中的友元函数需要在类体内部定义
-    friend ostream & operator<<(ostream &out, const Array &arr) {
-        out << "Array[" << arr.m_len << "] = { ";
-        for (int i=0; i<arr.m_len; i++) {
-            out << arr.m_ptr[i] << ", ";
-        }
-        out << "\b\b }" << endl;
-        return out;
-    }
-    T & operator[](int i);
+    int length() const { return m_len; }
+    T & operator[](int i) const { return m_ptr[i]; }
+    template <typename XT, int XLEN>
+    friend istream & operator>>(istream &in, Array<XT, XLEN> &arr);
+    template <typename XT, int XLEN>
+    friend ostream & operator<<(ostream &out, const Array<XT, XLEN> &arr);
 private:
     T *m_ptr;
     int m_len;
 };
 
-template <typename T, int len>
-Array<T, len>::Array() : m_len(len) {
-    m_ptr = (T *)malloc(sizeof(T) * m_len);
+template <typename T, int LEN>
+Array<T, LEN>::Array() : m_len(LEN) {
+    m_ptr = new T[m_len];
 }
 
-template <typename T, int len>
-Array<T, len>::~Array() {
-    free(m_ptr);
+template <typename T, int LEN>
+Array<T, LEN>::~Array() {
+    delete[] m_ptr;
 }
 
-template <typename T, int len>
-T & Array<T, len>::operator[](int i) {
-    return m_ptr[i];
+template <typename T, int LEN>
+istream & operator>>(istream &in, Array<T, LEN> &arr) {
+    for (int i=0; i<arr.m_len; i++) {
+        in >> arr.m_ptr[i];
+    }
+    return in;
+}
+
+template <typename T, int LEN>
+ostream & operator<<(ostream &out, const Array<T, LEN> &arr) {
+    if (arr.m_len == 0) {
+        out << "Array is empty" << endl;
+    } else {
+        out << "Array[" << arr.m_len << "] = { ";
+        for (int i=0; i<arr.m_len; i++) {
+            out << arr.m_ptr[i] << ", ";
+        }
+        out << "\b\b }" << endl;
+    }
+    return out;
 }
 
 int main() {
-    Array<const char *, 5> strs;
-    for (int i=0; i<5; i++) {
-        strs[i] = "www.zfl9.com";
-    }
-    cout << strs;
+    Array<string, 5> arr;
+    cin >> arr;
+    cout << arr;
     return 0;
 }
 </script></code></pre>
 
-<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [16:26:35]
-$ g++ d.cpp
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:45:14]
+$ g++ a.cpp
 
-# root @ arch in ~/work on git:master x [16:26:52]
+# root @ arch in ~/work on git:master x [10:45:17]
 $ ./a.out
-Array[5] = { www.zfl9.com, www.zfl9.com, www.zfl9.com, www.zfl9.com, www.zfl9.com }
+www.baidu.com www.google.com www.facebook.com www.youtube.com www.zfl9.com
+Array[5] = { www.baidu.com, www.google.com, www.facebook.com, www.youtube.com, www.zfl9.com }
 </script></code></pre>
 
 
@@ -917,3 +930,28 @@ C++ 支持显式实例化的目的是为「模块化编程」提供一种解决�
 C++ 标准库几乎都是用模板来实现的，这些模板的代码也都位于头文件中；
 
 总起来说，如果我们开发的模板只有我们自己使用，那也可以勉强使用显式实例化；如果希望让其他人使用（例如库、组件等），那只能将模板的声明和定义都放到头文件中了；
+
+## 模板默认参数
+在 C++11 中，模板和函数一样，可以有默认的参数；
+
+基本语法规则可以参考 C++ 对函数的默认参数的要求：
+- 默认参数只能放在形参列表的最后，而且一旦为某个形参指定了默认值，那么它后面的所有形参都必须有默认值；
+- 在同一个作用域中只能指定一次默认参数；
+C/C++ 共有四种作用域：`函数原型作用域`、`局部作用域（函数作用域）`、`块作用域`、`文件作用域（全局作用域）`
+
+
+## 模板与inline声明
+`inline`同样适用于函数模板、类模板，并且和 inline 函数一样，在函数定义处添加`inline`关键字进行修饰；
+不过需要注意添加的位置，要在`模板头之后`、`函数返回值类型之前`添加`inline`关键字；
+
+比如：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">// 函数模板声明
+template <typename T1, typename T2>
+auto Add(T1 a, T2 b) -> decltype(a + b);
+
+// 函数模板定义
+template <typename T1, typename T2>
+inline auto Add(T1 a, T2 b) -> decltype(a + b) {
+    return a + b;
+}
+</script></code></pre>
