@@ -1616,3 +1616,92 @@ int main () {
 所谓前向声明就是在枚举类定义之前就使用这个枚举类的名字声明指针或引用变量；
 
 比如上面例子中的 week 枚举类，可以这样做前向声明：`enum class week : char;`
+
+## for循环
+以往，如果想要遍历一个数组，一般的做法是：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    for (unsigned i=0; i<sizeof(arr)/sizeof(int); i++) {
+        cout << arr[i] << ", ";
+    }
+    cout << "\b\b " << endl;
+    return 0;
+}
+</script></code></pre>
+
+
+其实有些时候我们并不关心下标、迭代器位置或者元素个数，只是想依次输出元素的值而已，在 C++11 中可以这么写：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    for (int i : arr) {
+        cout << i << ", ";
+    }
+    cout << "\b\b " << endl;
+    return 0;
+}
+</script></code></pre>
+
+
+上面的代码中，因为 i 是按值传递的，所以在 for 循环体内部更改 i 的值并不会影响到外部的数组；
+如果需要能够读写元素的值，那么可以将 i 改为按引用传递的方式，比如：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    // 引用传递，可读写元素
+    for (int &i : arr) {
+        i += 100;
+    }
+    // 读取元素
+    for (const int &i : arr) {
+        cout << i << ", ";
+    }
+    cout << "\b\b " << endl;
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:25:29]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [14:25:45]
+$ ./a.out
+101, 102, 103, 104, 105
+</script></code></pre>
+
+
+## 原始字符串
+每次用 C 语言写正则模式的时候都非常蛋疼，各种转义，非常繁琐；
+但是在 python 中写正则模式却是很爽的，因为可以定义一个不转义的原始字符串：`r'raw_string'`；
+
+那么在 C++ 中有没有类似的原始字符串的功能呢？
+C++11 不愧称为 modern c++，当然会提供原始字符串了！
+
+原始字符串字面量的定义为：`R"xxx(raw_string)xxx"`
+其中，原始字符串必须用括号`()`括起来，括号的前后可以加其他字符串，所加的字符串会被忽略，并且加的字符串必须在括号两边同时出现；当然，最好两边什么也不加，看起来更清晰；
+
+例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+using namespace std;
+
+int main() {
+    const char *pattern = R"(www.zfl9.com\r\n, ''""\\)";
+    cout << pattern << endl;
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:38:22]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [14:38:34]
+$ ./a.out
+www.zfl9.com\r\n, ''""\\
+</script></code></pre>
