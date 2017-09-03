@@ -667,13 +667,9 @@ public:
 
 ## 初始化语法
 C++ 之前的初始化语法很乱，有四种初始化方式，而且每种之前甚至不能相互转换；让人有种剪不断，理还乱的感觉；
-
 1) 小括号初始化方法：`int a = int(5);`
-
 2) 赋值初始化方法：`int a = 3;`
-
 3) POD 聚合，也就是经常使用的大括号初始化方法：`int arr[2] = {0, 1};`
-
 4) 构造函数初始化：
 <pre><code class="language-cpp line-numbers"><script type="text/plain">class test {
 public:
@@ -719,9 +715,6 @@ int main() {
     return 0;
 }
 </script></code></pre>
-
-
-但是，我觉得这个看起来更别扭，还不如之前的 C/C++ 风格的初始化方法。所以尽量不要这样使用！
 
 
 ## 匿名命名空间
