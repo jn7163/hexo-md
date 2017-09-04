@@ -453,6 +453,9 @@ container is empty
 
 定义于头文件：`<deque>`
 原型：`template <typename T, typename Allocator = std::allocator<T>> class deque;`
+- `T`：元素的类型；
+- `Allocator`：用于获取/释放内存及构造/析构内存中元素的分配器；
+
 
 deque 上常见操作的`时间复杂度`如下：
 - 随机访问：常数`O(1)`
