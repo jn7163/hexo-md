@@ -502,6 +502,32 @@ private:
 </script></code></pre>
 
 
+## 泛型lambda
+所谓泛型 lambda，就是在形参声明中使用 auto 类型指示说明符的 lambda；
+比如：`auto glambda = [] (auto a, auto b) { return a + b; };`
+
+根据 C++14 标准，这一 lambda 与以下代码作用相同：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">class TMP {
+public:
+    template <typename T1, typename T2>
+    auto operator()(T1 a, T2 b) const {
+        return a + b;
+    }
+};
+
+auto glambda = TMP();
+</script></code></pre>
+
+
+C++14 的泛型 lambda 可以被看做 C++11 的（单态）lambda 升级版；
+单态 lambda 相当于普通函数对象；而泛型 lambda 则相当于带模板参数的函数对象，或者说相当于带状态的函数模板；两者相比，可以推出以下结果：
+- 单态 lambda 在函数内使用，能够捕获外围变量形成闭包，作用相当于局部函数；泛型 lambda 强化了这一能力，其作用相当于局部函数模板；
+- 单态 lambda 能够服务于高阶函数（参数为函数的函数），作用相当于回调函数；泛型 lambda 强化了这一能力，使得泛型回调成为可能；
+- 单态 lambda 能够作为函数返回值，形成柯里化函数（闭包），用于 lambda 演算；泛型 lambda 强化了这一能力，使得泛型闭包成为可能；
+
+
+可以说，泛型 lambda 大大加强了 C++ 中因单态 lambda 的引入而有所增强的 FP（函数型编程）能力；
+
 ## 相关的关键字
 **nullptr 空指针常量**
 `nullptr`是 C++11 标准用来表示空指针的常量值；
