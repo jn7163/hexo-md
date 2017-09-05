@@ -25,16 +25,16 @@ STL 提供了一些常用的数据结构和算法的模板，1998 年加入 C++ 
 
 
 **STL 容器**
-STL 中的容器定义在`std`命名空间下，需要引入头文件`<vector>`、`<set>`、`<map>`、`<deque>`、`<list>`、`<stack>`等；容器可以分为三大类：
+STL 中的容器定义在`std`命名空间下，需要引入头文件`<vector>`、`<list>`、`<deque>`、`<stack>`、`<queue>`、`<set>`、`<map>`等；容器可以分为三大类：
 - **顺序容器**
- - `vector`：尾端插入元素有较高性能，动态数组实现；
- - `deque`：首尾插入元素都有较高性能，动态数组实现；
- - `list`：可以常数时间在任何地方插入元素，双向链表实现；
+ - `vector`："动态数组"，随机存取性能高，尾端插入删除方便，内部插入删除效率低；
+ - `list`："双向链表"，插入删除方便，不支持随机存取，只能从头开始遍历；
+ - `deque`："双端队列"，首尾插入删除都有较高性能，同时支持随机存取，占用内存较多；
 - **关联容器**
- - `set`：不同元素的集合，平衡二叉树实现；
- - `multiset`：同上，但可以包含相同元数据；
- - `map`：同 set，但存放的是键值对；
- - `multimap`：同上，键可以重复；
+ - `set`："红黑树"，无重复元素的集合；
+ - `multiset`："红黑树"，元素的集合，元素可重复；
+ - `map`："红黑树"，键值对的集合，键不可重复；
+ - `multimap`："红黑树"，键值对的集合，键可重复；
 - **容器适配器**
  - `stack`：栈，后进先出（LIFO）的数据结构；
  - `queue`：队列，先进先出（FIFO）的数据结构；
@@ -141,10 +141,10 @@ vector 上的常见操作的`时间复杂度`如下：
 `c.resize(n, elem)`：同上，多出的元素都是 elem 的副本；
 `c.shrink_to_fit()`：回收未使用的容量，非强制性请求（C++11 起）；
 
-`c.begin()`：返回一个随机存取迭代器，指向第一个元素；
-`c.end()`：返回一个随机存取迭代器，指向最后一个元素的下一位置；
-`c.rbegin()`：返回一个逆向迭代器，指向逆向迭代的第一个元素；
-`c.rend()`：返回一个逆向迭代器，指向逆向迭代的最后一个元素的下一位置；
+`c.begin()`：返回一个迭代器，指向第一个元素；
+`c.end()`：返回一个迭代器，指向最后一个元素的下一位置；
+`c.rbegin()`：返回一个逆向迭代器，指向第一个元素；
+`c.rend()`：返回一个逆向迭代器，指向最后一个元素的下一位置；
 `c.cbegin()`：const 修饰的 begin；
 `c.cend()`：const 修饰的 end；
 `c.crbegin()`：const 修饰的 rbegin；
@@ -360,10 +360,10 @@ size: 10, capacity: 10
 `c.resize(n)`：调整元素数量，如果 n 小于当前 size()，那么 n 后面的元素被丢弃；如果 n 大于当前 size()，新增的元素由元素的默认构造函数完成；
 `c.resize(n, elem)`：同上，多出的元素都是 elem 的副本；
 
-`c.begin()`：返回一个随机存取迭代器，指向第一个元素；
-`c.end()`：返回一个随机存取迭代器，指向最后一个元素的下一位置；
-`c.rbegin()`：返回一个逆向迭代器，指向逆向迭代的第一个元素；
-`c.rend()`：返回一个逆向迭代器，指向逆向迭代的最后一个元素的下一位置；
+`c.begin()`：返回一个迭代器，指向第一个元素；
+`c.end()`：返回一个迭代器，指向最后一个元素的下一位置；
+`c.rbegin()`：返回一个逆向迭代器，指向第一个元素；
+`c.rend()`：返回一个逆向迭代器，指向最后一个元素的下一位置；
 `c.cbegin()`：const 修饰的 begin；
 `c.cend()`：const 修饰的 end；
 `c.crbegin()`：const 修饰的 rbegin；
@@ -480,7 +480,7 @@ deque 上常见操作的`时间复杂度`如下：
 `c.insert(pos, beg, end)`：在 pos 位置插入区间`[beg, end)`；
 
 `c.erase(pos)`：移除 pos 位置上的元素；
-`c.erase(beg, end)`：移除区间`[beg, end)`中的元素，（使用`advance(c.begin(), 5)`移动迭代器）；
+`c.erase(beg, end)`：移除区间`[beg, end)`中的元素；
 
 `c.push_front(elem)`：在首部添加一个 elem 副本；
 `c.pop_front()`：移除首部一个元素；
@@ -504,10 +504,10 @@ deque 上常见操作的`时间复杂度`如下：
 `c.resize(n)`：调整元素数量，如果 n 小于当前 size()，那么 n 后面的元素被丢弃；如果 n 大于当前 size()，新增的元素由元素的默认构造函数完成；
 `c.resize(n, elem)`：同上，多出的元素都是 elem 的副本；
 
-`c.begin()`：返回一个随机存取迭代器，指向第一个元素；
-`c.end()`：返回一个随机存取迭代器，指向最后一个元素的下一位置；
-`c.rbegin()`：返回一个逆向迭代器，指向逆向迭代的第一个元素；
-`c.rend()`：返回一个逆向迭代器，指向逆向迭代的最后一个元素的下一位置；
+`c.begin()`：返回一个迭代器，指向第一个元素；
+`c.end()`：返回一个迭代器，指向最后一个元素的下一位置；
+`c.rbegin()`：返回一个逆向迭代器，指向第一个元素；
+`c.rend()`：返回一个逆向迭代器，指向最后一个元素的下一位置；
 `c.cbegin()`：const 修饰的 begin；
 `c.cend()`：const 修饰的 end；
 `c.crbegin()`：const 修饰的 rbegin；
@@ -595,7 +595,7 @@ int main() {
     de d{1, 2, 3, 4, 5};
     st s(d);
 
-    for (unsigned i=0, size=s.size(); i<size; i++) {
+    while (!s.empty()) {
         cout << s.top() << ", ";
         s.pop();
     }
@@ -651,7 +651,7 @@ int main() {
     DQ dq{1, 2, 3, 4, 5};
     Q q(dq);
 
-    for (unsigned i=0, size=q.size(); i<size; i++) {
+    while (!q.empty()) {
         cout << q.front() << ", ";
         q.pop();
     }
@@ -678,10 +678,12 @@ $ ./a.out
 - `Compare`：优先级定义，默认为`std::less`即值大的先出队；
 
 
-构造函数
-`priority_queue(const priority_queue &other);`：拷贝构造；
-`priority_queue(Compare &compare = Compare(), const Container &cont = Container());`：优先级为 compare，底层容器为 cont；
-`priority_queue(InputIt first, InputIt last, Compare &compare, const Container &cont);`：区间`[first, last)`，优先级为 compare，底层容器为 cont；
+`priority_queue<T> c`：默认构造；
+`priority_queue<T> c1(c2)`：拷贝/移动构造；
+`priority_queue<T, vector<T>, Cmp> c(cmp)`：排序方式 cmp；
+`priority_queue<T, vector<T>, Cmp> c(cmp, cont)`：排序方式 cmp，使用 cont 初始化；
+`priority_queue<T> c(beg, end)`：区间`[beg, end)`；
+`priority_queue<T, vector<T>, Cmp> c(beg, end, cmp)`：区间`[beg, end)`，排序方式 cmp；
 
 `c1 = c2`：支持Copy、Move语义，赋值操作；
 `c1.swap(c2)`：交换两个容器适配器；
@@ -723,4 +725,231 @@ $ g++ a.cpp
 # root @ arch in ~/work on git:master x [21:25:33]
 $ ./a.out
 1, 2, 3, 4, 5
+</script></code></pre>
+
+
+## 关联容器
+### set
+定义于头文件：`<set>`
+原型：`template <typename Key, typename Compare = std::less<Key>, typename Allocator = std::allocator<Key>> class set;`
+- `Key`：元素的类型；
+- `Compare`：优先级定义，默认为`std::less`；
+- `Allocator`：用于获取/释放内存及构造/析构内存中元素的分配器；
+
+
+set 是一个关联容器，是一个`有序的集合`，集合中包含`不可重复的、类型为Key的元素`；排序通过使用类型为 Compare 的比较函数比较来实现；搜索，删除和插入操作具有对数时间复杂度；set 通常实现为`红黑树`；
+
+构造函数
+`set(const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+`set(InputIt first, InputIt last, const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+`set(const set &other);`
+`set(const set &other, const Allocator &alloc);`
+`set(set &&other);`
+`set(set &&other, const Allocator &alloc);`
+`set(std::initializer_list<value_type> init, const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+
+赋值运算符
+`set & operator=(const set &other);`
+`set & operator=(set &&other);`
+
+迭代器
+`c.begin()`：返回一个迭代器，指向第一个元素；
+`c.end()`：返回一个迭代器，指向最后一个元素的下一位置；
+`c.rbegin()`：返回一个逆向迭代器，指向第一个元素；
+`c.rend()`：返回一个逆向迭代器，指向最后一个元素的下一位置；
+`c.cbegin()`：const 修饰的 begin；
+`c.cend()`：const 修饰的 end；
+`c.crbegin()`：const 修饰的 rbegin；
+`c.crend()`：const 修饰的 rend；
+
+容量
+`c.empty()`：判断当前 set 是否为空；
+`c.size()`：返回当前元素的数量；
+`c.max_size()`：返回 set 可容纳的元素最大数量；
+
+修改
+`c.insert(elem)`：插入一个 elem 副本；
+`c.insert(n, elem)`：插入 n 个 elem 副本；
+`c.insert(beg, end)`：插入区间`[beg, end)`；
+`c.erase(pos)`：移除 pos 位置上的元素；
+`c.erase(beg, end)`：移除区间`[beg, end)`中的元素；
+`c.erase(key)`：移除键 key；
+`c.clear()`：移除所有元素，将容器清空；
+`c1.swap(c2)`：交换 c1 和 c2；
+`swap(c1, c2)`：同上，全局函数；
+
+查找
+`c.count(key)`：返回 key 的数目；
+`c.find(key)`：返回 key 的迭代器；
+`c.equal_range(key)`：返回匹配特定键的元素范围；
+`c.lower_bound()`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
+`c.upper_bound()`：返回一个迭代器，指向第一个“大于”给定值的元素；
+
+查询
+`c.key_comp()`：返回用于比较键的函数；
+`c.value_comp()`：返回用于在 value_type 类型的对象中比较键的函数；
+
+比较
+`operator==`、`operator!=`、`operator<`、`operator<=`、`operator>`、`operator>=`
+
+简单例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <algorithm>
+#include <functional>
+#include <set>
+using namespace std;
+
+int main() {
+    set<int> s1{1, 1, 2, 2, 3, 3, 3, 4, 5};
+    for (auto &i : s1) {
+        cout << i << ", ";
+    }
+    cout << "\b\b " << endl;
+
+    set<int, greater<int>> s2{1, 1, 2, 2, 3, 3, 3, 4, 5};
+    for (auto &i : s2) {
+        cout << i << ", ";
+    }
+    cout << "\b\b " << endl;
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [9:01:54]
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [9:02:03]
+$ ./a.out
+1, 2, 3, 4, 5
+5, 4, 3, 2, 1
+</script></code></pre>
+
+
+### map
+定义于头文件：`<map>`
+原型：`template <typename Key, typename T, typename Compare = std::less<Key>, typename Allocator = std::allocator<std::pair<const Key, T>>> class map;`
+- `Key`：键的类型；
+- `T`：值的类型；
+- `Compare`：比较器，默认`std::less`；
+- `Allocator`：空间分配器，默认`std::allocator`；
+
+
+map 是一个有序关联容器，包含具有`唯一键`的`键值对`；键使用比较函数 Compare 比较来进行排序；搜索，删除和插入操作具有对数复杂性；map 通常实现为`红黑树`；
+
+构造函数
+`map(const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+`map(InputIt first, InputIt last, const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+`map(const map &other);`
+`map(const map &other, const Allocator &alloc);`
+`map(map &&other);`
+`map(map &&other, const Allocator &alloc);`
+`map(std::initializer_list<value_type> init, const Compare &comp = Compare(), const Allocator &alloc = Allocator());`
+
+赋值运算符
+`map & operator=(const map &other);`
+`map & operator=(map &&other);`
+
+访问元素
+`T & at(const Key &key);`
+`T & operator[](const Key &key);`
+`T & operator[](Key &&key);`
+
+迭代器
+`c.begin()`：返回一个迭代器，指向第一个元素；
+`c.end()`：返回一个迭代器，指向最后一个元素的下一位置；
+`c.rbegin()`：返回一个逆向迭代器，指向第一个元素；
+`c.rend()`：返回一个逆向迭代器，指向最后一个元素的下一位置；
+`c.cbegin()`：const 修饰的 begin；
+`c.cend()`：const 修饰的 end；
+`c.crbegin()`：const 修饰的 rbegin；
+`c.crend()`：const 修饰的 rend；
+
+容量
+`c.empty()`：判断当前 map 是否为空；
+`c.size()`：返回当前元素的数量；
+`c.max_size()`：返回 map 可容纳的元素最大数量；
+
+修改
+`c.insert(elem)`：插入一个 elem 副本；
+`c.insert(n, elem)`：插入 n 个 elem 副本；
+`c.insert(beg, end)`：插入区间`[beg, end)`；
+`c.erase(pos)`：移除 pos 位置上的元素；
+`c.erase(beg, end)`：移除区间`[beg, end)`中的元素；
+`c.erase(key)`：移除键 key；
+`c.clear()`：移除所有元素，将容器清空；
+`c1.swap(c2)`：交换 c1 和 c2；
+`swap(c1, c2)`：同上，全局函数；
+
+查找
+`c.count(key)`：返回 key 的数目；
+`c.find(key)`：返回 key 的迭代器；
+`c.equal_range(key)`：返回匹配特定键的元素范围；
+`c.lower_bound()`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
+`c.upper_bound()`：返回一个迭代器，指向第一个“大于”给定值的元素；
+
+查询
+`c.key_comp()`：返回用于比较键的函数；
+`c.value_comp()`：返回用于在 value_type 类型的对象中比较键的函数；
+
+比较
+`operator==`、`operator!=`、`operator<`、`operator<=`、`operator>`、`operator>=`
+
+简单例子：
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <string>
+using namespace std;
+
+int main() {
+    map<char, string> ipaddr{
+        {'A', "0.0.0.0/8 - 127.255.255.255/8"},
+        {'B', "128.0.0.0/16 - 191.255.255.255/16"},
+        {'C', "192.0.0.0/24 - 223.255.255.255/24"},
+        {'D', "224.0.0.0/4 - 239.255.255.255/4"},
+        {'E', "240.0.0.0/4 - 255.255.255.255/4"},
+    };
+
+    for (auto i=ipaddr.begin(); i!=ipaddr.end(); i++) {
+        cout << "IP地址类别: " << i -> first << "\tIP地址范围: " << i -> second << endl;
+    }
+
+    cout << "-----------------------------------------------------------" << endl;
+
+    for (auto &i : ipaddr) {
+        cout << "IP地址类别: " << i.first << "\tIP地址范围: " << i.second << endl;
+    }
+
+    cout << "-----------------------------------------------------------" << endl;
+
+    for_each(ipaddr.begin(), ipaddr.end(), [](auto &i){cout << "IP地址类别: " << i.first << "\tIP地址范围: " << i.second << endl;});
+
+    return 0;
+}
+</script></code></pre>
+
+<pre><code class="language-cpp line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [9:33:41] C:130
+$ g++ a.cpp
+
+# root @ arch in ~/work on git:master x [9:33:43]
+$ ./a.out
+IP地址类别: A	IP地址范围: 0.0.0.0/8 - 127.255.255.255/8
+IP地址类别: B	IP地址范围: 128.0.0.0/16 - 191.255.255.255/16
+IP地址类别: C	IP地址范围: 192.0.0.0/24 - 223.255.255.255/24
+IP地址类别: D	IP地址范围: 224.0.0.0/4 - 239.255.255.255/4
+IP地址类别: E	IP地址范围: 240.0.0.0/4 - 255.255.255.255/4
+-----------------------------------------------------------
+IP地址类别: A	IP地址范围: 0.0.0.0/8 - 127.255.255.255/8
+IP地址类别: B	IP地址范围: 128.0.0.0/16 - 191.255.255.255/16
+IP地址类别: C	IP地址范围: 192.0.0.0/24 - 223.255.255.255/24
+IP地址类别: D	IP地址范围: 224.0.0.0/4 - 239.255.255.255/4
+IP地址类别: E	IP地址范围: 240.0.0.0/4 - 255.255.255.255/4
+-----------------------------------------------------------
+IP地址类别: A	IP地址范围: 0.0.0.0/8 - 127.255.255.255/8
+IP地址类别: B	IP地址范围: 128.0.0.0/16 - 191.255.255.255/16
+IP地址类别: C	IP地址范围: 192.0.0.0/24 - 223.255.255.255/24
+IP地址类别: D	IP地址范围: 224.0.0.0/4 - 239.255.255.255/4
+IP地址类别: E	IP地址范围: 240.0.0.0/4 - 255.255.255.255/4
 </script></code></pre>
