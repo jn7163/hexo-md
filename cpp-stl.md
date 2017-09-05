@@ -782,8 +782,8 @@ set 是一个关联容器，是一个`有序的集合`，集合中包含`不可�
 `c.count(key)`：返回 key 的数目；
 `c.find(key)`：返回 key 的迭代器；
 `c.equal_range(key)`：返回匹配特定键的元素范围；
-`c.lower_bound()`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
-`c.upper_bound()`：返回一个迭代器，指向第一个“大于”给定值的元素；
+`c.lower_bound(key)`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
+`c.upper_bound(key)`：返回一个迭代器，指向第一个“大于”给定值的元素；
 
 查询
 `c.key_comp()`：返回用于比较键的函数；
@@ -885,8 +885,8 @@ map 是一个有序关联容器，包含具有`唯一键`的`键值对`；键使
 `c.count(key)`：返回 key 的数目；
 `c.find(key)`：返回 key 的迭代器；
 `c.equal_range(key)`：返回匹配特定键的元素范围；
-`c.lower_bound()`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
-`c.upper_bound()`：返回一个迭代器，指向第一个“大于”给定值的元素；
+`c.lower_bound(key)`：返回一个迭代器，指向第一个“大于等于”给定值的元素；
+`c.upper_bound(key)`：返回一个迭代器，指向第一个“大于”给定值的元素；
 
 查询
 `c.key_comp()`：返回用于比较键的函数；
@@ -953,3 +953,147 @@ IP地址类别: C	IP地址范围: 192.0.0.0/24 - 223.255.255.255/24
 IP地址类别: D	IP地址范围: 224.0.0.0/4 - 239.255.255.255/4
 IP地址类别: E	IP地址范围: 240.0.0.0/4 - 255.255.255.255/4
 </script></code></pre>
+
+
+## 常用算法
+基本所有的 STL 算法（函数模板）都定义于头文件：`<algorithm>`；
+注意这里所有的区间都是左闭右开区间`[first, last)`，last 指代最后一个元素的后一个元素；
+
+**不修改序列的操作**
+`UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f);`：将一个函数应用于某一范围的元素；
+
+`int count(InputIt first, InputIt last, const T &value);`：统计 value 出现的次数；
+`int count_if(InputIt first, InputIt last, UnaryPredicate p);`：统计满足谓词 p（返回 true）的次数；
+
+1) `bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2);`
+2) `bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, BinaryPredicate p);`
+3) `bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);`（C++14 起）
+4) `bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p);`（C++14 起）
+(1)、(2)：如果区间`[first1, last1)`和区间`[first2, first2 + (last1 - first1)`相等，返回`true`，否则返回`false`；
+(3)、(4)：如果区间`[first1, last1)`和区间`[first2, last2)`相等，返回`true`，否则返回`false`；
+两个区间相等的条件是：对于区间`[first1, last1)`内的每个迭代器 i，`*i`等于`*(first2 + (i - first1))`；重载形式(1)和(3)使用operator==判定两个元素是否相等，而重载形式(2)和(4)使用的是给定的谓词函数；
+
+`InputIt find(InputIt first, InputIt last, const T &value);`：查找等于 value 的元素；
+`InputIt find_if(InputIt first, InputIt last, UnaryPredicate p);`：查找使谓词 p 返回 true 的元素；
+`InputIt find_if_not(InputIt first, InputIt last, UnaryPredicate q);`：查找使谓词 p 返回 false 的元素；
+
+`ForwardIt adjacent_find(ForwardIt first, ForwardIt last);`
+`ForwardIt adjacent_find(ForwardIt first, ForwardIt last, BinaryPredicate p);`
+搜索范围`[first, last)`内两个连续的相同元素；第一个版本使用 operator== 比较的元素，第二个版本使用给定的二元谓词 p；
+
+1) `ForwardIt1 search(ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last);`
+2) `ForwardIt1 search(ExecutionPolicy &&policy, ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last );`
+3) `ForwardIt1 search(ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last, BinaryPredicate p);`
+4) `ForwardIt1 search(ExecutionPolicy &&policy, ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first, ForwardIt2 s_last, BinaryPredicate p);`
+5) `ForwardIterator search(ForwardIterator first, ForwardIterator last, const Searcher& searcher);`
+1-4) 查找范围 [first, last - (s_last - s_first)) 中元素子序列 [s_first, s_last) 的首次出现；
+1) 元素用 operator== 比较；
+3) 元素用给定的二元谓词 p 比较；
+2,4) 同 (1,3)，但按 policy 执行；这些重载不参与重载决议，除非`std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>`为 true；
+5) 在序列 [first, last) 中查找指定于 searcher 构造函数的模式；等效于执行`return searcher(first, last).first;`；查找器(Searcher)不必为可复制构造(CopyConstructible)；
+
+**修改序列的操作**
+`OutputIt copy(InputIt first, InputIt last, OutputIt d_first);`
+`OutputIt copy_if(InputIt first, InputIt last, OutputIt d_first, UnaryPredicate pred);`
+复制指定范围内的元素到另一个容器，第二个版本使用谓词 pred 判断，只复制 pred 返回 true 的元素；
+
+`OutputIt move(InputIt first, InputIt last, OutputIt d_first);`：移动指定范围内的元素到另一个容器；
+
+`void fill(ForwardIt first, ForwardIt last, const T &value);`：使用元素 value 填充区间 [first, last)；
+
+`OutputIt fill_n(OutputIt first, Size count, const T &value);`：使用元素 value 填充，填充 count 次；
+
+`ForwardIt remove(ForwardIt first, ForwardIt last, const T &value);`
+`ForwardIt remove_if(ForwardIt first, ForwardIt last, UnaryPredicate p);`
+移除范围 [first, last) 中满足特定条件的所有元素；
+
+`void replace(ForwardIt first, ForwardIt last, const T &old_value, const T &new_value);`
+`void replace_if(ForwardIt first, ForwardIt last, UnaryPredicate p, const T &new_value);`
+替换元素的值为 new_value；
+
+`void swap(T &a, T &b);`：交换 a、b 的值；
+`void swap(T2 (&a)[N], T2 (&b)[N]);`：交换 a、b 的值（数组）；
+`ForwardIt2 swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2);`：交换两个范围的元素；
+`void iter_swap(ForwardIt1 a, ForwardIt2 b);`：交换给定的迭代器所指向的元素的值；
+
+`void reverse(BidirIt first, BidirIt last);`：反转元素顺序；
+
+`void random_shuffle(RandomIt first, RandomIt last);`
+`void random_shuffle(RandomIt first, RandomIt last, RandomFunc &r);`
+`void random_shuffle(RandomIt first, RandomIt last, RandomFunc &&r);`（C++11 起）
+`void shuffle(RandomIt first, RandomIt last, URNG &&g);`：（C++11 起）
+使给定范围内的元素随机排列；
+
+`ForwardIt unique(ForwardIt first, ForwardIt last);`
+`ForwardIt unique(ForwardIt first, ForwardIt last, BinaryPredicate p);`
+删除区间内连续重复的元素；
+
+**划分操作**
+`bool is_partitioned(InputIt first, InputIt last, UnaryPredicate p);`：判断区间是否被给定的谓词划分；
+`ForwardIt partition(ForwardIt first, ForwardIt last, UnaryPredicate p);`：把一个区间的元素分为两组；
+
+**排序操作**
+`void sort(RandomIt first, RandomIt last);`：升序，使用`operator<`；
+`void sort(RandomIt first, RandomIt last, Compare comp);`：自定义，使用 comp；
+
+`void stable_sort(RandomIt first, RandomIt last);`：升序，稳定排序，保留相等元素的原有顺序；
+`void stable_sort(RandomIt first, RandomIt last, Compare comp);`：自定义，稳定排序，保留相等元素的原有顺序；
+
+**二分查找操作（在已排序范围上）**
+`ForwardIt lower_bound(ForwardIt first, ForwardIt last, const T &value);`：返回指向第一个大于等于给定值的元素的迭代器；
+`ForwardIt upper_bound(ForwardIt first, ForwardIt last, const T &value);`：返回指向第一个大于给定值的元素的迭代器；
+`bool binary_search(ForwardIt first, ForwardIt last, const T &value);`：判断一个元素是否在区间内；
+
+**集合操作（在已排序范围上）**
+合并两个已排序的区间
+`OutputIt merge(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first);`
+`OutputIt merge(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first, Compare comp);`
+
+如果一个集合是另外一个集合的子集则返回 true
+`bool includes(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);`
+`bool includes(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Compare comp);`
+
+计算两个集合的交集
+`OutputIt set_intersection(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first);`
+`OutputIt set_intersection(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first, Compare comp);`
+
+计算两个集合的并集
+`OutputIt set_union(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first);`
+`OutputIt set_union(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first, Compare comp);`
+
+计算两个集合的补集
+`OutputIt set_difference(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first);`
+`OutputIt set_difference(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, OutputIt d_first, Compare comp);`
+
+**最小/最大运算**
+`const T & max(const T &a, const T &b);`
+`const T & max(const T &a, const T &b, Compare comp);`
+`T max(std::initializer_list<T> ilist);`
+`T max(std::initializer_list<T> ilist, Compare comp);`
+
+`ForwardIt max_element(ForwardIt first, ForwardIt last);`
+`ForwardIt max_element(ForwardIt first, ForwardIt last, Compare comp);`
+
+`const T & min(const T &a, const T &b);`
+`const T & min(const T &a, const T &b, Compare comp);`
+`T min(std::initializer_list<T> ilist);`
+`T min(std::initializer_list<T> ilist, Compare comp);`
+
+`ForwardIt min_element(ForwardIt first, ForwardIt last);`
+`ForwardIt min_element(ForwardIt first, ForwardIt last, Compare comp);`
+
+**C 库**，位于头文件：`<cstdlib>`
+`void qsort(void *ptr, std::size_t count, std::size_t size, /*compare-pred*/* comp);`
+`void qsort(void *ptr, std::size_t count, std::size_t size, /*c-compare-pred*/* comp);`
+以升序排序 ptr 所指向的给定数组；数组含 count 个 size 字节大小的元素；
+用 comp 所指向的函数比较对象；若 comp 指示二个元素等价，则其顺序未指定；
+
+`void * bsearch(const void *key, const void *ptr, std::size_t count, std::size_t size, /*compare-pred*/* comp);`
+`void * bsearch(const void *key, const void *ptr, std::size_t count, std::size_t size, /*c-compare-pred*/* comp);`
+在 ptr 所指向的数组中寻找等于 key 所指向的元素的元素；
+
+数组含有 count 个 size 字节的元素，且必须相对于 key 所指向的对象划分，即所有比较小于它的元素必须先出现于比较等于它的元素，而比较等于它者必须先出现于所有比较大于该关键对象的元素；完全排序的数组满足这些要求；
+
+用 comp 所指的函数比较数组元素：
+若数组未以按照 comp 所用同样原则，相对于 key 升序划分，则行为未定义；
+若数组含有数个 comp 会指示等于被搜索元素的元素，则函数返回哪个元素是未指定的；
