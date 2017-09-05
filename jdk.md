@@ -31,8 +31,9 @@ tar xf jdk-8u121-linux-x64.tar.gz -C /usr/java/
 vim /etc/profile.d/jdk.sh
 --- jdk.sh ---
 export JAVA_HOME=/usr/java/jdk1.8.0_121     # 填写jdk解压的路径就行
-export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-export PATH=$PATH:$JAVA_HOME/bin
+# 不推荐使用 CLASSPATH 环境变量，如果需要请使用 java -classpath 或者 java -cp 指定
+# export CLASSPATH=...
+export PATH=$JAVA_HOME/bin:$PATH
 
 . /etc/profile      # 生效jdk环境变量
 
