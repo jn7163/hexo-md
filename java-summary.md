@@ -318,7 +318,7 @@ java 中常用的几个包介绍：
 
 
 这里再说明一下`CLASSPATH`环境变量：
-在 jdk1.5 之后，配置 java 环境的时候并不需要显示的设置 CLASSPATH 环境变量了，jvm 默认会在`.`（当前目录）和 java 类库中搜寻；
+在 jdk1.5 之后，配置 java 环境的时候并不需要显示的设置 CLASSPATH 环境变量了，java 默认会在`.`（当前目录）和`$JAVA_HOME/jre/lib/rt.jar`中搜寻；
 如果自己使用的包不在这些路径下面，那么有两种方法：
 - 使用`-classpath`参数进行指定：`java -classpath .:/path/to/classpath`，多个可用`:`冒号分隔；
 - 使用`CLASSPATH`环境变量指定：`export CLASSPATH=.:/path/to/classpath`，多个可用`:`冒号分隔；
@@ -338,5 +338,5 @@ java 中常用的几个包介绍：
 例如，对于一个源文件`Main.java`，定义了类：`Main`、`A`、`B`、`C`，那么编译后生成的 class 文件为：`Main.class`、`A.class`、`B.class`、`C.class`；
 
 对于 javac、java 命令，都有一个`-classpath`选项，用于指定 class 的搜索路径，但是有些细微的区别：
-- `javac`：`-classpath`选项用于指定当前编译的`*.java`源文件的依赖包的搜索路径（即`import`语句的搜索路径）；默认的搜索路径：当前工作路径`.`
-- `java`：`-classpath`选项用于指定需要运行的 class 文件及其依赖包的路径；默认的搜索路径：当前工作路径`.`
+- `javac`：`-classpath`选项用于指定当前编译的`*.java`源文件的依赖包的搜索路径（即`import`语句的搜索路径）；默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
+- `java`：`-classpath`选项用于指定需要运行的 class 文件及其依赖包的路径；默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
