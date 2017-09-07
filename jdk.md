@@ -19,7 +19,7 @@ keywords: jdk, jdk环境变量, java环境变量
 ### jdk下载
 <pre><code class="language-bash line-numbers">jdk1.8下载页面:     http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
-jdk-8u121-linux-x64.tar.gz      # 一般选择tar.gz，比较通用
+jdk-8u121-linux-x64.tar.gz
 </code></pre>
 
 ### jdk安装及配置
@@ -30,12 +30,10 @@ tar xf jdk-8u121-linux-x64.tar.gz -C /usr/java/
 ### 配置java环境变量
 vim /etc/profile.d/jdk.sh
 --- jdk.sh ---
-export JAVA_HOME=/usr/java/jdk1.8.0_121     # 填写jdk解压的路径就行
-# 不推荐使用 CLASSPATH 环境变量，如果需要请使用 java -classpath 或者 java -cp 指定
-# export CLASSPATH=...
+export JAVA_HOME=/usr/java/jdk1.8.0_121     # jdk解压的路径
 export PATH=$JAVA_HOME/bin:$PATH
 
-. /etc/profile      # 生效jdk环境变量
+. /etc/profile
 
 ### 测试是否设置成功
 java
