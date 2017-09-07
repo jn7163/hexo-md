@@ -177,7 +177,7 @@ Hello, World!
 
 
 Java 和 C/C++ 一样，都是从 main() 函数开始运行，并且 main() 函数的属性必须是`public static`；
-一个 Java 源文件中只能有一个 public 属性的 class，并且必须与文件名同名，当然也可以没有一个 public 属性的 class；
+一个 Java 源文件中只能有一个 public 属性的 class，并且必须与文件名同名，当然一个源文件中也可以没有 public 属性的 class，并且不强制与文件名相同；
 
 ## Java类和对象的概念
 Java 中的类可以看作是 C 语言中结构体 struct 的升级版，结构体只能包含成员变量，而类除了可以包含成员变量，还可以包含成员函数；
