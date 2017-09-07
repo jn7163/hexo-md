@@ -327,3 +327,16 @@ java 中常用的几个包介绍：
 `import static`可以导入 static 成员至当前命名空间：
 比如包`com.zfl9`中的类`Demo`中有两个静态成员`static_var`、`static_func()`，前者是一个静态成员变量，后者是一个静态成员函数；
 那么可以使用静态导入`import static com.zfl9.Demo.*;`将他们导入到当前命名空间，然后就能直接使用了；
+
+## javac和java
+`javac`命令位于`$JAVA_HOME/bin/javac`，是 Java 的编译器，用于将`*.java`源文件编译为`*.class`字节码文件；
+`java`命令位于`$JAVA_HOME/bin/java`或`$JAVA_HOME/jre/bin/java`，是 Java 的解释器，用于将`*.class`字节码解释为特定平台的机器码；
+
+`javac`命令可以一次只编译一个源文件：`javac Test.java`，也可以一次编译多个文件：`javac *.java`；
+
+对于 javac，每个类编译后都会生成一个和类名一样的 class 文件，不管这些类在不同文件中还是都在一个文件中；
+例如，对于一个源文件`Main.java`，定义了类：`Main`、`A`、`B`、`C`，那么编译后生成的 class 文件为：`Main.class`、`A.class`、`B.class`、`C.class`；
+
+对于 javac、java 命令，都有一个`-classpath`选项，用于指定 class 的搜索路径，但是有些细微的区别：
+- `javac`：`-classpath`选项用于指定当前编译的`*.java`源文件的依赖包的搜索路径（即`import`语句的搜索路径）；默认的搜索路径：当前工作路径`.`
+- `java`：`-classpath`选项用于指定需要运行的 class 文件及其依赖包的路径；默认的搜索路径：当前工作路径`.`
