@@ -338,5 +338,7 @@ java 中常用的几个包介绍：
 例如，对于一个源文件`Main.java`，定义了类：`Main`、`A`、`B`、`C`，那么编译后生成的 class 文件为：`Main.class`、`A.class`、`B.class`、`C.class`；
 
 对于 javac、java 命令，都有一个`-classpath`选项，用于指定 class 的搜索路径，但是有些细微的区别：
-- `javac`：`-classpath`选项用于指定当前编译的`*.java`源文件的依赖包的搜索路径（即`import`语句的搜索路径）；默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
-- `java`：`-classpath`选项用于指定需要运行的 class 文件及其依赖包的路径；默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
+- `javac`：`-classpath`选项用于指定当前编译的`*.java`源文件的依赖包的搜索路径（即`import`语句的搜索路径）；
+默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
+- `java`：`-classpath`选项用于指定需要运行的 class 文件及其依赖包的路径；
+默认的搜索路径：当前工作路径`.`和`$JAVA_HOME/jre/lib/rt.jar`
