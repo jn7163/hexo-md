@@ -1,15 +1,15 @@
 ---
-title: Java 基础
+title: Java 概述
 date: 2017-09-07 08:12:00
 categories:
 - java
 tags:
 - java
-keywords: java 基础 环境搭建 jdk jre jvm
+keywords: java 概述 环境搭建 jdk jre jvm import package
 ---
 
 > 
-Java 基础
+Java 概述，C/C++ 和 Java 的区别、安装并配置 JDK、JVM 虚拟机简述、Java 类和对象的概念、package 和 import 用法等
 
 <!-- more -->
 
