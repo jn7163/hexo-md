@@ -100,7 +100,7 @@ J2ME 只包含 J2SE 中的一部分类，受平台影响比较大，主要用于
 
 Java5.0 版本后，J2SE、J2EE、J2ME 分别更名为 Java SE、Java EE、Java ME，由于习惯的原因，我们依然称之为 J2SE、J2EE、J2ME；
 
-## 安装JDK
+## 配置Java环境
 > 
 笔者主要使用 Linux + Vim 进行 Java SE 的学习，因此这里的安装环境也是指 Linux 环境；
 
@@ -179,7 +179,7 @@ Hello, World!
 Java 和 C/C++ 一样，都是从 main() 函数开始运行，并且 main() 函数的属性必须是`public static`；
 一个 Java 源文件中只能有一个 public 属性的 class，并且必须与文件名同名，当然一个源文件中也可以没有 public 属性的 class，并且不强制与文件名相同；
 
-## Java类和对象的概念
+## Java类和对象
 Java 中的类可以看作是 C 语言中结构体 struct 的升级版，结构体只能包含成员变量，而类除了可以包含成员变量，还可以包含成员函数；
 
 我们用三个例子感受一下 C、C++、Java 中如何实现一个简单的 Student 类；

@@ -9,11 +9,11 @@ keywords: Java 语法基础
 ---
 
 > 
-Java 语法基础，基本数据类型、引用数据类型、数据类型转换、运算符、流程控制、数组、String、StringBuffer、StringBuilder字符串等
+Java 语法基础，基本数据类型、引用数据类型、数据类型转换、运算符、流程控制、数组、String、StringBuffer、StringBuilder 等
 
 <!-- more -->
 
-## Java基本语法
+## 基本语法
 编写 Java 程序时，应注意以下几点：
 - 类名：对于所有的类来说，类名的首字母应该大写；如果类名由若干单词组成，那么每个单词的首字母应该大写，例如 MyFirstJavaClass；
 - 方法名：所有的方法名都应该以小写字母开头；如果方法名含有若干单词，则后面的每个单词首字母大写；
@@ -57,7 +57,7 @@ Java 中主要有如下几种类型的变量：
 - import 语句和 package 语句对源文件中定义的所有类都有效；在同一源文件中，不能给不同的类不同的包声明；
 
 
-## Java数据类型
+## 数据类型
 Java 的两大数据类型：
 - 内置数据类型
 - 引用数据类型
@@ -707,3 +707,72 @@ datetime: Thu Sep 07 20:47:08 CST 2017
 
 
 其他的格式控制符请查阅官方 API 文档：[Formatter - Java SE 7](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html#syntax)
+
+
+## 命令行参数
+在运行 Java 程序的时候，可以向 main() 函数传递命令行参数：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String args[]) {
+        for (int i = 0; i < args.length; i++) {
+            out.printf("arg[%d] = %s\n", i, args[i]);
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [19:21:23]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [19:21:26]
+$ java Main
+
+# root @ arch in ~/work on git:master x [19:21:27]
+$ java Main 1 2 3 4
+arg[0] = 1
+arg[1] = 2
+arg[2] = 3
+arg[3] = 4
+</script></code></pre>
+
+
+> 
+和 C/C++ 不同，Java 中的命令行参数列表不包含当前的可执行文件名；
+
+
+## 可变参数
+从 JDK1.5 开始，Java 支持传递同类型的可变参数给一个函数；
+
+函数的可变参数的声明语法：`typeName... parameterName`；
+一个方法中只能指定一个可变参数，它必须是方法的最后一个参数；
+
+Java 中的可变参数实际上是一个数组对象，看例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String args[]) {
+        out.printf("sum() = %g\n", sum());
+        out.printf("sum(1, 2, 3, 4, 5) = %g\n", sum(1, 2, 3, 4, 5));
+        out.printf("sum(new double[]{1, 2, 3, 4, 5}) = %g\n", sum(new double[]{1, 2, 3, 4, 5}));
+    }
+
+    public static double sum(double... args) {
+        double sum = 0.0d;
+        for (int i=0; i<args.length; i++) {
+            sum += args[i];
+        }
+        return sum;
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [19:33:33] C:130
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [19:33:36]
+$ java Main
+sum() = 0.00000
+sum(1, 2, 3, 4, 5) = 15.0000
+sum(new double[]{1, 2, 3, 4, 5}) = 15.0000
+</script></code></pre>
