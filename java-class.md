@@ -328,16 +328,56 @@ $ java Main
 在 C++ 中，this 是编译器隐式传给成员函数的一个对象指针，this 总是指向当前对象；
 在 Java 中，this 的含义并没有发生变化，依旧表示当前对象的指针；只不过有些细节不同；
 
-`this`可用于`委托构造`，语法为`this(param_list);`；
+1) `this`可用于`委托构造`，语法为`this(param_list);`；
 所谓的委托构造，就是在构造函数中调用本类中的其他构造函数来完成对象的初始化工作；
 - 委托语句必须位于构造函数的首行；
 - 只能在构造函数中使用委托构造；
 - 一个构造函数中最多只能有一个委托构造语句；
 
 
+2) `this`可用于调用被覆盖的同名成员变量；
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String args[]) {
+        Main m = new Main();
+        m.print();
+        m = new Main("Otokaze", 18, 144.5f);
+        m.print();
+    }
+
+    public Main() {
+        this("Unnamed", 18, 150.0f);
+    }
+    public Main(String name, int age, float score) {
+        this.name = name;
+        this.age = age;
+        this.score = score;
+    }
+
+    public void print() {
+        out.printf("name: %s, age: %d, score: %.1f\n", name, age, score);
+    }
+
+    private String name;
+    private int age;
+    private float score;
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:59:14]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [13:59:16]
+$ java Main
+name: Unnamed, age: 18, score: 150.0
+name: Otokaze, age: 18, score: 144.5
+</script></code></pre>
+
+
 ## 函数重载、重写
 `函数重载（overload）`
-**同一作用域中**，函数有`同样的名称`，但是`参数列表不相同`的情形，这样的同名不同参数的函数之间，互相称之为重载函数；
+同一作用域中，函数有`同样的名称`，但是`参数列表不相同`的情形，这样的同名不同参数的函数之间，互相称之为重载函数；
 
 基本条件：
 - 函数名必须相同；
@@ -345,7 +385,7 @@ $ java Main
 - 函数返回值可以相同，可以不相同；
 - 函数的访问性可以相同、可以不相同；
 - 函数的检查异常可以相同、可以不相同；
-- 互相构成重载的函数必须位于同一作用域中；
+- 函数能够在同一个类中或者在一个子类中被重载（这点与 C++ 不同）；
 
 
 `函数重写（override）`
