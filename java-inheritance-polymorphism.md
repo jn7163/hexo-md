@@ -408,8 +408,7 @@ Class 类可以理解为 C++ 中的 type_info 类，里面保存了类的类型�
 
 Class 类的常用方法：
 1、`getName()`：返回类的名称；
-2、`isArray()`：判定此 Class 对象是否表示一个数组类；
-3、`toString()`：返回类的描述字符串；
+2、`toString()`：返回类的描述字符串；
 
 例子：
 <pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
