@@ -34,8 +34,7 @@ Java 中类的继承使用 extends 关键字；Java 只支持单继承，不支�
 2) 当你需要创建多个类，它们拥有很多相似的成员变量或成员函数时，也可以使用继承；可以将这些类的共同成员提取出来，定义为基类，然后从基类继承，既可以节省代码，也方便后续修改成员；
 
 比如，我们定义了一个基类 People，并且由基类派生出 Student 类：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String args[]) {
@@ -94,8 +93,7 @@ class Student extends People {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:25:54]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:25:54]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [10:26:05]
@@ -103,3 +101,24 @@ $ java Main
 张三, 35 岁, 无业游民
 李四, 14 岁, 一名学生, 考试成绩 98.0 分
 </script></code></pre>
+
+
+Java 和 C++ 一样，派生类构造函数必须调用直接基类中的构造函数；
+如果不显式的在派生类构造函数中调用直接基类构造函数，那么默认调用直接基类的无参构造函数，即`super()`；
+如果直接基类中没有无参构造函数，那么编译失败，所以建议在派生类的构造函数中都显式的调用直接基类构造函数！
+
+对于需要 override 的派生类成员函数，建议都加上`@Override`伪代码，提示编译器检查 Override 的正确性；
+
+Java 中没有 public、protected、private 继承方式之分，默认都是 public 继承，即不改变基类成员在派生类中的访问性；
+
+**哪些成员可以被继承**
+- public、protected 成员函数和成员变量可以被继承；
+- private 成员函数不能被继承；private 成员变量可以被继承，但是在派生类中不可见；
+- 构造函数不能被继承；
+- final 类不能被继承；
+
+
+> 
+`static`成员：与对象无关的函数或变量，存储在`全局数据区`，相当于访问性被限制的全局函数、全局变量；
+`final`类：不能被派生，并且 final 类的成员函数都隐式的声明为了 final 成员，但是成员变量不会；
+`final`方法：不能被重写；`final`属性：不能被修改，只读；`final`局部变量：不能被修改，只读；
