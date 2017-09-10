@@ -418,7 +418,7 @@ name: Otokaze, age: 18, score: 111.5
 ## 接口
 在抽象类中，可以包含一个或多个抽象方法；但在`接口(interface)`中，所有的方法必须都是抽象的，不能有方法体，它比抽象类更加“抽象”；
 
-接口使用`interface`关键字来声明，可以看做是一种特殊的抽象类，可以指定一个类必须做什么，而不是规定它如何去做；
+接口使用`interface`关键字来声明，接口可以看做是一种特殊的抽象类，它可以指定一个类必须做什么，而不是规定它如何去做；
 
 现实中也有很多接口的实例，比如说串口电脑硬盘，Serial ATA 委员会指定了 Serial ATA 2.0 规范，这种规范就是接口；
 Serial ATA 委员会不负责生产硬盘，只是指定通用的规范；
@@ -457,8 +457,8 @@ Serial ATA 委员会不负责生产硬盘，只是指定通用的规范；
 
 **接口的特性**
 但是接口有自己的一些特性，归纳如下：
-1) 接口中每一个方法也是隐式抽象的，接口中的方法会被隐式的指定为`public abstract`（只能是 public abstract，其他修饰符都会报错）；
-2) 接口中可以含有变量，但是接口中的变量会被隐式的指定为`public static final`变量，接口中只能定义 static、final 变量，其他的都不被允许；
+1) 接口中每一个方法也是隐式抽象的，接口中的方法会被隐式的指定为`public abstract`，并且只能是`public abstract`；
+2) 接口中可以含有变量，但是接口中的变量会被隐式的指定为`public static final`静态常量，并且只能是`public static final`；
 3) 接口中没有构造方法，不能被实例化；
 4) 一个接口不实现另一个接口，但可以继承多个其他接口；`接口`的`多继承`特点弥补了`类`的`单继承`；
 5) **一个类只能继承一个父类，但却可以实现多个接口**；实现接口使用关键字`implements`；
@@ -468,14 +468,11 @@ Serial ATA 委员会不负责生产硬盘，只是指定通用的规范；
 2) 抽象类可以有构造函数，但是接口没有构造函数；
 3) 抽象类可以有具体的方法，但是接口中只能有抽象方法；
 4) 抽象类中的成员变量可以是各种修饰符的，但是接口中的成员变量只能是 public static final 的；
-5) 抽象类中可以有静态代码块和静态方法，但是接口中不能有 static 方法和 static 代码块；
+5) 抽象类中可以有 static 代码块和 static 方法，但是接口中不能有 static 代码块和 static 方法；
 6) 一个类只能继承一个抽象类，而一个类却可以实现多个接口；
 
 **接口的声明格式**
 `public/[default] interface 接口名称 [extends 接口1[, 接口2, ...]] { 声明变量、抽象方法 }`
-1) 接口是隐式抽象的，当声明一个接口的时候，不必使用 abstract 关键字；
-2) 接口中每一个方法也是隐式抽象的，声明时同样不需要 abstract 关键子；
-3) 接口中的方法都是 public 公有的；
 
 **类实现接口的格式**
 `[修饰符] class 类名 [extends 父类] implements 接口1[, 接口2, ...] { 实现抽象方法 }`
@@ -483,7 +480,6 @@ Serial ATA 委员会不负责生产硬盘，只是指定通用的规范；
 **重写接口中声明的方法**时，需要注意以下规则：
 1) 类在实现接口的方法时，不能抛出`强制性异常`，只能在`接口`中，或者`继承接口的抽象类`中抛出该强制性异常；
 2) 类在重写方法时要保持一致的方法名，并且应该保持相同或者相兼容的返回值类型；即应遵循`方法重写`的规则；
-3) 如果实现接口的类是抽象类，那么就没必要实现该接口的方法；
 
 **标记接口**
 标识接口是没有任何方法和属性的接口，它仅仅表明它的类属于一个特定的类型，供其他代码来测试允许做一些事情；
@@ -498,3 +494,80 @@ Serial ATA 委员会不负责生产硬盘，只是指定通用的规范；
 接口和抽象类各有优缺点，在接口和抽象类的选择上，必须遵守这样一个原则：
 1) 行为模型应该总是通过接口而不是抽象类定义，所以通常是优先选用接口，尽量少用抽象类；
 2) 选择抽象类的时候通常是如下情况：需要定义子类的行为，又要为子类提供通用的功能；
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Pupil s = new Pupil("小明", 7, 50);
+        s.say();
+        s.exam();
+    }
+}
+
+interface People {
+    public abstract String getName();
+    public abstract int getAge();
+    public abstract void setName(String name);
+    public abstract void setAge(int age);
+
+    public abstract void say();
+}
+
+interface Student {
+    public abstract float getScore();
+    public abstract void setScore(float score);
+
+    public abstract void exam();
+}
+
+class Pupil implements People, Student {
+    public Pupil() {
+        m_name = "Unnamed";
+        m_age = 0;
+        m_score = 0.0f;
+    }
+    public Pupil(String name, int age, float score) {
+        m_name = name;
+        m_age = age;
+        m_score = score;
+    }
+
+    @Override
+    public String getName() { return m_name; }
+    @Override
+    public int getAge() { return m_age; }
+    @Override
+    public float getScore() { return m_score; }
+    @Override
+    public void setName(String name) { m_name = name; }
+    @Override
+    public void setAge(int age) { m_age = age; }
+    @Override
+    public void setScore(float score) { m_score = score; }
+
+    @Override
+    public void say() {
+        out.printf("大家好，我叫%s，今年 %d 岁，是一名一年级的小学生。\n", m_name, m_age);
+    }
+
+    @Override
+    public void exam() {
+        out.printf("我正在考试，请保持安静 ... \n");
+    }
+
+    private String m_name;
+    private int m_age;
+    private float m_score;
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:28:32]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [13:28:47]
+$ java Main
+大家好，我叫小明，今年 7 岁，是一名一年级的小学生。
+我正在考试，请保持安静 ...
+</script></code></pre>
