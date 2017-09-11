@@ -1,11 +1,11 @@
 ---
-title: ASCII 和 Unicode 编码
+title: ASCII 和 Unicode
 date: 2017-06-30 18:23:00
 categories:
 - 字符编码
 tags:
+- 字符集
 - 字符编码
-- ASCII和Unicode
 keywords: ASCII Unicode utf-8 utf-16 ucs-2 utf-32 ucs-4
 ---
 
@@ -28,7 +28,7 @@ keywords: ASCII Unicode utf-8 utf-16 ucs-2 utf-32 ucs-4
 
 个人理解：
 > 
-字符集：每个字符用一个唯一的十进制数字来表示，这样的集合称为字符集，或者称为**`字符表示方法`**；
+字符集：每个字符用一个唯一的数字来表示，这样的集合称为字符集，或者称为**`字符表示方法`**；
 字符编码：将字符集存储在计算机内存/磁盘、网络的一种存储方案，或者称为**`字符存储方案`**；
 
 ## ASCII字符集&编码
@@ -89,7 +89,6 @@ UTF-8 的编码规则：
 4|010000 - 10FFFF|11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
 ## 总结
-5. 总结
 (1) Unicode 属于字符集，不属于编码，UTF-8、UTF-16 等是针对 Unicode 字符集的编码；
 
 (2) UTF-8、UTF-16、UCS-2、UTF-32、UCS-4 对比：
@@ -103,7 +102,7 @@ UTF-8 的编码规则：
 
 
 > 
-`字节顺序标记（英语：byte-order mark，BOM）`，用来标识该文件的字节序是大端还是小端；
+`字节顺序标记（英语：byte-order mark，BOM）`，用来标识 Unicode/UCS 文本文件中的字节序是大端还是小端；
 BOM 只适用于 UTF-16/UCS-2、UTF-32/UCS-4，UTF-8 不需要所谓的 BOM 标识，因为 UTF-8 没有所谓的字节序问题；
 
 相关参考：
