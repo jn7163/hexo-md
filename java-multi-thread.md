@@ -64,7 +64,7 @@ Java 运行系统在很多方面依赖于线程，所有的类库设计都考虑
 
 为了确定线程在当前是否存活着（就是要么是可运行的，要么是被阻塞了），需要使用 isAlive() 方法，如果是可运行或被阻塞，这个方法返回 true；如果线程仍旧是 new 状态且不是可运行的，或者线程死亡了，则返回 false；
 
-需要注意的是，如果试图对一个已经死亡的线程调用 start() 方法，线程死亡后将可能再次作为线程执行，系统会抛出 IllegalThreadStateException 异常；
+如果试图对一个已经死亡的线程调用 start() 方法，在运行期间将会抛出 IllegalThreadStateException 异常；
 
 **挂起、阻塞、睡眠**
 `挂起`和`睡眠`是**主动**的，挂起恢复需要主动完成，睡眠恢复则是自动完成的，因为睡眠有一个睡眠时间，睡眠时间到则恢复到就绪态；
@@ -167,7 +167,7 @@ Java 程序中的线程组由 java.lang.ThreadGroup 类的一个对象表示；T
 
 您还可以创建线程组，并在该线程组中放置一个新线程；
 要在你的线程组中放置一个新线程，我们必须使用 Thread 类的一个构造函数来接受一个 ThreadGroup 对象作为参数：
-<pre><code class="language-java line-numbers"><script type="text/plain">ThreadGroup myGroup = new ThreadGroup("My Thread  Group");
+<pre><code class="language-java line-numbers"><script type="text/plain">ThreadGroup myGroup = new ThreadGroup("My Thread Group");
 Thread t = new Thread(myGroup, "myThreadName");
 </script></code></pre>
 
@@ -631,7 +631,7 @@ public State getState();
 
 
 **关于线程中断**
-1、一个正常运行的线程，收到中断后，不会有任何问题，可以不需要做任何处理，当然程序可以通过显示的判断，来决定下一步动作，比如：`while (!Thread.currentThread().isInterrupted())`；
+1、一个正常运行的线程，收到中断后，不会有任何问题，可以不需要做任何处理，当然程序可以通过显示的判断，来决定下一步动作，比如：`while (!Thread.currentThread().isInterrupted()) { statements }`；
 
 2、当线程被 wait()、join()、sleep() 阻塞期间，如果收到中断请求，则会抛出 InterruptedException 异常并清除中断标志；这是中断非常有用的一点，可以提前从阻塞状态返回；
 
@@ -959,3 +959,766 @@ www.baidu.com
 2、调用同一个类中的静态同步方法的线程将彼此阻塞；它们都是锁定在相同的 Class 对象上；
 3、静态同步方法和非静态同步方法将永远不会彼此阻塞，因为静态方法锁定在 Class 对象上，非静态方法锁定在该类的对象上；
 4、对于同步代码块，要看清楚什么对象已经用于锁定（synchronized 后面括号的内容）；在同一个对象上进行同步的线程将彼此阻塞，在不同对象上锁定的线程将永远不会彼此阻塞；
+
+**类锁的本质，和对象锁有什么区别？**
+如果仔细观察类锁和对象锁的 synchronized 块定义：
+1) `synchronized (obj) { statements }`：对象锁
+2) `synchronized (xxx.class) { statements }`：类锁
+
+除去相同的部分，就剩下了`obj`、`xxx.class`（xxx为具体的类名）
+还记得之前说的[Object.getClass() 方法](https://www.zfl9.com/java-inheritance-polymorphism.html#Object类)吗？
+没错，其实无论是`obj`还是`xxx.class`，本质都是一个对象，也就是它们都是属于某个具体类的一个实例：
+1) 对于`obj`：很明显，是属于某个类的一个实例；
+2) 对于`xxx.class`：每个类都有一个静态属性`class`，该属性是 java.lang.Class 类的一个实例，该对象中保存了类的信息；也就是说，`xxx.class`是类 Class 的一个实例；
+
+总结起来说，synchronized 代码块的括号中只能接收一个对象，没有所谓的类锁、对象锁之分，本质都是对象锁；
+
+## 线程交互
+线程的交互可以理解为线程之间的通信，通过 Object 类的 wait()、notify()、notifyAll() 方法进行线程通信；
+
+wait() 方法原型：
+`public final void wait() throws InterruptedException;`：无超时等待，进入该对象的等待池，等待来自该对象的 notify/notifyAll 通知
+`public final native void wait(long timeout) throws InterruptedException;`：超时等待，毫秒ms为单位，同上
+`public final void wait(long timeout, int nanos) throws InterruptedException;`：超时等待，毫秒ms为基本单位，精确到纳秒ns，同上
+
+notify() 方法原型：
+`public final native void notify();`：唤醒在该对象的等待池中的某个线程，该线程将进入对象的锁池，竞争对象锁
+`public final native void notifyAll();`：唤醒在该对象的等待池中的所有线程，唤醒的线程将进入对象的锁池，竞争对象锁
+
+需要注意的是，notify/notifyAll 是实时信号，因此在 notify/notifyAll 之后的 wait 将不会收到唤醒信号，直到下一个 notify/notifyAll 信号的到来；
+也就是说，使用 wait/notify 机制的时候，需要注意他们的时间顺序，不然会造成后面的 wait 线程持续等待；
+
+还有非常重要的一点，wait/notify/notifyAll 必须在 synchronized 的保护下进行，因为 Java 的 wait/notify 机制和 C/C++ 中的条件变量很相似，所以这里就拿 C/C++ 的条件变量的图做解释：
+![Java wait/notify 机制](/images/pthread_cond_wait.jpg)
+> 
+忽略图中的 pthread_cond_wait、pthread_cond_signal，并将它们替换为 Java 中的 wait()、notify()/notifyAll()
+
+> 
+pthread 中的原话：
+传入给 pthread_cond_wait 的 mutex 应为一把已经获取的互斥锁；
+pthread_cond_wait 调用相当复杂，它是如下执行序列的一个组合：
+1）释放互斥锁 并且 将线程挂起（这两个操作是一个原子操作）；
+2）线程获得信号，尝试获得互斥锁后被唤醒；
+
+放在 Java 中：
+调用对象的 wait() 方法之后，将执行的操作是：
+1) 释放已获取的对象锁，并且将线程移至对象的等待池；
+2) 线程获得 notify/notifyAll 信号，从对象的等待池移至对象的锁池，尝试获得对象锁；
+
+所以，调用对象的 wait() 方法的前提是已经获得对象的锁，也就是 wait 必须在 synchronized 中；
+而 notify/notifyAll 方法通常伴随着条件（共享的变量）的改变，因此也必须在 synchronized 中（实际上笔者对于 notify/notifyAll 为什么必须在 synchronized 中的具体原因还是不太明确，如果你有更好、更精确的解释请帮忙指点！）；
+
+注意，wait、notify/notifyAll 必须在 synchronized 的保护下调用不仅仅是逻辑上的要求，也是 Java 语言本身的要求，否则在运行期间将会抛出 java.lang.IllegalMonitorStateException 异常；
+
+wait/notify 机制的应用例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Object lock = new Object();
+        Thread t1 = new Thread(new Task(lock, "A", true));  // 先打印
+        Thread t2 = new Thread(new Task(lock, "B", false)); // 后打印
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Task implements Runnable {
+    private Object m_lock;  // 应为同一个对象
+    private String m_s;     // 需要打印的字符串
+    private boolean m_flag; // true表示先打印, false表示后打印
+
+    public Task(Object lock, String s, boolean flag) {
+        m_lock = lock;
+        m_s = s;
+        m_flag = flag;
+    }
+
+    @Override
+    public void run() {
+        if (!m_flag) {
+            Thread.yield(); // 后打印的进行 yield() 线程让步
+        }
+
+        for (int i=0; i<10; i++) {
+            synchronized (m_lock) {
+                out.print(m_s);
+                m_lock.notify();    // 唤醒 m_lock 等待池中的某个线程
+
+                if (i == 9 && !m_flag) { // 如果为最后一次打印则不再进行 wait()
+                    out.print("\n");
+                    break;
+                }
+
+                // 进入 m_lock 的等待池，等待唤醒
+                try {
+                    m_lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:45:54]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [17:45:57]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [17:45:58]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [17:46:01]
+$ java Main
+BABABABABABABABABAB
+A^C#
+</script></code></pre>
+
+
+
+第一次运行结果和第二次运行结果都没有问题，都按照我们预想的顺序执行；
+但是第三次运行的结果却不符合预期，因为 Thread.yield() 方法并不保证让步的成功性！
+
+如何保证（至少能够降低概率）不会出现第三次这种情况呢？
+这里提供了一个解决方法：使用一个额外的标志位，用来标识先打印的线程已经先执行了：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Lock lock = new Lock();
+        Thread t1 = new Thread(new Task(lock, "A", true));  // 先打印
+        Thread t2 = new Thread(new Task(lock, "B", false)); // 后打印
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Lock {
+    /**
+     * volatile 变量强制线程每次读取的时候都直接从主内存中读取
+     * 同时，每次写 volatile 变量的时候也要立即刷新主内存中的值
+     */
+    private volatile boolean m_flag;
+    public synchronized void setFlag(boolean flag) { m_flag = flag; }
+    public boolean getFlag() { return m_flag; }
+}
+
+class Task implements Runnable {
+    private Lock m_lock;    // 应为同一个对象
+    private String m_s;     // 需要打印的字符串
+    private boolean m_flag; // true表示先打印, false表示后打印
+
+    public Task(Lock lock, String s, boolean flag) {
+        m_lock = lock;
+        m_s = s;
+        m_flag = flag;
+    }
+
+    @Override
+    public void run() {
+        if (!m_flag) {
+            Thread.yield(); // 后打印的进行 yield() 线程让步
+        }
+
+        for (int i=0; i<10; i++) {
+            synchronized (m_lock) {
+                if (i == 0 && m_flag) { // 设置flag, 告诉后打印的线程我已经先于你执行了
+                    m_lock.setFlag(true);
+                }
+
+                if (i == 0 && !m_flag && !m_lock.getFlag()) { // 后打印的线程进行flag判断
+                    try {
+                        m_lock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                out.print(m_s);
+                m_lock.notify();    // 唤醒 m_lock 等待池中的某个线程
+
+                if (i == 9 && !m_flag) { // 如果为最后一次打印则不再进行 wait()
+                    out.print("\n");
+                    break;
+                }
+
+                // 进入 m_lock 的等待池，等待唤醒
+                try {
+                    m_lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [18:21:23]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [18:24:44]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [18:24:47]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [18:24:48]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [18:24:48]
+$ java Main
+ABABABABABABABABABAB
+
+# root @ arch in ~/work on git:master x [18:24:49]
+$ java Main
+ABABABABABABABABABAB
+</script></code></pre>
+
+
+
+**竞态条件和临界区**
+在同一程序中运行多个线程本身不会导致问题，问题在于多个线程访问了相同的资源；
+如，同一内存区（变量，数组，或对象）、系统（数据库，web services 等）或文件；
+实际上，这些问题只有在一或多个线程向这些资源做了`写`操作时才有可能发生，只要资源没有发生变化，多个线程读取相同的资源就是安全的；
+
+多线程同时执行下面的代码可能会出错：
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Counter {
+    protected long count = 0;
+    public void add(long value) {
+        this.count = this.count + value;
+    }
+}
+</script></code></pre>
+
+
+
+想象下线程 A 和 B 同时执行同一个 Counter 对象的 add()方法，我们无法知道操作系统何时会在两个线程之间切换；
+JVM 并不是将这段代码视为单条指令来执行的，而是按照下面的顺序：
+1) 从内存获取 this.count 的值放到寄存器；
+2) 将寄存器中的值增加 value；
+3) 将寄存器中的值写回内存；
+
+观察线程 A 和 B 交错执行会发生什么：
+> 
+this.count = 0;
+A: 读取 this.count 到一个寄存器 (0)
+B: 读取 this.count 到一个寄存器 (0)
+B: 将寄存器的值加 2
+B: 回写寄存器值(2)到内存. this.count 现在等于 2
+A: 将寄存器的值加 3
+A: 回写寄存器值(3)到内存. this.count 现在等于 3
+
+两个线程分别加了 2 和 3 到 count 变量上，两个线程执行结束后 count 变量的值应该等于 5；
+然而由于两个线程是交叉执行的，两个线程从内存中读出的初始值都是 0；然后各自加了 2 和 3，并分别写回内存；最终的值并不是期望的 5，而是最后写回内存的那个线程的值，上面例子中最后写回内存的是线程 A，但实际中也可能是线程 B；如果没有采用合适的同步机制，线程间的交叉执行情况就无法预料；
+
+`竞态条件 & 临界区`
+当两个线程竞争同一资源时，如果**对资源的访问顺序敏感**，就称存在`竞态条件`；导致竞态条件发生的代码区称作`临界区`；
+
+上例中 add() 方法就是一个临界区，它会产生竞态条件；在临界区中使用适当的同步就可以避免竞态条件；
+
+**生产者消费者 - 简单例子**
+对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的；就像学习每一门编程语言一样，Hello World！都是最经典的例子；
+
+实际上，准确说应该是“生产者-消费者-仓储”模型，离开了仓储，生产者消费者模型就显得没有说服力了；
+
+对于此模型，应该明确一下几点：
+1、生产者在仓储未满时生产，仓满时停止生产；
+2、消费者在仓储有产品时消费，仓空则等待；
+3、当消费者发现仓储没产品可消费时通知生产者生产；
+4、生产者在生产出可消费产品时，应通知等待的消费者去消费；
+
+此模型将要结合 java.lang.Object 的 wait 与 notify、notifyAll 方法来实现以上的需求：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Godown godown = new Godown(40);
+
+        Thread c1 = new Thread(new Consumer(20, godown));
+        Thread c2 = new Thread(new Consumer(30, godown));
+        Thread c3 = new Thread(new Consumer(15, godown));
+        Thread c4 = new Thread(new Consumer(10, godown));
+        Thread c5 = new Thread(new Consumer(20, godown));
+
+        Thread p1 = new Thread(new Producer(40, godown));
+        Thread p2 = new Thread(new Producer(40, godown));
+        Thread p3 = new Thread(new Producer(50, godown));
+
+        p1.start();
+        p2.start();
+        c1.start();
+        c2.start();
+        c3.start();
+        p3.start();
+        c4.start();
+        c5.start();
+
+        try {
+            c1.join();
+            c2.join();
+            c3.join();
+            c4.join();
+            c5.join();
+            p1.join();
+            p2.join();
+            p3.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// 货仓
+class Godown {
+    private final int MAX_SIZE = 100; // 仓库容量
+    private volatile int m_currnum;   // 当前库存
+
+    public Godown() {}
+    public Godown(int currnum) {
+        if (currnum > MAX_SIZE) {
+            out.printf("预留库存(%d)大于仓库容量(%d)!\n", currnum, MAX_SIZE);
+            exit(1);
+        }
+        m_currnum = currnum;
+    }
+
+    // 生产
+    public synchronized void produce(int recvnum) {
+        while (recvnum + m_currnum > MAX_SIZE) {
+            out.printf("厂家发货过多(发货量: %d, 剩余空间: %d) -> [暂停进货]\n", recvnum, MAX_SIZE - m_currnum);
+            notifyAll(); // 通知消费者购买
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        m_currnum += recvnum; // 进货
+        out.printf("厂家已发货(发货量: %d, 当前库存: %d)\n", recvnum, m_currnum);
+        notifyAll(); // 通知消费者购买
+    }
+
+    // 消费
+    public synchronized void consume(int neednum) {
+        while (neednum > m_currnum) {
+            out.printf("当前库存不足(需求量: %d, 剩余库存: %d) -> [暂停售货]\n", neednum, m_currnum);
+            notifyAll(); // 通知卖家进货
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        m_currnum -= neednum; // 购买
+        out.printf("消费者购买(购买量: %d, 剩余库存: %d)\n", neednum, m_currnum);
+        notifyAll(); // 通知卖家进货
+    }
+}
+
+// 生产者
+class Producer implements Runnable {
+    private Godown m_godown;
+    private int m_num;
+
+    public Producer(int num, Godown godown) {
+        m_num = num;
+        m_godown = godown;
+    }
+
+    @Override
+    public void run() {
+        m_godown.produce(m_num);
+    }
+}
+
+// 消费者
+class Consumer implements Runnable {
+    private Godown m_godown;
+    private int m_num;
+
+    public Consumer(int num, Godown godown) {
+        m_num = num;
+        m_godown = godown;
+    }
+
+    @Override
+    public void run() {
+        m_godown.consume(m_num);
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:14:58]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [11:15:13]
+$ java Main
+厂家已发货(发货量: 40, 当前库存: 80)
+厂家发货过多(发货量: 50, 剩余空间: 20) -> [暂停进货]
+消费者购买(购买量: 15, 剩余库存: 65)
+消费者购买(购买量: 10, 剩余库存: 55)
+厂家已发货(发货量: 40, 当前库存: 95)
+消费者购买(购买量: 30, 剩余库存: 65)
+消费者购买(购买量: 20, 剩余库存: 45)
+厂家已发货(发货量: 50, 当前库存: 95)
+消费者购买(购买量: 20, 剩余库存: 75)
+
+# root @ arch in ~/work on git:master x [11:15:14]
+$ java Main
+厂家已发货(发货量: 40, 当前库存: 80)
+消费者购买(购买量: 20, 剩余库存: 60)
+消费者购买(购买量: 15, 剩余库存: 45)
+消费者购买(购买量: 10, 剩余库存: 35)
+厂家已发货(发货量: 50, 当前库存: 85)
+消费者购买(购买量: 30, 剩余库存: 55)
+消费者购买(购买量: 20, 剩余库存: 35)
+厂家已发货(发货量: 40, 当前库存: 75)
+
+# root @ arch in ~/work on git:master x [11:15:15]
+$ java Main
+厂家已发货(发货量: 40, 当前库存: 80)
+厂家发货过多(发货量: 50, 剩余空间: 20) -> [暂停进货]
+消费者购买(购买量: 10, 剩余库存: 70)
+消费者购买(购买量: 20, 剩余库存: 50)
+厂家已发货(发货量: 40, 当前库存: 90)
+厂家发货过多(发货量: 50, 剩余空间: 10) -> [暂停进货]
+消费者购买(购买量: 15, 剩余库存: 75)
+消费者购买(购买量: 30, 剩余库存: 45)
+消费者购买(购买量: 20, 剩余库存: 25)
+厂家已发货(发货量: 50, 当前库存: 75)
+</script></code></pre>
+
+
+
+本例仅仅是"生产者消费者模型"中最简单的一种表示；
+本例中，如果消费者的需求达不到满足，而又没有生产者，则程序会一直处于等待状态；
+同样，如果生产者送来的货物数量过多，而又没有消费者，则程序会一直处于等待状态；这些都是需要改进的地方！
+
+## 线程死锁
+所谓死锁，是指多个线程在运行过程中因争夺资源而造成的一种`僵局(DeadlyEmbreace)`即互相等待的现象，当线程处于这种僵持状态时，若无外力作用，它们都将无法向前推进；
+
+典型的例子：线程 A 获得了锁 1，线程 B 获得了锁 2；这时线程 A 调用 lock 试图获得锁 2，结果是需要挂起等待线程 B 释放锁 2，而这时线程 B 也调用 lock 试图获得锁 1，结果是需要挂起等待线程 A 释放锁 1，于是线程 A 和 B 都永远处于挂起状态了；
+
+话不多说，我们来模拟一下这种情况：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Lock lock1 = new Lock("lock1");
+        Lock lock2 = new Lock("lock2");
+        Thread t1 = new Thread(new Deadlock(lock1, lock2));
+        Thread t2 = new Thread(new Deadlock(lock2, lock1));
+        t1.start();
+        t2.start();
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Lock {
+    private String m_name;
+    public Lock(String name) {
+        m_name = name;
+    }
+    @Override
+    public String toString() {
+        return m_name;
+    }
+}
+
+class Deadlock implements Runnable {
+    private Lock m_lock1;
+    private Lock m_lock2;
+    public Deadlock(Lock lock1, Lock lock2) {
+        m_lock1 = lock1;
+        m_lock2 = lock2;
+    }
+    @Override
+    public void run() {
+        synchronized (m_lock1) {
+            out.printf("[%s] -> entry synchronized(%s)\n", Thread.currentThread().getName(), m_lock1.toString());
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            out.printf("[%s] -> try entry synchronized(%s)\n", Thread.currentThread().getName(), m_lock2.toString());
+            synchronized (m_lock2) {
+                out.printf("[%s] -> entry synchronized(%s)\n", Thread.currentThread().getName(), m_lock2.toString());
+            }
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [12:15:25] C:130
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [12:15:27]
+$ java Main
+[Thread-0] -> entry synchronized(lock1)
+[Thread-1] -> entry synchronized(lock2)
+[Thread-0] -> try entry synchronized(lock2)
+[Thread-1] -> try entry synchronized(lock1)
+^C#
+
+# root @ arch in ~/work on git:master x [12:15:33] C:130
+$ java Main
+[Thread-1] -> entry synchronized(lock2)
+[Thread-0] -> entry synchronized(lock1)
+[Thread-1] -> try entry synchronized(lock1)
+[Thread-0] -> try entry synchronized(lock2)
+^C#
+</script></code></pre>
+
+
+
+**产生死锁的必要条件**
+虽然线程在运行过程中可能发生死锁，但死锁的发生也必须具备一定的条件：
+1) `互斥条件`：指线程对所分配的资源进行排它性使用，即在一段时间内某资源只由一个线程占用；如果此时还有其它线程请求该资源，则请求者只能等待，直至占有该资源的线程释放；
+2) `请求和保持条件`：指线程已经保持了至少一个资源，但又提出了新的资源请求，而该资源又被其它线程占有，或者已经拥有了该资源却又再次请求，此时请求线程阻塞，但又对自己已获得的资源保持不放；
+3) `不剥夺条件`：指线程在已获得的资源，在未使用完之前，不能被剥夺，只能在使用完时由自己释放；
+4) `环路等待条件`：指在发生死锁时，必然存在一个 线程--资源 的`环形链`，即线程集合`{P0, P1, P2, ... Pn}`中的 P0 正在等待 P1 占用的资源；P1 正在等待 P2 占用的资源，......，Pn 正在等待已被 P0 占用的资源；
+
+**处理死锁的基本方法**
+为保证系统中诸线程的正常运行，应事先采取必要的措施，来预防发生死锁；在系统中已经出现死锁后，则应及时检测到死锁的发生，并应采取适当的措施来解除死锁；目前，处理死锁的方法可归结为以下四种：
+
+1) `预防死锁`：这是一种较简单和直观的方法；该方法是通过设置某些限制条件，去破坏产生死锁的四个必要条件中的一个或几个，来预防发生死锁；但由于所施加的限制条件往往太严格，因而会导致系统资源利用率和系统吞吐量低；
+
+2) `避免死锁`：该方法同样是属于事先预防的策略，但它并不须事先采取各种限制措施去破坏产生死锁的四个必要条件，而是在资源的动态分配过程中，用某种方法去防止系统进入不安全状态，从而避免发生死锁；这种方法只需事先施加较弱的限制条件，便可获得较高的资源利用率及系统吞吐量，但在事实上有一定的难度；目前在较完善的系统中常用此方法来避免发生死锁；
+
+3) `检测死锁`：这种方法并不须事先采取任何限制性措施，也不必检查系统是否已经进入不安全区，而是允许系统在运行过程中发生死锁；但可通过系统所设置的检测机构，及时的检测出死锁的发生，并精确地确定与死锁有关的线程和资源；然后采取适当措施，从系统中将已发生的死锁清除掉；
+
+4) `解除死锁`：这是与检测死锁相配套的一种措施；当检测到系统中已发生死锁时，须将线程从死锁状态中解脱出来；常用的实施方法是撤销或挂起一些线程，以便回收一些资源，再将这些资源分配给已处于阻塞状态的线程，是之转为就绪状态，以继续运行；死锁的检测和解除措施有可能使系统获得较好的资源利用率和吞吐量，但在实现上难度也最大；
+
+## 线程挂起/恢复/终止
+suspend() 挂起、resume() 恢复、stop() 终止，这些线程控制方法在 Java 2 和早期版本中有所不同；
+尽管现在大多数时候都是使用 Java 2 来编写多线程程序，但是我们仍然需要了解 Java 2 为什么会这有这样的变化，其原因是什么？
+
+**Java 1.1 及更早版本的线程挂起、恢复、终止**
+`public final void suspend();`：挂起线程
+`public final void resume();`：恢复线程
+`public final void stop();`：终止线程
+
+> 
+这些方法已经被官方标记为`@Deprecated`，也就是`弃用的`方法，不应该去使用这些方法；
+
+这几个 API 的使用非常简单，并且命名非常直观，看例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new Thread(new Task());
+        t.start();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call suspend()\n");
+        t.suspend();
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call resume()\n");
+        t.resume();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call stop()\n");
+        t.stop();
+    }
+}
+
+class Task implements Runnable {
+    @Override
+    public void run() {
+        for (int i=0; ; i++) {
+            out.println(i);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:05:33]
+$ javac Main.java
+Note: Main.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+# root @ arch in ~/work on git:master x [14:05:47]
+$ java Main
+0
+1
+2
+call suspend()
+call resume()
+3
+4
+5
+call stop()
+</script></code></pre>
+
+
+
+从这个例子中，貌似看不出有什么问题，并且也没有出现什么不安全的情况；
+是的，因为这是一个非常简单的多线程例子，根本看不出任何问题！
+
+**为什么 stop() 是不安全的**？
+首先我们需要明确的一点是：
+调用 Thread.stop() 方法是不安全的，这是因为当调用 Thread.stop() 方法时，会发生下面两件事：
+1) 即刻抛出 ThreadDeath 错误，在线程的 run() 方法内，任何一处都有可能抛出 ThreadDeath Error，包括在 catch 或 finally 语句中；
+2) 释放该线程所持有的所有的锁；
+
+**难道我不能通过捕获 ThreadDeath 错误来修正受损对象吗**？
+理论上，也许可以，但书写正确的多线程代码的任务将极其复杂，由于两方面的原因，这一任务的将几乎不可能完成：
+1) 线程可以在几乎任何地方抛出 ThreadDeath 错误；由于这一点，所有的同步方法和同步块将必须被考虑得事无巨细；
+2) 线程在清理第一个 ThreadDeath 错误的时候（在 catch 或 finally 语句中），可能会抛出第二个；清理工作将不得不重复直到到其成功；保障这一点的代码将会很复杂；
+
+综上所述，试图通过捕获 ThreadDeath 错误进行正常的 stop 线程是不符合实际的；
+
+那么第二点呢？
+调用 stop 方法会抛出 ThreadDeath 来终止线程，而 stop 方法的不安全性在于该方法会释放线程所持有的锁，导致被`污染的数据`暴露给其他线程；
+简单来说，就是 stop 方法会“突然”停止线程并释放锁而来不及做“善后”工作（如回滚操作），从而使结果变得不可预期；
+
+此外，当线程持有本身（this）的锁时，stop 方法是无法起效的，需等到线程释放自身的锁才能终止该线程；这是由于 stop() 会调用 stop(Throwable obj) 方法，而该方法是一个同步方法；
+
+**如何正确的停止一个线程**？
+对于 stop 的不安全性，Sun 的文档中也给出了推荐的做法：
+1) 给定一个终止线程的`标记位`，当需要终止线程的时候设置这个标记位，而线程本身应当定期检查这个标记位，当检测到终止标记时，“优雅”地结束自己；
+2) 对于阻塞的线程，应当使用 interrupt() 方法来终止等待；实际上 interrupt() 方法也是通过设置中断标志位来实现"结束"线程的；
+
+**为什么 suspend()/resume() 方法也是不安全的**？
+`suspend()`：这个方法本质上有死锁的倾向；如果目标线程拥有一个锁，该锁保护一个临界区；当该线程暂停时，其它线程不能访问该资源，直到目标线程被继续进行(resume)；如果一个线程试图获取该监视器的锁，而不是调用 resume() 方法，死锁将会发生；此类死锁通常表现为`"冻结"进程`；
+
+resume() 方法是和 suspend() 配对使用的，显然它不能独立于 suspend() 工作！
+
+**如何正确的挂起/恢复一个线程**？
+最简单的方法：使用 Object 继承过来的 wait()、notify()/notifyAll() 机制；
+
+**Java 2 中实现安全的线程挂起、恢复、终止**
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Task task = new Task();
+        Thread t = new Thread(task);
+        t.start();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call suspend()\n");
+        task.suspend();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call resume()\n");
+        task.resume();
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        out.printf("call interrupt()\n");
+        t.interrupt();
+
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Task implements Runnable {
+    private volatile boolean suspend = false;
+
+    @Override
+    public void run() {
+        for (int i=0; !Thread.interrupted(); i++) {
+            synchronized (this) {
+                while (suspend) {
+                    try { wait(); } catch (InterruptedException e) {}
+                }
+            }
+
+            out.printf("Running -> %d\n", i);
+            for (long j=0; j<3000000000L; j++);
+        }
+    }
+
+    public synchronized void suspend() {
+        suspend = true;
+    }
+
+    public synchronized void resume() {
+        suspend = false;
+        notify();
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:10:23]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [15:10:38]
+$ java Main
+Running -> 0
+Running -> 1
+Running -> 2
+call suspend()
+call resume()
+Running -> 3
+Running -> 4
+Running -> 5
+call interrupt()
+</script></code></pre>
