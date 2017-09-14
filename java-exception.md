@@ -30,7 +30,7 @@ Java 异常处理通过 5 个关键字控制：`try`、`catch`、`finally`、`th
 
 
 
-1) try 不可以单独出现，必须有至少一个 catch 语句，finally 语句只能有一个；
+1) try 不可以单独出现，可以出现 try...finally 这样的组合，catch 语句可以有多个，finally 语句只能有一个；
 2) ExceptionType_1、ExceptionType_2 应该匹配的异常类型，只有相匹配的类型才会被对应的 catch 捕获；
 3) 如果 ExceptionType_1 和 ExceptionType_2 存在继承关系，那么需要将子类的 catch 放在前面，否则会被其父类一并捕获；
 4) 异常控制的流程和 if...else 一样，如果在 try 中检测到异常，会按照从上到下的顺序依次匹配所有的 catch 块，如果符合，则执行匹配到的 catch 语句，并停止向下匹配，执行完 catch 之后跳转到 finally 语句（如果存在的话），之后执行 finally 之后的正常语句；
