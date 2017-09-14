@@ -78,6 +78,60 @@ Java 异常处理通过 5 个关键字控制：`try`、`catch`、`finally`、`th
 如果 Java 中的内置异常类型不能满足你的需要，那么你可以创建一个属于你自己的异常类型；
 自定义异常类型可以继承于 Exception、RuntimeException 等基类；
 
+**finally 的执行顺序**
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            out.printf("try statement block\n");
+            return;
+        } finally {
+            out.printf("finally statement block\n");
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [7:12:54] C:127
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [7:12:56]
+$ java Main
+try statement block
+finally statement block
+</script></code></pre>
+
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+import static java.lang.System.*;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            out.printf("try statement block\n");
+            throw new RuntimeException();
+        } finally {
+            out.printf("finally statement block\n");
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [7:13:46]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [7:13:50]
+$ java Main
+try statement block
+finally statement block
+Exception in thread "main" java.lang.RuntimeException
+	at Main.main(Main.java:7)
+</script></code></pre>
+
 
 ## throw抛出异常
 我们除了可以处理别人抛出的异常之外，还可以自己显式的抛出一个异常，语法：`throw exceptionObj`；
