@@ -220,6 +220,105 @@ MyException: 自定义错误
 
 
 
+## 异常处理的性能影响
+创建一个异常对象的时空开销比创建一个普通的对象要大的多；
+
+因为创建一个异常对象往往需要收集一个`栈跟踪（stack track）`，这个栈跟踪用于描述异常是在何处创建的；构建这些栈跟踪时需要为运行时栈做一份快照，正是这一部分开销很大；
+
+异常处理过程中的主要开销就是`创建异常`，抛出和捕获异常都没有太大的性能影响；
+
+那么 try...catch 和 for/while 循环一起使用呢？比如下面两个例子：
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+import static java.lang.System.*;
+
+public class Test {
+    public static void main(String[] args) {
+        assert(args.length != 0) : "请提供运行程序的必要参数！";
+        try {
+            for (int i = 0; i < args.length; i++) {
+                out.printf("%d, ", Integer.parseInt(args[i]));
+            }
+            out.println();
+        } catch (NumberFormatException e) {
+            out.println("bad_format");
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [9:59:59]
+$ javac Test.java
+
+# root @ arch in ~/work on git:master x [10:00:02]
+$ java -ea Test
+Exception in thread "main" java.lang.AssertionError: 请提供运行程序的必要参数！
+	at Test.main(Test.java:5)
+
+# root @ arch in ~/work on git:master x [10:00:05] C:1
+$ java -ea Test 1 2 3 4 5 a b c
+1, 2, 3, 4, 5, bad_format
+</script></code></pre>
+
+
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+import static java.lang.System.*;
+
+public class Test {
+    public static void main(String[] args) {
+        assert(args.length != 0) : "请提供运行程序的必要参数！";
+        for (int i = 0; i < args.length; i++) {
+            try {
+                out.printf("%d, ", Integer.parseInt(args[i]));
+            } catch (NumberFormatException e) {
+                out.printf("bad_format, ");
+            }
+        }
+        out.println();
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [10:02:12]
+$ javac Test.java
+
+# root @ arch in ~/work on git:master x [10:02:16]
+$ java -ea Test 1 2 3 4 5
+1, 2, 3, 4, 5,
+
+# root @ arch in ~/work on git:master x [10:02:23]
+$ java -ea Test 1 2 3 4 5 a b c
+1, 2, 3, 4, 5, bad_format, bad_format, bad_format,
+</script></code></pre>
+
+
+
+两者在功能上有很明显的区别：
+前者：只要在 for 循环中有任何一个异常，循环就会终止；
+后者：如果转换失败则打印"bad_format"，并不会直接终止循环；
+
+那它们的性能区别呢？
+性能无非就是看`空间消耗`，`时间消耗`，一开始的时候我想当然得觉得 try...catch 重复执行了这么多次肯定比只执行了一次跑得肯定慢，空间消耗肯定更大；但是实际上并不是，只能说明太年轻！
+
+[Stack Overflow 讨论帖地址](http://stackoverflow.com/questions/141560/should-try-catch-go-inside-or-outside-a-loop)
+讨论的结果是：**在没有抛出异常的情况下，性能完全没区别**；
+
+[Java 异常处理的原理](http://www.javaworld.com/javaworld/jw-01-1997/jw-01-hood.html?page=1)
+
+大致流程：
+1、类会跟随一张`异常表（exception table）`，每一个 try...catch 都会在这个表里添加行记录，每一个记录都有 4 个信息（try...catch 的开始地址，结束地址，异常的处理起始位，异常类名称）；
+
+2、当代码在运行时抛出了异常时，首先拿着抛出位置到异常表中查找是否可以被 catch，如果可以则跑到异常处理的起始位置开始处理，如果没有找到则原地 return，并且 copy 异常的引用给父调用方，接着看父调用的异常表，以此类推；
+
+综合上面来看可以得出结论：
+1、异常如果没发生，也就不会去查表，也就是说你写不写 try...catch 也就是有没有这个异常表的问题，如果没有发生异常，写 try...catch 对性能是没有消耗的，所以不会让程序跑得更慢；
+2、try 的范围大小其实就是异常表中两个值（开始地址和结束地址）的差异而已，也是不会影响性能的；
+
+当然 try...catch 绝对不是在什么地方都可以乱加的！要在适当的场合使用适当的特性！
+
+
 ## assert断言
 **断言的概念**
 断言的目的是为了标示与验证程序开发者预期的结果，当程序运行到断言的位置时，对应的断言应该为真；若断言不为真时，程序会中止运行，并给出错误消息；

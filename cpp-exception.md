@@ -519,7 +519,7 @@ RAII 是 Resource Acquisition Is Initialization 的简称，是 C++ 语言的一
 第一步和第二步缺一不可，因为资源必须要申请才能使用的，使用完成以后，必须要释放，如果不释放的话，就会造成资源泄漏；
 
 一个最简单的例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">#include <iostream>
+<pre><code class="language-cpp line-numbers"><script type="text/plain">#include <iostream>
 using namespace std;
 
 int main() {
