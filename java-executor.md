@@ -1496,6 +1496,87 @@ AtomicIntegerArray 类主要是提供原子的方式更新数组里的整型，�
 原子更新字段类都是抽象类，每次使用都时候必须使用静态方法 newUpdater 创建一个更新器；原子更新类的字段的必须使用 public volatile 修饰符；
 
 ## 阻塞队列/栈
+阻塞队列提供了可阻塞的入队和出对操作，如果队列满了，入队操作将阻塞直到有空间可用，如果队列空了，出队操作将阻塞直到有元素可用；
+
+如果你想避免使用错综复杂的 wait–notify 的语句，BlockingQueue 非常有用；BlockingQueue 可用于解决生产者-消费者问题；
+
+任何有效的生产者-消费者问题解决方案都是通过控制生产者 put() 方法（生产资源）和消费者 take() 方法（消费资源）的调用来实现的，一旦你实现了对方法的阻塞控制，那么你将解决该问题；
+
+Java 通过 BlockingQueue 提供了开箱即用的支持来控制这些方法的调用（一个线程创建资源，另一个消费资源）；
+java.util.concurrent 包下的 BlockingQueue 接口是一个线程安全的可用于存取对象的队列；
+
+在 Java 中，主要有以下类型的阻塞队列：
+`ArrayBlockingQueue`：一个由`数组结构`组成的`有界`阻塞队列；
+`LinkedBlockingQueue`：一个由`链表结构`组成的`有界`阻塞队列；
+`LinkedTransferQueue`：一个由`链表结构`组成的`无界`阻塞队列；
+`LinkedBlockingDeque`：一个由`链表结构`组成的`有界`阻塞双端队列（通常作为stack使用）；
+`SynchronousQueue`：一个不存储元素的`无界`阻塞队列；
+`PriorityBlockingQueue`：一个支持`优先级`排序的`无界`阻塞队列；
+`DelayQueue`：一个支持`延时`获取元素的`无界`阻塞队列；
+
+> 
+在 JDK1.2 之后，Vector、Stack 是不被推荐的；Vector 已经被 ArrayList 替代，Stack 应该选择 ArrayDeque、Deque；
+
+**BlockingQueue 接口**
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+public interface BlockingQueue<E> extends Queue<E> {
+    /**
+     * 元素 e 入队
+     * 成功返回 true，失败返回 false，并抛出 IllegalStateException 异常
+     */
+    boolean add(E e);
+
+    /**
+     * 元素 e 入队
+     * 成功返回 true，失败返回 false
+     */
+    boolean offer(E e);
+
+    /**
+     * 元素 e 入队
+     * 若空间不足则阻塞
+     */
+    void put(E e) throws InterruptedException;
+
+    /**
+     * 元素 e 入队
+     * 若空间不足则阻塞指定时间
+     * 成功返回 true，失败返回 false
+     */
+    boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * 元素出队
+     * 若队列为空则阻塞
+     * 返回出队的元素
+     */
+    E take() throws InterruptedException;
+
+    /**
+     * 元素出队
+     * 若队列为空则阻塞指定时间
+     * 返回出队的元素
+     */
+    E poll(long timeout, TimeUnit unit) throws InterruptedException;
+
+    int remainingCapacity();
+    boolean remove(Object o);
+    public boolean contains(Object o);
+    int drainTo(Collection<? super E> c);
+    int drainTo(Collection<? super E> c, int maxElements);
+}
+</script></code></pre>
+
+
+
+**BlockingDeque 接口**
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+
+</script></code></pre>
+
+
+
+例子：
 <pre><code class="language-bash line-numbers"><script type="text/plain">
 import static java.lang.System.*;
 import java.util.concurrent.*;
