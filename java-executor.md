@@ -43,8 +43,7 @@ concurrent 包的优点：
 ![线程池继承关系图](/images/java-executor.jpg)
 
 最顶层是 Executor 接口，它的定义很简单，一个用于执行任务的 execute 方法：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface Executor {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Executor {
 
     /**
      * Executes the given command at some time in the future.  The command
@@ -63,8 +62,7 @@ public interface Executor {
 
 
 ExecutorService 接口继承自 Executor 接口，它提供了更丰富的实现多线程的方法，比如，ExecutorService 提供了 shutdown() 线程池的方法，以及可为跟踪一个或多个异步任务执行状况而生成 Future 的方法等：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface ExecutorService extends Executor {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface ExecutorService extends Executor {
     void shutdown(); // 平滑关闭
     List<Runnable> shutdownNow(); // 强制关闭
 
@@ -89,8 +87,7 @@ public interface ExecutorService extends Executor {
 
 AbstractExecutorService 抽象类实现了 ExecutorService 接口的大部分方法；
 ThreadPoolExecutor 核心类，创建自定义线程池就靠它了，下面是 4 个构造方法：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public ThreadPoolExecutor(int corePoolSize,
+<pre><code class="language-java line-numbers"><script type="text/plain">public ThreadPoolExecutor(int corePoolSize,
                           int maximumPoolSize,
                           long keepAliveTime,
                           TimeUnit unit,
@@ -218,8 +215,7 @@ SHUTDOWN 状态和 STOP 状态先会转变为 TIDYING 状态，最终都会变�
 
 **ThreadPoolExecutor 常用构造方法**
 实际上 ThreadPoolExecutor 类中还有很多重载的构造函数，下面这个构造函数在 Executors 中经常用到：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public ThreadPoolExecutor(int corePoolSize,
+<pre><code class="language-java line-numbers"><script type="text/plain">public ThreadPoolExecutor(int corePoolSize,
         int maximumPoolSize,
         long keepAliveTime,
         TimeUnit unit,
@@ -245,8 +241,7 @@ defaultHandler 缺省饱和策略是 ThreadPoolExecutor.AbortPolicy()；
 `public void setRejectedExecutionHandler(RejectedExecutionHandler handler)`：设置 RejectedExecutionException 策略；
 
 **线程池的例子**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -274,8 +269,7 @@ class Task implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [11:59:03]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:59:03]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [11:59:15]
@@ -320,8 +314,7 @@ $ java Main
 **Executors 类**
 通过 Executors 工具类可以创建各种类型的线程池，如下为常见的四种：
 1) `newCachedThreadPool`
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public static ExecutorService newCachedThreadPool() {
+<pre><code class="language-java line-numbers"><script type="text/plain">public static ExecutorService newCachedThreadPool() {
     return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                                   60L, TimeUnit.SECONDS,
                                   new SynchronousQueue<Runnable>());
@@ -333,8 +326,7 @@ corePoolSize 为 0，maximumPoolSize 为 Integer.MAX_VALUE，使用 SynchronousQ
 这种类型的线程池非常适用 IO 密集的服务；因为 IO 请求具有密集、数量巨大、不持续、服务器端 CPU 等待 IO 响应时间长的特点；服务器端为了能提高 CPU 的使用率就应该为每个 IO 请求都创建一个线程，以免 CPU 因为等待 IO 响应而空闲；
 
 2) `newFixedThreadPool`
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public static ExecutorService newFixedThreadPool(int nThreads) {
+<pre><code class="language-java line-numbers"><script type="text/plain">public static ExecutorService newFixedThreadPool(int nThreads) {
     return new ThreadPoolExecutor(nThreads, nThreads,
                                   0L, TimeUnit.MILLISECONDS,
                                   new LinkedBlockingQueue<Runnable>());
@@ -346,8 +338,7 @@ corePoolSize 和 maximumPoolSize 都为传入的参数 nThreads，使用 LinkedB
 这种类型的线程池可以适用 CPU 密集的工作，在这种工作中 CPU 忙于计算而很少空闲，由于 CPU 能真正并发的执行的线程数是一定的（比如四核八线程），所以对于那些需要 CPU 进行大量计算的线程，创建的线程数超过 CPU 能够真正并发执行的线程数就没有太大的意义；
 
 3) `newSingleThreadExecutor`
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public static ExecutorService newSingleThreadExecutor() {
+<pre><code class="language-java line-numbers"><script type="text/plain">public static ExecutorService newSingleThreadExecutor() {
     return new FinalizableDelegatedExecutorService
         (new ThreadPoolExecutor(1, 1,
                                 0L, TimeUnit.MILLISECONDS,
@@ -360,8 +351,7 @@ corePoolSize 和 maximumPoolSize 都为 1，线程空闲时间为 0 毫秒，使
 newSingleThreadExecutor 线程池中只有一个线程工作，它能保证按照任务提交的顺序来执行任务，适合串行执行的任务；
 
 4) `newScheduledThreadPool`
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+<pre><code class="language-java line-numbers"><script type="text/plain">public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
     return new ScheduledThreadPoolExecutor(corePoolSize);
 }
 
@@ -379,8 +369,7 @@ newScheduledThreadPool 线程池适合执行计划任务、周期任务；
 
 **提交任务 execute()、submit()**
 execute() 方式：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public void execute(Runnable command) {
+<pre><code class="language-java line-numbers"><script type="text/plain">public void execute(Runnable command) {
     if (command == null)
         throw new NullPointerException();
 
@@ -405,8 +394,7 @@ public void execute(Runnable command) {
 
 
 submit() 方式：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public Future<?> submit(Runnable task) {
+<pre><code class="language-java line-numbers"><script type="text/plain">public Future<?> submit(Runnable task) {
     if (task == null) throw new NullPointerException();
     RunnableFuture<Void> ftask = newTaskFor(task, null);
     execute(ftask);
@@ -436,8 +424,7 @@ public <T> Future<T> submit(Callable<T> task) {
 而方式二中，CompletionService 的实现是维护一个保存 Future 对象的 BlockingQueue，只有当这个 Future 对象状态是结束的时候，才会加入到这个 Queue 中，所以调用 take() 能从阻塞队列中拿到最新的已完成任务的结果；
 
 方式一的例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -484,8 +471,7 @@ class Task implements Callable<String> {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:54:23]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:54:23]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [10:55:02]
@@ -500,8 +486,7 @@ task result: Task-E
 
 
 方式二的例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -549,8 +534,7 @@ class Task implements Callable<String> {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [11:06:17]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:06:17]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [11:06:20]
@@ -591,8 +575,7 @@ Runnable 实现的是 void run() 方法，Callable 实现的是 V call() 方法�
 
 **Callable 接口**
 Callable 定义在 java.util.concurrent 包中，只有一个`<V> call() throws Exception;`方法，Callable 是一个泛型接口：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface Callable<V> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Callable<V> {
     /**
      * Computes a result, or throws an exception if unable to do so.
      *
@@ -609,8 +592,7 @@ public interface Callable<V> {
 一个 Future 表示一个异步计算的结果；它提供了一系列方法，用来检测计算是否完成，获取计算结果，等待计算结果等；
 使用 get() 方法获取计算结果时，如果计算没有完成，get() 方法会一直等待，直到任务完成；
 如果你想使用 Future，但并不需要返回一个结果，则可以使用`Future<?>`并返回 null；
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface Future<V> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Future<V> {
 
     /**
      * Attempts to cancel execution of this task.  This attempt will
@@ -693,8 +675,7 @@ FutureTask 表示一个可以取消的异步计算任务；它实现了 Runnable
 由于 FutureTask 实现了 Runnable，因此它既可以通过 Thread 包装来直接执行，也可以提交给 ExecuteService 来执行；
 并且还可以直接通过 get() 函数获取执行结果，该函数会阻塞，直到结果返回；
 因此 FutureTask 既是 Future、Runnable，又是包装了 Callable(如果是 Runnable 最终也会被转换为 Callable)，它是这两者的结合体；
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public class FutureTask<V> implements RunnableFuture<V> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public class FutureTask<V> implements RunnableFuture<V> {
     /**
      * Creates a {@code FutureTask} that will, upon running, execute the
      * given {@code Callable}.
@@ -739,8 +720,7 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
 
 
 Callable + ExecutorService 方式：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.*;
 
 public class Main {
@@ -768,8 +748,7 @@ class Task implements Callable<String> {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:54:30]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:54:30]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:54:43]
@@ -780,8 +759,7 @@ This is the result of the execution
 
 
 Callable + FutureTask 方式：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.*;
 
 public class Main {
@@ -809,8 +787,7 @@ class Task implements Callable<String> {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:59:26]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:59:26]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:59:41]
@@ -841,8 +818,7 @@ Lock 可以说是 synchronized 的一个替代品，synchronized 能做的事，
 实现：ReentrantLock、ReentrantReadWriteLock、ConditionObject（AbstractQueuedSynchronizer、AbstractQueuedLongSynchronizer 中）；
 
 **Lock 接口**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface Lock {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Lock {
     void lock(); // 不可中断
     void lockInterruptibly() throws InterruptedException; // 可中断
     boolean tryLock(); // 尝试获取锁，成功返回 true，失败返回 false
@@ -855,8 +831,7 @@ public interface Lock {
 
 
 **ReadWriteLock 接口**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface ReadWriteLock {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface ReadWriteLock {
     /**
      * Returns the lock used for reading.
      *
@@ -876,8 +851,7 @@ public interface ReadWriteLock {
 
 
 **Condition 接口**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface Condition {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Condition {
     void await() throws InterruptedException; // 可中断 wait
     void awaitUninterruptibly(); // 不可中断 wait
     long awaitNanos(long nanosTimeout) throws InterruptedException; // 可中断 wait，超时等待（纳秒）
@@ -925,8 +899,7 @@ Lock 必须被显式地创建、锁定和释放，为了可以使用更多的功
 为了保证锁最终一定会被释放（可能会有异常发生），要把互斥区放在 try 语句块内，并在 finally 语句块中释放锁，尤其当有 return 语句时，return 语句必须放在 try 字句中，以确保 unlock()不会过早发生，从而将数据暴露给第二个任务；
 
 因此，采用 Lock 加锁和释放锁的一般形式如下：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-Lock lock = new ReentrantLock(); // 默认使用非公平锁，如果要使用公平锁，需要传入参数 true
+<pre><code class="language-java line-numbers"><script type="text/plain">Lock lock = new ReentrantLock(); // 默认使用非公平锁，如果要使用公平锁，需要传入参数 true
 lock.lock(); // 获取锁
 try {
     // 更新对象的状态
@@ -952,8 +925,7 @@ ReetrantLock 有两种锁：忽略中断锁（不可中断）和响应中断锁�
 获得响应中断锁的方法：`lock.lockInterruptibly();`；
 
 synchronized 不可中断的例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -1020,8 +992,7 @@ class TaskB implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [15:11:20] C:130
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:11:20] C:130
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [15:11:22]
@@ -1035,8 +1006,7 @@ $ java Main
 
 
 ReentrantLock 可中断锁，例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.locks.*;
 
 public class Main {
@@ -1110,8 +1080,7 @@ class TaskB implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [15:34:17]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:34:17]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [15:34:30]
@@ -1130,8 +1099,7 @@ Condition 对象需要通过 Lock.newCondition() 方法来获取，Condition 总
 一个 Lock 可以有多个不同的 Condition 对象，它们之间互不影响，而 wait()、notify()/notifyAll() 不能；
 
 一个简单的生产者消费者例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.locks.*;
 
 public class Main {
@@ -1239,8 +1207,7 @@ class Consumer implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [16:31:02] C:127
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [16:31:02] C:127
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [16:31:05]
@@ -1270,8 +1237,7 @@ $ java Main
 如果读写锁没有写者，那么读者可以立即获得该读写锁，否则读者必须自旋在那里，直到写者释放该读写锁；
 
 在 J.U.C 中，java.util.concurrent.locks.ReadWriteLock 接口定义了读写锁：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface ReadWriteLock {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface ReadWriteLock {
     /**
      * Returns the lock used for reading.
      *
@@ -1309,8 +1275,7 @@ J.U.C 中的同步器主要用于协助线程同步，有以下四种：
 在 Linux 的进程间通信（C 语言）里面，我们通常使用共享内存和信号量进行进程间的同步访问；
 
 在 Java 中，Semaphore 也可以作为线程之间同步的手段，不过这并不是信号量的初衷（先不管这么多了，其他例子真的举不出了）
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.Semaphore;
 
 public class Main {
@@ -1354,8 +1319,7 @@ class Task implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [17:48:04]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:48:04]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [17:48:18]
@@ -1431,8 +1395,7 @@ AtomicInteger 的常用方法如下：
 `int addAndGet(int delta)`：以原子方式将 value 和 delta 相加，并返回计算结果；
 
 例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.atomic.*;
 
 public class Main {
@@ -1451,8 +1414,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [20:03:28]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:03:28]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [20:03:39]
@@ -1518,8 +1480,7 @@ java.util.concurrent 包下的 BlockingQueue 接口是一个线程安全的可�
 在 JDK1.2 之后，Vector、Stack 是不被推荐的；Vector 已经被 ArrayList 替代，Stack 应该选择 ArrayDeque、Deque；
 
 **BlockingQueue 接口**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public interface BlockingQueue<E> extends Queue<E> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface BlockingQueue<E> extends Queue<E> {
     /**
      * 元素 e 入队
      * 成功返回 true，失败返回 false，并抛出 IllegalStateException 异常
@@ -1559,26 +1520,125 @@ public interface BlockingQueue<E> extends Queue<E> {
      */
     E poll(long timeout, TimeUnit unit) throws InterruptedException;
 
+    /**
+     * 返回队列的剩余空间，无阻塞
+     * 如果没有内部限制，则返回 Integer.MAX_VALUE
+     */
     int remainingCapacity();
+
+    /**
+     * 移除指定元素的单个实例（如果存在）
+     * 成功返回 true，失败返回 false
+     */
     boolean remove(Object o);
+
+    /**
+     * 若队列中至少含有一个等于 o 的元素则返回 true，否则返回 false
+     */
     public boolean contains(Object o);
-    int drainTo(Collection<? super E> c);
-    int drainTo(Collection<? super E> c, int maxElements);
 }
 </script></code></pre>
 
 
 
 **BlockingDeque 接口**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
+![BlockingDeque 接口](/images/java-executor-blockingdeque.png)
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
+    /**
+     * 在 first 端添加元素 e
+     * 操作失败抛出 IllegalStateException 异常
+     */
+    void addFirst(E e);
 
+    /**
+     * 在 last 端添加元素 e
+     * 操作失败抛出 IllegalStateException 异常
+     */
+    void addLast(E e);
+
+    /**
+     * 在 first 端添加元素 e
+     * 成功返回 true，失败返回 false
+     */
+    boolean offerFirst(E e);
+
+    /**
+     * 在 last 端添加元素 e
+     * 成功返回 true，失败返回 false
+     */
+    boolean offerLast(E e);
+
+    /**
+     * 在 first 端添加元素 e
+     * 如果必要则阻塞
+     */
+    void putFirst(E e) throws InterruptedException;
+
+    /**
+     * 在 last 端添加元素 e
+     * 如果必要则阻塞
+     */
+    void putLast(E e) throws InterruptedException;
+
+    /**
+     * 在 first 端添加元素 e
+     * 如果必要则阻塞指定时间
+     * 成功返回 true，失败返回 false
+     */
+    boolean offerFirst(E e, long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * 在 last 端添加元素 e
+     * 如果必要则阻塞指定时间
+     * 成功返回 true，失败返回 false
+     */
+    boolean offerLast(E e, long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * 在 first 端弹出元素
+     * 如果必要则阻塞
+     * 返回弹出的元素
+     */
+    E takeFirst() throws InterruptedException;
+
+    /**
+     * 在 last 端弹出元素
+     * 如果必要则阻塞
+     * 返回弹出的元素
+     */
+    E takeLast() throws InterruptedException;
+
+    /**
+     * 在 first 端弹出元素
+     * 如果必要则阻塞指定时间
+     * 返回弹出的元素
+     */
+    E pollFirst(long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * 在 last 端弹出元素
+     * 如果必要则阻塞指定时间
+     * 返回弹出的元素
+     */
+    E pollLast(long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * 查看 first 端顶的元素
+     * 返回顶部元素，空则返回 null
+     */
+    E peek();
+
+    /**
+     * 返回当前队列大小
+     */
+    public int size();
+}
 </script></code></pre>
 
 
 
-例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+例一，消费者生产者问题：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.concurrent.*;
 
 public class Main {
@@ -1658,8 +1718,7 @@ class Consumer implements Runnable {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [21:01:35]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [21:01:35]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:01:56]
@@ -1723,3 +1782,51 @@ Consuming Resource -> java.lang.Object@33009c1
 [Producer] godown-size: 19
 [Producer] godown-size: 20
 </script></code></pre>
+
+
+
+例二，阻塞栈的使用：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
+import java.util.concurrent.*;
+
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+        BlockingDeque<Integer> stack = new LinkedBlockingDeque<Integer>(10);
+        for (int i = 0; i < 10; i++) {
+            stack.putFirst(i);
+        }
+        for (int i = 0; i < 10; i++) {
+            out.printf("%d, ", stack.takeFirst());
+        }
+        out.println("\b\b ");
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:44:11]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [13:44:20]
+$ java Main
+9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+</script></code></pre>
+
+
+
+## TimeUnit枚举
+TimeUnit 是 java.util.concurrent 包下面的一个枚举类，TimeUnit 提供了可读性更好的线程暂停操作；
+
+在 JDK5 之前，一般我们暂停线程是这样写的：`Thread.sleep(2400000)`，可读性差；一眼看去，不知道睡了多久；
+在 JDK5 之后，我们可以这样写：
+`TimeUnit.SECONDS.sleep(4);`：sleep 4秒
+`TimeUnit.MINUTES.sleep(4);`：sleep 4分钟
+`TimeUnit.HOURS.sleep(1);`：sleep 1小时
+`TimeUnit.DAYS.sleep(1);`：sleep 1天
+
+另外，TimeUnit 还提供了便捷方法用于把时间转换成不同单位；
+例如，如果你想把秒转换成毫秒，你可以使用`TimeUnit.SECONDS.toMillis(44);`
+
+其他方法：
+`public void timedWait(Object obj, long timeout) throws InterruptedException`：对应 Object.wait() 方法
+`public void timedJoin(Thread thread, long timeout) throws InterruptedException`：对应 Thread.join() 方法
+`public void sleep(long timeout) throws InterruptedException`：对应 Thread.sleep() 方法
