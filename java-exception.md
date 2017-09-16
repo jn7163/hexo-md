@@ -79,8 +79,7 @@ Java 异常处理通过 5 个关键字控制：`try`、`catch`、`finally`、`th
 自定义异常类型可以继承于 Exception、RuntimeException 等基类；
 
 **finally 的执行顺序**
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -94,8 +93,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [7:12:54] C:127
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [7:12:54] C:127
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [7:12:56]
@@ -105,8 +103,7 @@ finally statement block
 </script></code></pre>
 
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -120,8 +117,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [7:13:46]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [7:13:46]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [7:13:50]
