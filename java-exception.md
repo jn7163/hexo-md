@@ -228,8 +228,7 @@ MyException: 自定义错误
 异常处理过程中的主要开销就是`创建异常`，抛出和捕获异常都没有太大的性能影响；
 
 那么 try...catch 和 for/while 循环一起使用呢？比如下面两个例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Test {
     public static void main(String[] args) {
@@ -246,8 +245,7 @@ public class Test {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [9:59:59]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [9:59:59]
 $ javac Test.java
 
 # root @ arch in ~/work on git:master x [10:00:02]
@@ -262,8 +260,7 @@ $ java -ea Test 1 2 3 4 5 a b c
 
 
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Test {
     public static void main(String[] args) {
@@ -280,8 +277,7 @@ public class Test {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:02:12]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:02:12]
 $ javac Test.java
 
 # root @ arch in ~/work on git:master x [10:02:16]
