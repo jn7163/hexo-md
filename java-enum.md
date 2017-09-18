@@ -15,8 +15,7 @@ Java Enum枚举，枚举的定义及使用、枚举与类的区别、枚举的�
 
 ## Enum枚举
 在 jdk1.5 之前，如果需要定义一个表示星期几的常量，一般通过`public static final ...`来定义：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -49,8 +48,7 @@ class Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:32:22]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:32:22]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [10:32:40]
@@ -62,8 +60,7 @@ Friday
 
 
 使用 enum 关键字进行枚举的定义：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -90,8 +87,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:41:35]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:41:35]
 $ ls
 Main.java
 
@@ -326,8 +322,7 @@ Enum 类的唯一构造函数`protected Enum(String name, int ordinal)`；
 通过上面的简单分析，我们得知，使用 enum 定义的枚举类型其实就是一个实实在在的类，基本可以把它当作类来使用（不过有一些特别的限制）；
 
 它们都共同继承自`java.lang.Enum`抽象基类，Enum 类的常用方法：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializable {
+<pre><code class="language-java line-numbers"><script type="text/plain">public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializable {
     // name 名称
     private final String name;
     public final String name() {
@@ -403,8 +398,7 @@ public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializ
 
 
 需要注意的是，java.lang.Enum 类不能被显式的继承，只能由编译器使用，下面的例子演示了这种情况；
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-enum Week {
+<pre><code class="language-java line-numbers"><script type="text/plain">enum Week {
     Sun, Mon, Tues, Wed, Thur, Fri, Sat;
 }
 
@@ -420,8 +414,7 @@ class _Week extends Enum<_Week> {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [12:45:42]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [12:45:42]
 $ javac Main.java
 Main.java:5: error: classes cannot directly extend java.lang.Enum
 class _Week extends Enum<_Week> {
@@ -431,16 +424,15 @@ class _Week extends Enum<_Week> {
 
 
 
-另外，Enum.getClass() 和 Enum.getDeclaringClass() 有什么区别？
+Enum.getClass() 和 Enum.getDeclaringClass() 的区别在哪里？
 1) `getClass()`方法：继承自 Object 类，返回一个 Class 类对象（类型信息）；
 2) `getDeclaringClass()`方法：Enum 类定义的 public 方法，返回枚举常量对应的枚举类型的 Class 对象；
 
-![Stack Overflow 提问帖（已有答案）地址](https://stackoverflow.com/questions/5758660/java-enum-getdeclaringclass-vs-getclass)
+[Stack Overflow 提问帖（已有答案）地址](https://stackoverflow.com/questions/5758660/java-enum-getdeclaringclass-vs-getclass)
 
 讨论的结果：
 1) 对于没有定义匿名类的枚举类型，这两个方法没有区别；比如：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -454,8 +446,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:04:06]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:04:06]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:04:16]
@@ -466,8 +457,7 @@ Week.class == Week.Sun.getClass() == Week.Fri.getDeclaringClass() >>> true
 
 
 2) 对于定义了匿名类的复杂枚举，getClass() 始终返回当前对象对应的类的 Class 对象，getDeclaringClass() 返回枚举常量所属的枚举类型的 Class 对象；比如：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -495,8 +485,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:13:46]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:13:46]
 $ ls
 Main.java
 
@@ -526,8 +515,7 @@ Week.Sun.getDeclaringClass() == Week.Fri.getClass() >>> true
 在 Enum 基类中定义了 valueOf() 方法，但是它接受两个参数`public static <T extends Enum<T>> T valueOf(Class<T> enumType, String name)`，在具体的枚举类中的 valueOf() 只有一个 String 参数即枚举的字符串形式，本质还是调用的 Enum.valueOf() 方法；
 
 使用例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -545,8 +533,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:30:51] C:127
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:30:51] C:127
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:30:54]
@@ -565,8 +552,7 @@ Sat
 
 但是，如果将 Week 向上转型为 Enum 类型，那么就不能像这样直接调用 values() 方法了；
 但是可以通过 Class 类的`public T[] getEnumConstants();`方法间接获取，`public boolean isEnum();`方法判断是否为 Enum 类型；例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -589,8 +575,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:44:53]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:44:53]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:44:55]
@@ -606,14 +591,13 @@ Sat
 
 
 
-## 进阶用法
+## Enum进阶用法
 自定义 private/[default] 构造函数，需要注意的几点是：
 1) 访问修饰符只能为`private`、`默认`；
 2) 不能在构造函数内部调用`super(...)`基类的构造函数；
 3) 必须先定义完枚举常量后才能自定义构造函数及其他成员，否则编译报错；
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -653,8 +637,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:59:24] C:130
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:59:24] C:130
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:59:26]
@@ -671,8 +654,7 @@ Saturday
 
 
 定义枚举常量的内部方法（实则为一个内部匿名类）
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -745,8 +727,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [14:18:56]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:18:56]
 $ ls
 Main.java
 
@@ -772,8 +753,7 @@ Saturday_星期六
 
 
 enum 枚举类型还可以实现接口；比如：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -810,8 +790,7 @@ enum E implements A, B {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [14:26:17]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:26:17]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [14:26:28]
@@ -829,8 +808,7 @@ B::fb()
 3) EnumMap 虽说是枚举专属集合，但其操作与一般的 Map 差不多；
 
 例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -871,8 +849,7 @@ enum Color {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [15:01:54]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:01:54]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [15:02:07]
@@ -894,8 +871,7 @@ $ java Main
 `public static <E extends Enum<E>> EnumSet<E> range(E from, E to)`：创建一个指定范围的 Set；
 
 例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-import static java.lang.System.*;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
 import java.util.EnumSet;
 
 public class Main {
@@ -926,8 +902,7 @@ enum Week {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [15:25:23]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [15:25:23]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [15:25:33]
