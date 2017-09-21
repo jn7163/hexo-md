@@ -84,6 +84,7 @@ IO 流类图结构：
 
 缓冲 IO 流：
 `BufferedReader/BufferedWriter`：自带缓冲区的包装流，默认建立一个 8192 字符（即 16 KB）的缓冲区，可以显著提高 IO 效率；
+
 装饰 IO 流：
 1) `LineNumberReader`：可以获取/设置数据的行号信息；
 2) `PrintWriter`：支持格式化输出，提供 print、println、printf、format 方法，在 jdk1.4 之后，`PrintStream`、`PrintWriter`基本无区别，除了 autoFlush 的不同；
@@ -92,7 +93,7 @@ IO 流类图结构：
 **File 文件类**
 File 类是对文件系统中文件以及文件夹进行封装的对象，可以通过对象的思想来操作文件和文件夹；
 
-File类保存文件或目录的各种元数据信息，包括文件名、文件长度、最后修改时间、是否可读、获取当前文件的路径名，判断指定文件是否存在、获得当前目录中的文件列表，创建、删除文件和目录等方法；
+File 类保存文件或目录的各种元数据信息，包括文件名、文件长度、最后修改时间、是否可读、获取当前文件的路径名，判断指定文件是否存在、获得当前目录中的文件列表，创建、删除文件和目录等方法；
 
 注意，实例化一个 File 对象并不会检查对应的文件（夹）的真实性，只有在进行真正的 IO 操作时才会检查（如创建文件、删除文件等）；
 
@@ -100,7 +101,7 @@ File类保存文件或目录的各种元数据信息，包括文件名、文件�
 **RandomAccessFile**
 RandomAccessFile 并不是上述流体系中的一员，其封装了字节流，同时还封装了一个缓冲区，通过内部的文件指针来操作文件；
 RandomAccessFile 的特点：既可以对文件进行读操作，也能进行写操作，在进行对象实例化时可指定操作模式（`r`、`rw`、`rws`、`rwd`）；
-RandomAccessFile 可以用于多线程下载或多个线程同时写数据到文件。
+RandomAccessFile 多用于操作大文件、多线程下载、多个线程同时操作文件；
 
 
 **STDIN、STDOUT、STDERR**
@@ -114,7 +115,7 @@ Java 和 C/C++ 一样，默认为每个进程打开了 3 个文件，即`标准�
 
 **File 和 FileDescriptor 的区别**
 一个 File 对象代表一个抽象的"磁盘文件"，仅仅是一个记录而已，和真正的文件之间没有关联；
-一个 FileDescriptor 表示一个已打开的文件，fd 是程序在内核注册的一个文件"链接"，就像建立的网络连接一样；
+一个 FileDescriptor 表示一个已打开的文件，在 Linux 中就是一个"文件描述符 fd"，就像建立的网络连接一样；
 
 
 ## File 类
@@ -666,22 +667,25 @@ Java 平台允许我们在内存中创建可复用的 Java 对象，但一般情
 
 ### Print 格式化
 **构造函数**
-`public PrintStream(OutputStream out);`：autoFlush = false；
-`public PrintStream(OutputStream out, boolean autoFlush);`
-`public PrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException;`
+<pre><code class="language-java line-numbers"><script type="text/plain">/**
+ * autoFlush，即自动刷新缓冲区，对于没有缓冲区的输出字节流来说，该参数没有意义.
+ * 如果 autoFlush 的值为 true，那么 PrintStream 在这几种情况下会进行 flush() 调用：
+ * 1) 写入一个 byte[] 字节数组时，自动刷新缓冲区
+ * 2) 写入一个 '\n' 换行符时，自动刷新缓冲区
+ * 3) 调用 println() 时，自动刷新缓冲区
+ */
+public PrintStream(OutputStream out); // autoFlush = false
+public PrintStream(OutputStream out, boolean autoFlush);
+public PrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException;
 
-`public PrintStream(String fileName) throws FileNotFoundException;`
-`public PrintStream(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException;`
+public PrintStream(String fileName) throws FileNotFoundException;
+public PrintStream(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException;
 
-`public PrintStream(File file) throws FileNotFoundException;`
-`public PrintStream(File file, String csn) throws FileNotFoundException, UnsupportedEncodingException;`
+public PrintStream(File file) throws FileNotFoundException;
+public PrintStream(File file, String csn) throws FileNotFoundException, UnsupportedEncodingException;
+</script></code></pre>
 
-> 
-`autoFlush`，即自动刷新缓冲区，对于没有缓冲区的输出字节流来说，该参数没有意义；
-如果输出流有 buffer 缓冲区，并且 autoFlush 的值为 true，那么 PrintStream 在这几种情况下会进行 flush() 调用：
-1) 写入一个`byte[]`字节数组时，自动刷新缓冲区；
-2) 写入一个'\n'换行符时，自动刷新缓冲区；
-3) 调用 println() 时，自动刷新缓冲区；
+
 
 到现在为止，我们可以创建自定义的 stdin、stdout、stderr 标准输入输出文件了：
 1) `InputStream stdin = new FileInputStream(FileDescriptor.in);`
@@ -726,4 +730,464 @@ public PrintStream format(Locale l, String format, Object ... args);
 public PrintStream append(char c);
 public PrintStream append(CharSequence csq); // CharSequence接口：String、StringBuffer、StringBuilder
 public PrintStream append(CharSequence csq, int start, int end);
+</script></code></pre>
+
+
+## Reader、Writer
+**Reader 抽象类**
+<pre><code class="language-java line-numbers"><script type="text/plain">// 读取 1 个字符 char，EOF 返回 -1
+public int read() throws IOException;
+// 读取整个字符数组
+public int read(char cbuf[]) throws IOException;
+// 读取指定长度
+public int read(char cbuf[], int off, int len) throws IOException;
+
+// skip 跳过 n 个字符
+public long skip(long n) throws IOException;
+public boolean ready() throws IOException; // 测试可读
+
+/**
+ * @param readAheadLimit 限制仍然保留标记时可能读取的字符数，
+ *                       读了这么多字符后，尝试重新设置流可能会失败.
+ * @throws IOException 操作失败时抛出 IOException 异常
+ */
+public void mark(int readAheadLimit) throws IOException;
+public boolean markSupported();
+public void reset() throws IOException; // 回到最近的 mark 位置
+
+public void close() throws IOException; // 关闭输入字符流
+</script></code></pre>
+
+
+
+**Writer 抽象类**
+<pre><code class="language-java line-numbers"><script type="text/plain">// 写入 1 个字符
+public void write(int c) throws IOException;
+// 写入整个字符数组
+public void write(char cbuf[]) throws IOException;
+// 写入指定长度
+public void write(char cbuf[], int off, int len) throws IOException;
+
+// 写入字符串 String
+public void write(String str) throws IOException;
+public void write(String str, int off, int len) throws IOException;
+
+// flush 刷新缓冲区
+public void flush() throws IOException;
+// close 关闭输出字符流
+public void close() throws IOException;
+</script></code></pre>
+
+
+
+字符编码、内码、外码等知识：
+<pre><code class="language-java line-numbers"><script type="text/plain">编码："加密"，String -> byte[]
+解码："解密"，byte[] -> String
+
+// 内码（internal encoding）和外码（external encoding）
+内码：程序内部使用的字符编码，特别是某种语言实现其 char 或 String 类型在"内存"中用的内部编码；
+外码：是程序与外部"交互"时外部使用的字符编码；
+
+Java 使用 "UTF-16" 作为字符的内码，并且是 "UTF-16BE" big-endian 大端序
+
+一个完整的字符是一个"code point"
+一个"code point"可以对应 1 到 2 个"code unit"
+一个"code unit"是固定的 2 字节，即一个 char 字符类型
+
+// char 类型
+对应上述的一个"code unit"，固定为 2 个字节，也可以理解成是一个两字节的"无符号整型"
+只有只需 1 个"code unit"的"code point"才可以完整的存在一个 char 中，所以 char 类型不一定能表示一个完整的 UTF-16 字符
+
+// String.length() 方法
+length() 只是单纯地计算字符数组 char[] 的长度，即"code unit"的个数；
+
+// 例子
+char u = '\u4E2D'; // 中
+String u2 = "\uD801\uDC0F"; // ? 一个特殊字符, length 2
+
+String 作为 char 的序列，对于两字节的 UTF-16 只需要用一个 char 表示，对于需要 2 个 code unit 的 UTF-16 可以包含由两个 char 组成的 “surrogate pair” 代理对来表示
+
+为此 Java 的标准库新加了一套用于访问 code point 的 API，而这套 API 就表现出了 UTF-16 的变长特性, 包括 String, StringBuffer, StringBuilder 等
+
+String.getBytes() 用于将 String 的内码转换为指定的外码的方法：
+1. 无参数版使用平台的默认编码作为外码，"系统环境变量"
+2. 有参数版使用参数指定的编码作为外码，"指定编码"
+getBytes() 方法将 String 的内容用外码编码后，结果放在一个新 byte[] 并返回该字符数组
+
+// 大小端 BOM
+UTF-16LE：0xFF 0xFE
+UTF-16BE：0xFE 0xFF
+
+String str = "z中";
+System.out.println(str.length()); // 2
+
+String str1 = "z中\uD852\uDF62"; // 输出 3 个字符，后面两个 char 组成一个 Unicode 字符
+System.out.println(str1);
+System.out.println(str1.length()); // 4
+
+// 默认UTF-8, ASCII 使用 1 个字节
+System.out.println("z".getBytes().length);
+// 默认UTF-8, 中文使用 3 个字节
+System.out.println("中".getBytes().length);
+
+// 虽然两个字符都是在UTF-16的两个字节表示范围内, 但是UTF-16默认会加上BOM信息
+System.out.println("z".getBytes("UTF-16").length); // 4
+System.out.println("中".getBytes("UTF-16").length); // 4
+
+// 指定BOM顺序后，不输出BOM信息
+System.out.println("z".getBytes("UTF-16BE").length); // 2
+System.out.println("中".getBytes("UTF-16BE").length); // 2
+</script></code></pre>
+
+
+### CharArray 字符数组
+`CharArrayReader`
+**构造函数**
+`public CharArrayReader(char buf[]);`
+`public CharArrayReader(char buf[], int offset, int length);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public int read() throws IOException;
+public int read(char b[], int off, int len) throws IOException;
+
+public long skip(long n) throws IOException;
+public boolean ready() throws IOException;
+
+public boolean markSupported();
+public void mark(int readAheadLimit) throws IOException;
+public void reset() throws IOException;
+
+public void close();
+</script></code></pre>
+
+
+
+`CharArrayWriter`
+**构造函数**
+`public CharArrayWriter();`：default 值为 32（字符数组长度）
+`public CharArrayWriter(int initialSize);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public void write(int c);
+public void write(char c[], int off, int len);
+public void write(String str, int off, int len);
+
+public void writeTo(Writer out) throws IOException; // 输出至 out 字符流
+
+public CharArrayWriter append(char c);
+public CharArrayWriter append(CharSequence csq);
+public CharArrayWriter append(CharSequence csq, int start, int end);
+
+public int size()
+public void reset();
+public void flush(); // 空函数体
+public void close(); // 空函数体
+
+public char toCharArray()[]; // 导出字符数组
+public String toString();
+</script></code></pre>
+
+
+### String 字符串
+`StringReader`
+**构造函数**
+`public StringReader(String s);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public int read() throws IOException;
+public int read(char cbuf[], int off, int len) throws IOException;
+
+public long skip(long ns) throws IOException;
+public boolean ready() throws IOException;
+
+public boolean markSupported();
+public void mark(int readAheadLimit) throws IOException;
+public void reset() throws IOException;
+
+public void close();
+</script></code></pre>
+
+
+
+`StringWriter`
+**构造函数**
+`public StringWriter();`：内部调用`new StringBuffer();`，默认大小 16 字符，即 32 字节；
+`public StringWriter(int initialSize);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public void write(int c);
+public void write(char cbuf[], int off, int len);
+
+public void write(String str);
+public void write(String str, int off, int len);
+
+public StringWriter append(char c);
+public StringWriter append(CharSequence csq);
+public StringWriter append(CharSequence csq, int start, int end);
+
+public String toString();
+public StringBuffer getBuffer();
+
+public void flush(); // 函数体为空
+public void close() throws IOException; // 函数体为空
+</script></code></pre>
+
+
+### InputStream/OutputStream 桥梁
+`InputStreamReader`
+**构造函数**
+`public InputStreamReader(InputStream in);`：自动识别编码
+`public InputStreamReader(InputStream in, String charsetName) throws UnsupportedEncodingException;`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public String getEncoding(); // 获取字符编码
+
+public int read() throws IOException;
+public int read(char cbuf[], int offset, int length) throws IOException;
+
+public boolean ready() throws IOException;
+public void close() throws IOException;
+</script></code></pre>
+
+
+
+`OutputStreamWriter`
+**构造函数**
+`public OutputStreamWriter(OutputStream out);`：使用平台默认编码，Linux 下为`UTF-8`；
+`public OutputStreamWriter(OutputStream out, String charsetName) throws UnsupportedEncodingException;`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public String getEncoding();
+
+public void write(int c) throws IOException;
+public void write(char cbuf[], int off, int len) throws IOException;
+
+public void write(String str, int off, int len) throws IOException;
+
+public void flush() throws IOException;
+public void close() throws IOException;
+</script></code></pre>
+
+
+### File 文件
+`FileReader`
+**构造函数**
+`public FileReader(String fileName) throws FileNotFoundException;`
+`public FileReader(File file) throws FileNotFoundException;`
+`public FileReader(FileDescriptor fd);`
+
+`FileWriter`
+**构造函数**
+`public FileWriter(String fileName) throws IOException;`
+`public FileWriter(String fileName, boolean append) throws IOException;`
+`public FileWriter(File file) throws IOException;`
+`public FileWriter(File file, boolean append) throws IOException;`
+`public FileWriter(FileDescriptor fd);`
+
+
+### Buffered 缓冲流
+`BufferedReader`
+**构造函数**
+`public BufferedReader(Reader in);`：default 值为 8192 字符，即 16 KB；
+`public BufferedReader(Reader in, int sz);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public int read() throws IOException;
+public int read(char cbuf[], int off, int len) throws IOException;
+
+public String readLine() throws IOException;
+
+public long skip(long n) throws IOException;
+public boolean ready() throws IOException;
+
+public boolean markSupported();
+public void mark(int readAheadLimit) throws IOException;
+public void reset() throws IOException;
+
+public void close() throws IOException;
+</script></code></pre>
+
+
+
+`BufferedWriter`
+**构造函数**
+`public BufferedWriter(Writer out);`：default 值为 8192 字符，即 16 KB；
+`public BufferedWriter(Writer out, int sz);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public void write(int c) throws IOException;
+public void write(char cbuf[], int off, int len) throws IOException;
+
+public void write(String s, int off, int len) throws IOException;
+
+public void newLine() throws IOException;
+
+public void flush() throws IOException;
+public void close() throws IOException;
+</script></code></pre>
+
+
+### LineNumber 行号
+**构造函数**
+`public LineNumberReader(Reader in);`：default 值为 8192 字符，即 16 KB；
+`public LineNumberReader(Reader in, int sz);`
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public void setLineNumber(int lineNumber); // 设置当前 LineNumber 号
+public int getLineNumber(); // 获取当前 LineNumber 号
+
+public int read() throws IOException;
+public int read(char cbuf[], int off, int len) throws IOException;
+
+public String readLine() throws IOException;
+
+public long skip(long n) throws IOException;
+public void mark(int readAheadLimit) throws IOException;
+public void reset() throws IOException;
+</script></code></pre>
+
+
+### Print 格式化
+**构造函数**
+<pre><code class="language-java line-numbers"><script type="text/plain">/**
+ * 若 autoFlush 为 true:
+ * 当调用 println()、printf()、format() 方法时自动 flush()
+ */
+public PrintWriter(Writer out); // autoFlush = false
+public PrintWriter(Writer out, boolean autoFlush);
+
+public PrintWriter(OutputStream out); // autoFlush = false
+public PrintWriter(OutputStream out, boolean autoFlush);
+
+public PrintWriter(String fileName) throws FileNotFoundException;
+public PrintWriter(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException;
+
+public PrintWriter(File file) throws FileNotFoundException;
+public PrintWriter(File file, String csn) throws FileNotFoundException, UnsupportedEncodingException;
+</script></code></pre>
+
+
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public void flush();
+public void close();
+public boolean checkError(); // 检查错误 Error
+
+public void write(int c);
+public void write(char buf[], int off, int len);
+public void write(char buf[]);
+
+public void write(String s, int off, int len);
+public void write(String s);
+
+public void print(boolean b);
+public void print(char c);
+public void print(int i);
+public void print(long l);
+public void print(float f);
+public void print(double d);
+public void print(char s[]);
+public void print(String s);
+public void print(Object obj);
+
+public void println();
+public void println(boolean x);
+public void println(char x);
+public void println(int x);
+public void println(long x);
+public void println(float x);
+public void println(double x);
+public void println(char x[]);
+public void println(String x);
+public void println(Object x);
+
+// printf() 内部调用 format()，是 format() 的一个别名
+public PrintWriter printf(String format, Object ... args);
+public PrintWriter printf(Locale l, String format, Object ... args);
+public PrintWriter format(String format, Object ... args);
+public PrintWriter format(Locale l, String format, Object ... args);
+
+public PrintWriter append(char c);
+public PrintWriter append(CharSequence csq);
+public PrintWriter append(CharSequence csq, int start, int end);
+</script></code></pre>
+
+
+## RandomAccessFile
+> 
+`RanndomAccessFile`实现了接口`DataOutput/DataInput`
+实际上与 InputStream/OutputStream、Reader/Writer 无关
+最大的特点是支持随机存储，内部依靠一个"文件指针"实现
+
+**构造函数**
+<pre><code class="language-java line-numbers"><script type="text/plain">public RandomAccessFile(String name, String mode) throws FileNotFoundException;
+public RandomAccessFile(File file, String mode) throws FileNotFoundException;
+
+// mode: r、rw、rws、rwd
+"r"：以只读方式打开，调用结果对象的任何 write 方法都将导致抛出 IOException
+"rw"：打开以便读取和写入
+"rws"：打开以便读取和写入；对于 data 或 metadata 自动进行 sync
+"rwd"：打开以便读取和写入，对于 data 自动进行 sync
+
+// metadata 和 data 区别
+medadata：元数据，描述数据的数据，如文件权限、文件属性、访问时间、修改时间等等
+data：文件内容（数据）
+</script></code></pre>
+
+
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public final FileDescriptor getFD() throws IOException;
+public final FileChannel getChannel();
+
+public int read() throws IOException;
+public int read(byte b[], int off, int len) throws IOException;
+public int read(byte b[]) throws IOException;
+
+public final void readFully(byte b[]) throws IOException;
+public final void readFully(byte b[], int off, int len) throws IOException;
+
+public int skipBytes(int n) throws IOException;
+
+public void write(int b) throws IOException;
+public void write(byte b[]) throws IOException;
+public void write(byte b[], int off, int len) throws IOException;
+
+// 操作文件指针 pos
+public native long getFilePointer() throws IOException;
+public void seek(long pos) throws IOException;
+
+/**
+ * 若 newLength < curLength：截断文件，需要的话将文件指针指向 newLength 位置
+ * 若 newLength > curLength：扩充文件，扩充部分的内容未定义
+ */
+public native long length() throws IOException;
+public native void setLength(long newLength) throws IOException;
+
+public void close() throws IOException;
+
+public final boolean readBoolean() throws IOException;
+public final byte readByte() throws IOException;
+public final int readUnsignedByte() throws IOException;
+public final short readShort() throws IOException;
+public final int readUnsignedShort() throws IOException;
+public final char readChar() throws IOException;
+public final int readInt() throws IOException;
+public final long readLong() throws IOException;
+public final float readFloat() throws IOException;
+public final double readDouble() throws IOException;
+
+public final String readLine() throws IOException;
+public final String readUTF() throws IOException;
+
+public final void writeBoolean(boolean v) throws IOException;
+public final void writeByte(int v) throws IOException;
+public final void writeShort(int v) throws IOException;
+public final void writeChar(int v) throws IOException;
+public final void writeInt(int v) throws IOException;
+public final void writeLong(long v) throws IOException;
+public final void writeFloat(float v) throws IOException;
+public final void writeDouble(double v) throws IOException;
+
+public final void writeUTF(String str) throws IOException;
 </script></code></pre>
