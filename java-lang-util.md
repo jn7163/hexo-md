@@ -907,7 +907,7 @@ DESC >>> [@D: 98.0, @B: 79.0, @E: 72.0, @A: 67.0, @C: 59.0]
 </script></code></pre>
 
 
-## String、StringBuffer、StringBuilder
+## String 字符串
 String 是 Java 中的字符串，String 实现了 CharSequence 字符序列接口；
 除了 String 实现了 CharSequence 之外，StringBuffer 和 StringBuilder 也实现了 CharSequence 接口；
 
@@ -1255,77 +1255,220 @@ public String toString();
 
 
 ## 包装类
-基本类型：`byte`、`short`、`int`、`long`、`float`、`double`、`boolean`、`char`
-对应包装类：`Byte`、`Short`、`Integer`、`Long`、`Float`、`Double`、`Boolean`、`Character`
+基本类型（值类型）：`byte`、`short`、`int`、`long`、`float`、`double`、`boolean`、`char`
+包装类（引用类型）：`Byte`、`Short`、`Integer`、`Long`、`Float`、`Double`、`Boolean`、`Character`
 
-**基本类型** -> **类类型**，称为`装箱`；
-**类类型** -> **基本类型**，称为`拆箱`。
+**值类型** -> **引用类型**，称为`装箱`；
+**引用类型** -> **值类型**，称为`拆箱`。
 
 在 jdk1.5 之前，装箱、拆箱需要我们手动干预，称为**手动装箱**、**手动拆箱**；
 在 jdk1.5 之后，装箱、拆箱可以由编译器自动完成，称为**自动装箱**、**自动拆箱**。
 
 除了 Boolean、Character 类型直接继承 Object 类，Byte、Short、Integer、Long、Float、Double 都是继承自 Number 类。
 
-每个包装类的对象可以封装一个相应的基本类型的数据，并提供了其它一些有用的方法；包装类对象一经创建，所封装的基本类型数据的值不会改变；这一点和 String 是一样的。
+包装类对象一经创建，所封装的基本类型的值不会再改变；这一点和 String 是一样的。
 
-包装类的一些共同方法，以 Integer 为例：
-`public Integer(int value)`：构造函数，手动装箱；
-`public Integer(String s) throws NumberFormatException`：构造函数，解析字符串中的数字，手动装箱；
+**常量池**
+常量池有两种：
+1) `class文件常量池`：或称为"静态常量池"，用于存放编译器生成的各种`字面量`、`符号引用`，在类加载之后会放到方法区的**运行时常量池**中；
+2) `运行时常量池`：或称为"动态常量池"，与静态常量池不同的是，它具有**动态性**，即可以在运行期间动态的将新的常量放入池中。
 
-`public static Integer valueOf(int i)`：自动装箱时调用，值在区间`[-128, 127]`的对象将被缓存；
-`public static Integer valueOf(String s) throws NumberFormatException`：区间`[-128, 127]`被缓存；
-`public static Integer valueOf(String s, int radix) throws NumberFormatException`：同上；
+常量池的运用可以有效地减少相同常量的多次存储，减少不必要的存储空间浪费。
+
+而动态常量池在开发中运用的最多的就是 String 的 intern() 成员方法；
+并且基本类型包装类也存在运行时常量池，它们的作用和 String 是相似的。
+
+八大基本类型的包装类中，除了`浮点型`的包装类（**Float**、**Double**）外，其他所有的包装类都存在常量池机制。
+
+当一个 String 实例调用 intern() 方法时，首先会去查找 String 运行时常量池中是否有相同的字符串常量；
+如果有，则返回常量池中该字符串的引用；如果没有，将当前对象的加入到常量池中，并返回其在常量池中的引用。
+
+**String 的两种创建方式**
+1) `String s = "www.zfl9.com";`
+第一步，将字面量"www.zfl9.com"存放在 Class 文件的常量池中；
+第二步，执行`String s`，新建一个 String 引用变量 s（String 类型的指针）；
+第三步，将字面量"www.zfl9.com"的地址赋给引用变量 s。
+
+在这种方式中，只创建了一个对象，即"www.zfl9.com"常量；
+
+2) `String s = new String("www.zfl9.com");`
+第一步，将字面量"www.zfl9.com"存放在 Class 文件的常量池中；
+第二步，执行`new String()`，在堆中创建一个 String 对象，并使用常量"www.zfl9.com"进行初始化（拷贝构造）；
+第三步，执行`String s`，新建一个 String 引用变量 s（String 类型的指针）；
+第四步，将刚刚在堆中创建的匿名对象的指针赋给引用变量 s。
+
+在这种方式中，创建了两个对象，一个在常量池中，一个在堆中；
+
+因此，不建议使用第二种形式，会造成内存空间的浪费！
+
+String.intern() 的例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.out;
+
+public class Main {
+    public static void main(String[] args) {
+        String s1 = "www.zfl9.com";
+        String s2 = "www.zfl9.com";
+        String s3 = new String("www.zfl9.com");
+        String s4 = new String(s3);
+
+        out.printf("s1 == s2 -> %b\n", s1 == s2); // true
+        out.printf("s1 == s3 -> %b\n", s1 == s3); // false
+        out.printf("s3 == s4 -> %b\n", s3 == s4); // false
+
+        out.printf("s1.equals(s3) -> %b\n", s1.equals(s3)); // true
+        out.printf("s3.equals(s4) -> %b\n", s3.equals(s4)); // true
+
+        out.printf("s1 == s3.intern() == s4.intern() -> %b\n",
+                   s1 == s3.intern() && s1 == s4.intern()); // true
+        out.printf("s1.intern() == s3.intern() -> %b\n", s1.intern() == s3.intern()); // true
+        out.printf("s3.intern() == s4.intern() -> %b\n", s3.intern() == s4.intern()); // true
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [16:12:43]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [16:12:56]
+$ java Main
+s1 == s2 -> true
+s1 == s3 -> false
+s3 == s4 -> false
+s1.equals(s3) -> true
+s3.equals(s4) -> true
+s1 == s3.intern() == s4.intern() -> true
+s1.intern() == s3.intern() -> true
+s3.intern() == s4.intern() -> true
+</script></code></pre>
+
+
+
+好吧，有些扯远了，我们回到包装类中来，包装类有一些共同方法，以 Integer 为例：
+**手动装箱**
+`public Integer(int value)`
+`public Integer(String s) throws NumberFormatException`：解析字符串中的 int。
+**自动装箱**
+`public static Integer valueOf(int i)`：基本类型的值在区间`[-128, 127]`的对象将入池。
+`public static Integer valueOf(String s) throws NumberFormatException`：同上。
+`public static Integer valueOf(String s, int radix) throws NumberFormatException`：同上。
 
 `public int intValue()`：返回所包装的基本类型的值；
 
 `public static int parseInt(String s) throws NumberFormatException`：解析字符串中的数字；
-`public static int parseInt(String s, int radix) throws NumberFormatException`
-
-`public int hashCode()`：返回 hashCode 值；
-`public boolean equals(Object obj)`：比较两个对象是否相等；
-
-`public String toString()`：转换为字符串形式；
+`public static int parseInt(String s, int radix) throws NumberFormatException`：同上。
 
 手动装箱因为每次都是使用`new`创建，所以每次创建的对象都是不同的，它们生死于堆上；
+而自动装箱则有点不同，它不使用`new`创建，而是使用其静态方法`valueOf()`，`valueOf()`内部维护了一个常量池；
 
-而自动装箱则有点不同，它不使用`new`创建，而是使用其静态方法`valueOf()`，`valueOf()`内部维护了一个 cache 池；
-
-初始时，该 cache 池为空，没有任何已创建的对象；
-当调用`valueOf(10)`方法自动装箱时，发现 cache 池中没有值等于 10 的对象，于是新建一个对象并丢入 cache 池中；
-当再次调用`valueOf(10)`方法自动装箱时，发现 cache 池中已有值相同的对象，于是不再创建新对象，而是将已有对象返回。
-但是 cache 池并不是无限大的，是有一定范围的，在 Integer 中，它被限制为只缓存区间`[-128, 127]`的对象，即一个字节；
-如果传入 valueOf() 的参数不在该范围中，那么等同于手动装箱，即每次都会 new 一个新的对象出来；
+1) 初始时，该 cache 池为空，没有任何包装类对象；
+2) 当调用`valueOf(10)`方法自动装箱时，发现 cache 池中没有值等于 10 的对象，于是新建一个对象并丢入 cache 池中；
+3) 当再次调用`valueOf(10)`方法自动装箱时，发现 cache 池中已有值相同的对象，于是不再创建新对象，而是将已有对象返回；
+4) 但是 cache 池并不是无限大的，是有一定范围的，在 Integer 中，它被限制为只缓存区间`[-128, 127]`的对象，即一个字节表示的整数；
+5) 如果传入 valueOf() 的参数不在该范围中，那么等同于手动装箱，即每次都会 new 一个新的对象出来；
 
 除了 Integer 有所谓的 cache 池，Boolean、Byte、Short、Long、Character 也有 cache，如下：
-Short、Long 和 Integer 一样，区间都是 [-128, 127]；
-Boolean、Byte 因为它们占用的内存长度都在 1 字节之内，因此全部取值范围都被缓存；
-而 Character 相当于无符号的 Short 整型，因此在区间 [0, 127] 的对象也将被缓存；
-但是 Float、Double 浮点型的对象并不会被缓存，不管它们的取值范围是多少；
+- Short、Long 和 Integer 一样，区间都是 [-128, 127]；
+- Boolean、Byte 因为它们占用的内存长度都在 1 字节之内，因此全部取值范围都被缓存；
+- 而 Character 相当于无符号的 Short 整型，因此在区间 [0, 127] 的对象也将被缓存；
+- 但是 Float、Double 浮点型的对象并不会被缓存，不管它们的取值范围是多少；
 
-为什么单单就浮点型的对象不会被缓存？*下面是我的个人见解，不保证没有错误*
 
-仔细观察一下，其实就可以发现，他们的区间都在 [-128, 127]，这不就是 1 byte 内存可以表示的整型范围嘛；
-对于 Byte 来说，不需要进行修改，因为它就占用一个字节的内存；
-对于 Short、Integer、Long 只需要保留一个字节，其他的可以丢弃，不影响数值；
-对于 Boolean 就更简单了，它只有两个取值 true、false；
-对于 Character 也是一样的道理，只需要保留一个字节，不影响数值；
-但是对于 Float、Double 就不能这么做了，归根结底还是整数和小数在内存中的存储不同，不能简简单单的裁剪至一个字节，因为这会破坏它们的存储结构！
 
+为什么浮点数包装类不会被丢入池中，无论它们的大小是多少？
+准确原因我也不是很明确，但是我猜测是因为"整数和小数在内存中的表示是不同的"；
+对于整型变量，假设它们都是有符号的，如果其值的区间在`[-128, 127]`内，那么就可以将其压缩为一个字节（有符号）来存储。
 
 还有一点要注意：
-当“==”运算符的两个操作数都是`引用类型`（包装类）时，比较它们的`指向`，不会触发自动拆箱；
-而如果其中有一个操作数是`表达式`（即包含算术运算）则触发`自动拆箱`，比较`基本类型的值`；
+1) 当`==`运算符的两个操作数都是`引用类型`（包装类）时，比较引用的值，不触发自动拆箱；
+2) 如果其中有一个操作数是`算数表达式/数值`则触发`自动拆箱`，这时比较的是`基本类型的值`。
 
-很好理解，首先你要知道，在 Java 中，除了八大基本类型，其他所有的变量都是引用，包括数组；
-注意，这里说的引用不同于 C++ 中的引用，而应该理解为 C 中的指针的一种包装，本质是指针；
+例子一：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.out;
 
-也就是说，除了八大基本类型存储在栈（Stack）上，其他的类型的变量都是生死于堆上；
-我们只需要无脑的 new 就行了，不用担心内存回收问题，因为 GC（垃圾回收器）已经包揽了一切；
+public class Main {
+    public static void main(String[] args) {
+        Integer a1 = 40;
+        Integer a2 = 40;
+        Integer a3 = 0;
+        Integer b1 = new Integer(40);
+        Integer b2 = new Integer(40);
+        Integer b3 = new Integer(0);
 
-但是 Java 中的指针与 C 语言中的指针有一点不同，C/C++ 的指针有指针运算（即指针和整数相加减），而 Java 中不支持该操作！
+        out.printf("a1 == a2 -> %b\n", a1 == a2); // true
+        out.printf("a1 == a2 + a3 -> %b\n", a1 == a2 + a3); // true
+        out.printf("b1 == b2 -> %b\n", b1 == b2); // false
+        out.printf("b1 == b2 + b3 -> %b\n", b1 == b2 + b3); // true
+    }
+}
+</script></code></pre>
 
-所以当出现两个引用类型的“==”运算时，它们比较的是指针，也就是对象的地址，这一点对于包装类也不例外！
-而当有一个操作数是基本类型时，编译器有两种选择，一是将基本类型自动装箱，二是将引用类型自动拆箱；
-很显然，编译器不会蠢到去创建一个对象，毕竟创建对象是有开销的，所以编译器选择将引用类型进行拆箱，取出它们的值再进行比较；即比较基本类型的值；
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [16:58:27]
+$ javac Main.java
 
-总之，对于引用类型，不支持**数学运算符**、除“==”外的**关系运算符**、**位运算符**；
+# root @ arch in ~/work on git:master x [16:58:42]
+$ java Main
+a1 == a2 -> true
+a1 == a2 + a3 -> true
+b1 == b2 -> false
+b1 == b2 + b3 -> true
+</script></code></pre>
+
+
+
+如果你理解了前面的内容，那么这个例子就很容易理解了：
+1) `a1 == a2`：a1、a2 自动装箱，值在区间 [-128, 127]，因此它们都引用同一个对象，而`==`两边的操作数都是引用类型，比较他们的引用的值，因为是同一个对象，所以返回 true；
+2) `a1 == a2 + a3`：a1、a2、a3 都是自动装箱，a1 和 a2 都引用自池中的同一对象，`==`的右操作数是一个表达式，触发 a2、a3 的自动拆箱，变为`40 + 0`，即右操作数为 40，因为有一个操作数是值类型，所以触发 a1 的自动拆箱，最终比较的是`40 == 40`，返回 true；
+3) `b1 == b2`：因为 b1、b2 都是手动装箱，所以他们引用的是不同的对象，因此返回 false；
+4) `b1 == b2 + b3`：右操作数是一个表达式，触发自动拆箱，结果为 40，而 b1 也被触发自动拆箱，结果为 40，因此返回 true。
+
+
+再来一个例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.out;
+
+public class Main {
+    public static void main(String[] args) {
+        Integer a1 = 1;
+        Integer a2 = 2;
+        Integer a3 = 3;
+        Integer a4 = 3;
+
+        Integer a5 = 200;
+        Integer a6 = 200;
+
+        Long b1 = 3L;
+        Long b2 = 2L;
+
+        out.printf("a3 == a4 -> %b\n", a3 == a4); // true
+        out.printf("a5 == a6 -> %b\n", a5 == a6); // false
+        out.printf("a3 == a1 + a2 -> %b\n", a3 == a1 + a2); // true
+        out.printf("a3.equals(a1 + a2) -> %b\n", a3.equals(a1 + a2)); // true
+        out.printf("b1 == a1 + a2 -> %b\n", b1 == a1 + a2); // true
+        out.printf("b1.equals(a1 + a2) -> %b\n", b1.equals(a1 + a2)); // false
+        out.printf("b1.equals(a1 + b2) -> %b\n", b1.equals(a1 + b2)); // true
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:19:29]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [17:19:43]
+$ java Main
+a3 == a4 -> true
+a5 == a6 -> false
+a3 == a1 + a2 -> true
+a3.equals(a1 + a2) -> true
+b1 == a1 + a2 -> true
+b1.equals(a1 + a2) -> false
+b1.equals(a1 + b2) -> true
+</script></code></pre>
+
+
+
+1) `a3 == a4`：自动装箱，比较的是引用，因为在区间 [-128, 127]，true；
+2) `a5 == a6`：自动装箱，比较的是引用，因为不在区间 [-128, 127]，false；
+3) `a3 == a1 + a2`：触发自动拆箱，比较的是数值，true；
+4) `a3.equals(a1 + a2)`：计算`a1 + a2`时触发自动拆箱，然后再次自动装箱，因此返回 true；
+5) `b1 == a1 + a2`：计算`a1 + a2`时触发自动拆箱，结果为 int 类型的值 3，b1 也因此自动拆箱，是 long 类型的值 3；然后 int -> long 自动类型转换，因此返回 true；
+6) `b1.equals(a1 + a2)`：计算`a1 + a2`时触发自动拆箱，结果为 int 类型的值 3，然后再次装箱为 Integer 引用类型，因为比较的两个对象的类型不同，所以返回 false；
+7) `b1.equals(a1 + b2)`：计算`a1 + b2`时触发自动拆箱，并且发生自动类型转换 int -> long，然后装箱为 Long 引用类型，因此返回 true。

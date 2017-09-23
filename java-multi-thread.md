@@ -1745,8 +1745,7 @@ ThreadLocal 类的几个方法：
 5) `protected T initialValue()`：protected 方法，一般在子类中要覆盖该方法，提供一个 init 初始值，默认为 null。
 
 可以发现，ThreadLocal 的 API 很简单，就 5 个函数，我们先来看一个 ThreadLocal 的使用例子：
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-public class Main {
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
     public static void main(String[] args) {
         // init_value = null;
         ThreadLocal<Boolean> threadLocal = new ThreadLocal<Boolean>();
@@ -1775,8 +1774,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-bash line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [10:29:50]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:29:50]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [10:30:08]
