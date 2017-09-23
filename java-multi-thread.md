@@ -1722,3 +1722,78 @@ Running -> 4
 Running -> 5
 call interrupt()
 </script></code></pre>
+
+
+## ThreadLocal线程局部变量
+ThreadLocal 是一个泛型类，位于 java.lang 包。`ThreadLocal`，看名字就知道，"线程本地变量"、"线程局部变量"；
+
+通常情况下，我们创建的变量是可以被任何一个线程访问并修改的，称为 Global 变量；
+而使用 ThreadLocal 创建的变量只能被当前线程访问，其他线程则无法访问和修改，称为 Local 变量。
+
+**ThreadLocal 的作用是提供线程内的局部变量，这种变量在线程的生命周期内起作用，减少同一个线程内多个函数或者组件之间一些公共变量的传递的复杂度**
+
+**synchronized**：`以时间换空间`，只提供一份变量，让不同的线程排队访问；
+**ThreadLocal**：`以空间换时间`，为每个线程都创建一个变量副本，因此可以同时访问而互不影响。
+> 
+`ThreadLocal`的出现并不是说要代替`synchronized`同步锁机制，它们都有各自不同的应用领域！
+
+ThreadLocal 类的几个方法：
+1) `public ThreadLocal() {}`：无参构造函数，并且函数体为空；
+2) `public T get()`：获取当前线程的 value；
+3) `public void set(T value)`：更新当前线程的 value；
+4) `public void remove()`：删除当前线程的 value，提前回收内存；
+5) `protected T initialValue()`：protected 方法，一般在子类中要覆盖该方法，提供一个 init 初始值，默认为 null。
+
+可以发现，ThreadLocal 的 API 很简单，就 5 个函数，我们先来看一个 ThreadLocal 的使用例子：
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+public class Main {
+    public static void main(String[] args) {
+        // init_value = null;
+        ThreadLocal<Boolean> threadLocal = new ThreadLocal<Boolean>();
+
+        // Thread - Main 主线程
+        threadLocal.set(true);
+        System.out.println("Main -> " + threadLocal.get());
+
+        // Thread - A 线程A
+        new Thread() {
+            @Override
+            public void run() {
+                threadLocal.set(false);
+                System.out.println("A -> " + threadLocal.get());
+            }
+        }.start();
+
+        // Thread - B 线程B
+        new Thread() {
+            @Override
+            public void run() {
+                System.out.println("B -> " + threadLocal.get());
+            }
+        }.start();
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-bash line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [10:29:50]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [10:30:08]
+$ java Main
+Main -> true
+A -> false
+B -> null
+</script></code></pre>
+
+
+
+从运行结果中可以看出，虽然线程 Main、A、B 共同操作 threadLocal 对象，但是并没有出现"脏数据"，它们访问的都是属于自己的变量，互不影响。
+
+
+**ThreadLocal 实现原理**
+![ThreadLocal 实现原理](/images/java-threadlocal.jpg)
+
+每个 Thread 对象（即线程/任务）维护一个 ThreadLocalMap 映射表（Thread.threadLocals 成员变量，默认为 null），这个映射表的 key 是 ThreadLocal 对象，value 是真正需要存储的 Object（value）；
+
+也就是说 ThreadLocal 本身并不存储值，它只是作为一个 key 来让线程从 ThreadLocalMap 获取 value；
