@@ -530,8 +530,114 @@ G1 收集器是一款**面向服务端应用的垃圾收集器**；HotSpot 团�
 - `分代收集`：和其他收集器一样，分代的概念在 G1 中依然存在，不过 G1 不需要其他的垃圾回收器的配合就可以独自管理整个 GC 堆；
 - `空间整合`：G1 收集器有利于程序长时间运行，分配大对象时不会无法得到连续的空间而提前触发一次 GC；
 - `可预测的非停顿`：这是 G1 相对于 CMS 的另一大优势，降低停顿时间是 G1 和 CMS 共同的关注点，能让使用者明确指定在一个长度为 M 毫秒的时间片段内，消耗在垃圾收集上的时间不得超过 N 毫秒；
-- 在使用 G1 收集器时，Java 堆的内存布局和其他收集器有很大的差别，它将这个 Java 堆分为多个大小相等的独立区域，虽然还保留新生代和老年代的概念，但是新生代和老年代不再是物理隔离的了，它们都是一部分 Region（不需要连续）的集合；
 
 
 
-虽然 G1 看起来有很多优点，实际上 CMS 还是主流；
+使用 G1 收集器时，Java 堆的内存布局和其他收集器有很大的差别：
+G1 将整个 Java 堆分为多个大小相等的独立区域；
+虽然还保留新生代和老年代的概念，但是新生代和老年代不再是物理隔离的了，它们都是一部分 Region（不需要连续）的集合；
+
+> 
+虽然 G1 看起来有很多优点，实际上 CMS 还是主流。
+
+
+## JVM 启动参数
+**javac 常用参数**
+`-classpath <路径>`：指定 CLASSPATH 搜索路径；
+`-cp <路径>`：指定 CLASSPATH 搜索路径；
+
+`-Xlint`：输出所有可用的警告信息；
+`-Xlint:all`：输出所有可用的警告信息；
+`-Xlint:none`：不输出任何警告信息；
+
+`-g`：生成调试信息；
+`-g:none`：不生成调试信息；
+
+`-Werror`：出现警告时终止编译；
+`-nowarn`：不生成任何警告；
+`-verbose`：输出编译过程的详细信息；
+
+`-deprecation`：输出使用已过时 API 的源位置；
+
+`-encoding <编码>`：指定源文件使用的字符编码；
+
+`-source <jdk版本>`：指定源文件的 jdk 版本；
+`-target <jdk版本>`：指定类文件的 jdk 版本；
+
+`-version`：版本信息；
+`-help`：输出标准选项的提要；
+
+
+**java 常用参数**
+`-classpath <目录>`：指定 CLASSPATH 搜索路径；
+`-cp <目录>`：指定 CLASSPATH 搜索路径；
+
+`-server`：使用 Server VM 虚拟机（64bit 默认）；
+`-client`：使用 Client VM 虚拟机（64bit 无效）；
+
+`-d32`：使用 32 位数据模型 (如果可用)；
+`-d64`：使用 64 位数据模型 (如果可用)；
+
+`-verbose:[class|gc|jni]`：启用详细输出；
+
+`-version`：输出版本信息并退出；
+`-showversion`：输出版本信息并继续；
+
+`-?/-help`：输出帮助消息；
+
+**java 启动参数**
+**堆栈大小相关**
+`-Xss2m`：每个线程的 VM Stack 栈大小；jdk1.5 之前默认 256k，jdk1.5 之后默认 1m；
+`-Xms1024m`：初始堆大小；通常和 -Xmx 大小一样；
+`-Xmx1024m`：最大堆大小；
+`-XX:MaxDirectMemorySize=128M`：直接内存最大值，默认与 Java 堆的最大值相同；
+
+**年轻代/年老代/永久代相关**
+`-Xmn384m`：新生代大小，推荐配置为整个堆的 3/8；
+`-XX:SurvivorRatio`：年轻代中 Eden 和 Survivor 区域的大小比例，默认为 8，即：`Eden:Survivor0:Survivor1 = 8:1:1`；
+
+`-XX:Permsize=384m`：设置永久代初始值；
+`-XX:MaxPermsize=384m`：设置永久代的最大值；
+> 
+Java8 没有永久代说法，它们被称为**元空间**，`-XX:MetaspaceSize=N`；
+
+`-XX:+UseAdaptiveSizePolicy`：启用动态控制，动态调整 Java 堆中各个区域的大小以及进入老年代的年龄；
+`-XX:PretenureSizeThreshold=2m`：直接进入年老代的大对象的大小，默认单位为字节 byte；
+`-XX:MaxTenuringThreshold=10`：设置新生代中对象进入老年代的年龄，最大为 15 岁；
+对于 parallel 并行垃圾收集器来说，默认值是 15；对于 CMS 垃圾收集器来说，默认值是 6。
+
+**GC 收集器相关**
+`-XX:+UseSerialGC`：使用 Serial + Serial Old 组合（不建议）；
+
+`-XX:+UseParNewGC`：使用 ParNew + Serial Old 组合；
+`-XX:ParallelGCThreads`：设置执行内存回收的线程数；
+
+`-XX:+UseParallelGC`：使用 Parallel Scavenge + Serial Old 组合（Server 模式的默认值）；
+`-XX:+UseParallelOldGC`：使用 Parallel Scavenge + Parallel Old 组合；
+`-XX:GCTimeRatio`：设置用户执行时间占总时间的比例，默认 99，即 1% 的时间用来进行垃圾回收；
+`-XX:MaxGCPauseMillis`：设置 GC 的最大停顿时间(ms 毫秒为单位)（只对 Parallel Scavenge 有效）；
+
+`-XX:+UseConcMarkSweepGC`：使用 ParNew + CMS + Serial Old 进行内存回收；
+优先使用 ParNew + CMS，当用户线程内存不足时，采用备用方案 ParNew + Serial Old；
+`-XX:ParallelGCThreads=4`：设置垃圾收集线程数，默认是`(CPU个数 + 3)/4`；
+`-XX:CMSInitiatingOccupancyFraction=80`：老年代垃圾占比达此阈值时开始 CMS 收集；默认为 92；设置过高容易导致并发收集失败，会出现 SerialOld 收集的情况；
+`-XX:+UseCMSCompactAtFullCollection`：在 Full GC 时，对年老代进行压缩，可能会影响性能；但是可以消除内存碎片；
+`-XX:CMSFullGCsBeforeCompaction=1`：进行 Full GC 多少次后进行内存压缩；
+`-XX:+CMSParallelRemarkEnabled`：为了减少第二次暂停的时间，开启并行 remark，降低标记停顿；
+
+`-XX:+UseG1GC`：使用 G1 垃圾收集器，谨慎使用，需要经过线上测试，还没有被设置为默认垃圾收集器；
+
+**打印日志相关**
+`-verbose:gc`：打印 GC 日志；
+`-XX:+PrintGC`：打印 GC 基本日志；
+`-XX:+PrintGCDetails`：打印 GC 详细日志；
+`-XX:+PrintGCTimeStamps`：打印 GC 相对时间戳；
+`-XX:+PrintGCApplicationStoppedTime`：打印 GC 期间程序暂停的时间；
+`-XX:+PrintGCApplicationConcurrentTime`：打印每次垃圾回收前，程序未中断的执行时间；
+`-XX:+PrintTenuringDistribution`：查看每次 Minor GC 后新的存活周期的阈值；
+`-XX:+PrintTLAB`：查看 TLAB 空间的使用情况；
+`-Xloggc:filename`：把相关日志信息记录到文件以便分析；
+
+**OOM 转储相关**
+`-XX:+HeapDumpOnOutOfMemoryError`：发生 OOM 内存溢出错误时自动生成堆转储文件；
+`-XX:HeapDumpPath=filename`：指定堆转储文件的路径及文件名；
