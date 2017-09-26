@@ -94,6 +94,7 @@ true
 // 根据给定的 className 获取其 Class 对象
 public static Class<?> forName(String className) throws ClassNotFoundException;
 public native Class<? super T> getSuperclass(); // 获取直接基类的 Class 对象
+public Type getGenericSuperclass(); // 获取直接基类的 Class 对象(泛型)
 
 // 调用无参构造函数创建对象，等同于执行 new T();
 public T newInstance() throws InstantiationException, IllegalAccessException;
@@ -108,6 +109,8 @@ public T[] getEnumConstants(); // 获取枚举类型的所有枚举常量(同enu
 public native boolean isInterface(); // 判断是否为 interface 接口
 public native boolean isArray(); // 判断是否为 Array 静态数组
 public native boolean isPrimitive(); // 判断是否为 基本类型
+public boolean isAnnotation(); // 判断是否为 注解类型
+public boolean isSynthetic(); // 判断是否为 合成类
 public boolean isMemberClass(); // 判断是否为 成员类
 public boolean isAnonymousClass(); // 判断是否为 匿名类
 
@@ -115,6 +118,7 @@ public String getName(); // 获取类型名称
 public String getSimpleName(); // 获取简单名称(不包含package包信息)
 public String getCanonicalName(); // 获取规范名称(基本同getSimpleName)
 public String toString(); // 获取字符串描述
+public String toGenericString(); // 获取泛型字符串描述
 
 // 返回其声明类的 Class 对象 (如果当前类为某个类的成员类)
 public Class<?> getDeclaringClass() throws SecurityException;
@@ -129,9 +133,11 @@ public Class<?> getDeclaringClass() throws SecurityException;
 public Class<?>[] getClasses();
 public Class<?>[] getDeclaredClasses() throws SecurityException;
 
+public Package getPackage(); // 获取 package 信息
 public native Class<?> getComponentType(); // 获取数组元素的 Class 对象
 public native int getModifiers(); // 获取修饰符，需使用 Modifier 进行解析
 public Class<?>[] getInterfaces(); // 获取当前类实现的所有接口(不包括继承的)
+public Type[] getGenericInterfaces(); // (泛型)
 
 // 获取指定字段、所有字段，字段即成员变量
 public Field getField(String name) throws NoSuchFieldException, SecurityException;
@@ -154,7 +160,7 @@ public Constructor<?>[] getDeclaredConstructors() throws SecurityException;
 </script></code></pre>
 
 
-## Field 字段
+## Field 类
 所谓的字段（Field），就是我们平常所说的成员变量、属性。
 
 java.lang.reflect.Field 类的相关方法：
@@ -452,4 +458,84 @@ $ javac Main.java
 $ java Main
 public Test::Test(int)
 private Test::Test(float)
+</script></code></pre>
+
+
+## Array 类
+反射除了可以用于操作类的成员变量、成员函数、构造函数之外，还可以创建 Array 数组；
+
+java.lang.reflect.Array 类的常用方法：
+<pre><code class="language-java line-numbers"><script type="text/plain">
+/**
+ * 创建一个 length 长的元素类型为 componentType 的静态数组.
+ * @param componentType 数组元素的 Class 对象
+ * @param length 数组长度
+ * @throws NegativeArraySizeException RuntimeException 异常，当 length 为负数时抛出
+ * @throws IllegalArgumentException RuntimeException 异常，数组维数超过 255 时抛出
+ * @return Object 返回数组的引用
+ */
+public static Object newInstance(Class<?> componentType, int length) throws NegativeArraySizeException;
+// 获取数组长度
+public static native int getLength(Object array) throws IllegalArgumentException;
+
+// 获取指定索引的元素
+public static native Object get(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native boolean getBoolean(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native byte getByte(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native char getChar(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native short getShort(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native int getInt(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native long getLong(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native float getFloat(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native double getDouble(Object array, int index) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+
+// 修改指定索引的元素
+public static native void set(Object array, int index, Object value) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setBoolean(Object array, int index, boolean z) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setByte(Object array, int index, byte b) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setChar(Object array, int index, char c) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setShort(Object array, int index, short s) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setInt(Object array, int index, int i) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setLong(Object array, int index, long l) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setFloat(Object array, int index, float f) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+public static native void setDouble(Object array, int index, double d) throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
+</script></code></pre>
+
+
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">
+import static java.lang.System.in;
+import static java.lang.System.out;
+import static java.lang.System.err;
+import java.util.Arrays;
+import java.lang.reflect.Array;
+
+public class Main {
+    public static void main(String[] args) {
+        // 基本类型
+        int[] intArr = (int[]) Array.newInstance(int.class, 5);
+        for (int i = 0; i < intArr.length; i++) {
+            intArr[i] = i * i;
+        }
+        out.println(Arrays.toString(intArr));
+
+        // 引用类型
+        Main[] intMain = (Main[]) Array.newInstance(Main.class, 5);
+        for (int i = 0; i < intMain.length; i++) {
+            intMain[i] = new Main();
+        }
+        out.println(Arrays.toString(intMain));
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [18:35:17]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [18:35:30]
+$ java Main
+[0, 1, 4, 9, 16]
+[Main@15db9742, Main@6d06d69c, Main@7852e922, Main@4e25154f, Main@70dea4e]
 </script></code></pre>
