@@ -50,15 +50,13 @@ java.lang.Class 对象是什么？
 注意，除了可以通过包装类的`.TYPE`属性获取基本类型的 Class 对象，也可以直接通过基本类型来获取，比如`int.class`，它与`Integer.TYPE`是等价的。
 
 以 Integer 为例，TYPE 的声明：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public static final Class<Integer> TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
+<pre><code class="language-java line-numbers"><script type="text/plain">public static final Class<Integer> TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 </script></code></pre>
 
 
 
 Integer.class、Integer.TYPE、int.class 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import static java.lang.System.in;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
 import static java.lang.System.out;
 import static java.lang.System.err;
 
@@ -74,8 +72,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [13:56:43]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [13:56:43]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [13:57:13]
@@ -90,8 +87,7 @@ true
 
 
 **Class 类的常用方法**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-// 根据给定的 className 获取其 Class 对象
+<pre><code class="language-java line-numbers"><script type="text/plain">// 根据给定的 className 获取其 Class 对象
 public static Class<?> forName(String className) throws ClassNotFoundException;
 public native Class<? super T> getSuperclass(); // 获取直接基类的 Class 对象
 public Type getGenericSuperclass(); // 获取直接基类的 Class 对象(泛型)
@@ -164,8 +160,7 @@ public Constructor<?>[] getDeclaredConstructors() throws SecurityException;
 所谓的字段（Field），就是我们平常所说的成员变量、属性。
 
 java.lang.reflect.Field 类的相关方法：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public Class<?> getDeclaringClass(); // 获取声明此字段的类的 Class 对象
+<pre><code class="language-java line-numbers"><script type="text/plain">public Class<?> getDeclaringClass(); // 获取声明此字段的类的 Class 对象
 public String getName(); // 获取字段名称
 public int getModifiers(); // 获取字段修饰符
 
@@ -200,8 +195,7 @@ public void setDouble(Object obj, double d) throws IllegalArgumentException, Ill
 
 
 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import static java.lang.System.in;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
 import static java.lang.System.out;
 import static java.lang.System.err;
 import java.lang.reflect.Field;
@@ -282,8 +276,7 @@ class Test {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [20:23:50]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:23:50]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [20:24:04]
@@ -311,8 +304,7 @@ int Test.defa
 
 
 ## Method 类
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public Class<?> getDeclaringClass(); // 获取声明该方法的类的 Class 对象
+<pre><code class="language-java line-numbers"><script type="text/plain">public Class<?> getDeclaringClass(); // 获取声明该方法的类的 Class 对象
 public String getName(); // 获取方法名称
 public int getModifiers(); // 获取方法修饰符
 public Class<?> getReturnType(); // 获取返回值的 Class 对象
@@ -325,6 +317,7 @@ public int hashCode(); // hashCode 值
 public String toString(); // 获取字符串描述
 
 public boolean isVarArgs(); // 判断当前方法是否使用可变参数
+public boolean isDefault(); // 判断是否为接口中的默认方法
 
 // 调用当前方法
 public Object invoke(Object obj, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException;
@@ -333,8 +326,7 @@ public Object invoke(Object obj, Object... args) throws IllegalAccessException, 
 
 
 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import static java.lang.System.in;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
 import static java.lang.System.out;
 import static java.lang.System.err;
 import java.lang.reflect.Method;
@@ -378,8 +370,7 @@ class Test {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [20:39:38]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:39:38]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [20:39:59]
@@ -393,8 +384,7 @@ result2 -> 30
 ## Constructor 类
 java.lang.reflect.Constructor 类和 java.lang.Class 类一样，都是泛型类；
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public Class<T> getDeclaringClass(); // 获取所属类的 Class 对象
+<pre><code class="language-java line-numbers"><script type="text/plain">public Class<T> getDeclaringClass(); // 获取所属类的 Class 对象
 public String getName(); // 获取所属类的名称
 public int getModifiers(); // 获取修饰符
 public Class<?>[] getParameterTypes(); // 获取参数列表的 Class 对象
@@ -414,8 +404,7 @@ public T newInstance(Object ... initargs) throws InstantiationException, Illegal
 
 
 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import static java.lang.System.in;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
 import static java.lang.System.out;
 import static java.lang.System.err;
 import java.lang.reflect.Constructor;
@@ -450,8 +439,7 @@ class Test {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [20:51:26]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:51:26]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [20:51:38]
@@ -465,8 +453,7 @@ private Test::Test(float)
 反射除了可以用于操作类的成员变量、成员函数、构造函数之外，还可以创建 Array 数组；
 
 java.lang.reflect.Array 类的常用方法：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-/**
+<pre><code class="language-java line-numbers"><script type="text/plain">/**
  * 创建一个 length 长的元素类型为 componentType 的静态数组.
  * @param componentType 数组元素的 Class 对象
  * @param length 数组长度
@@ -504,8 +491,7 @@ public static native void setDouble(Object array, int index, double d) throws Il
 
 
 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import static java.lang.System.in;
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
 import static java.lang.System.out;
 import static java.lang.System.err;
 import java.util.Arrays;
@@ -530,12 +516,393 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [18:35:17]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [18:35:17]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [18:35:30]
 $ java Main
 [0, 1, 4, 9, 16]
 [Main@15db9742, Main@6d06d69c, Main@7852e922, Main@4e25154f, Main@70dea4e]
+</script></code></pre>
+
+
+## Annotation 注解
+**什么是注解**
+注解是 Java5 的新特性。注解可以看做一种注释或者元数据（MetaData），可以把它插入到我们的 Java 代码中，用来描述我们的 Java 类，从而影响 Java 类的行为。
+
+**注解的构成**
+一个 Java 注解由一个`@`符后面跟一个`标识符`构成，类似于这样：`@MyAnnotation`。
+
+Java 注解中一般包含一些**元素**，这些元素类似于属性或者参数，可以用来设置值；
+比如我们有一个包含两个元素的`@Entity`注解：`@Entity(tableName = "vehicles", primaryKey = "id")`
+上面注解中有两个元素，`tableName`和`primaryKey`，它们各自都被赋予了自己的元素值。
+
+**注解的位置**
+Java 注解可用于注解：`package包`、`类/接口/enum枚举`、`注解`(**元注解**)、`构造函数`、`方法`、`方法参数`、`字段`、`局部变量`等。
+
+在下边这个例子中，注解分别用在了类、字段、方法、参数和局部变量中：
+<pre><code class="language-java line-numbers"><script type="text/plain">// 注解一个类
+@Entity
+public class Vehicle {
+    // 注解一个字段
+    @Persistent
+    protected String vehicleName = null;
+
+    // 注解一个方法
+    @Getter
+    public String getVehicleName() {
+        return this.vehicleName;
+    }
+
+    // 注解一个参数
+    public void setVehicleName(@Optional vehicleName) {
+        this.vehicleName = vehicleName;
+    }
+
+    public List addVehicleNameToList(List names) {
+        // 注解一个局部变量
+        @Optional
+        List localNames = names;
+
+        if (localNames == null) {
+            localNames = new ArrayList();
+        }
+
+        localNames.add(getVehicleName());
+        return localNames;
+    }
+}
+</script></code></pre>
+
+
+
+**三种内置注解**
+Java 本身提供了三个内置注解：`@Override`、`@Deprecated`、`@SuppressWarnings`；
+它们都位于 java.lang 包。
+
+1) `@Override`，可注解**方法**；**源码**(Source)注解，是一个标记注解（没有元素）；
+用于在编译期间检查当前方法是否正确的重写了基类中的被重写方法。
+如果没有则抛出一个编译错误，若已正确重写则该注解被忽略，不会保存到 .class 字节码文件中。
+
+2) `@Deprecated`，可注解除注解外的所有 Target，**运行时**(Runtime)注解，该注解会被包含至 java doc 中，是一个标记注解（没有元素）；
+表示被注解的 Target 不被 Java 赞成使用，这些 Target 是过时的，废弃的 API，如果使用了这些 Target 则抛出编译警告。
+
+3) `@SuppressWarnings`，可注解除注解、Package包外的所有 Target，**源码**(Source)注解，该注解有一个元素`String[] value();`；
+用于压制被注解的 Target 中出现的 Warnings 编译警告，使得在编译的时候不会出现编译警告。
+
+**创建自定义注解**
+除了可以使用 Java 内置注解外，我们还可以创建自定义注解；
+
+定义注解使用关键字`@interface`，就和定义一个 interface 接口一样简单；
+Annotation 注解和 interface 接口其实很相似，可以说注解就是一种特殊的 interface 接口。
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.in;
+import static java.lang.System.out;
+import static java.lang.System.err;
+
+public class Main {
+    public static void main(String[] args) {
+        @MyAnnotation
+        Object obj = new Object();
+    }
+}
+
+// 标记注解，默认作用范围为所有 Target & 默认生命周期为 CLASS
+@interface MyAnnotation {
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:07:48]
+$ ls
+Main.java
+
+# root @ arch in ~/work on git:master x [10:07:49]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [10:07:52]
+$ java Main
+
+# root @ arch in ~/work on git:master x [10:07:57]
+$ ls
+Main.class  Main.java  MyAnnotation.class
+
+# root @ arch in ~/work on git:master x [10:07:58]
+$ javap -c -p MyAnnotation
+Compiled from "Main.java"
+interface MyAnnotation extends java.lang.annotation.Annotation {
+}
+
+# root @ arch in ~/work on git:master x [10:08:07]
+$ javap -c -p Main
+Compiled from "Main.java"
+public class Main {
+  public Main();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: new           #2                  // class java/lang/Object
+       3: dup
+       4: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       7: astore_1
+       8: return
+}
+</script></code></pre>
+
+
+
+从反编译结果来看，注解类型 MyAnnotation 实际上就是一个继承自 java.lang.annotation.Annotation 接口的接口；
+定义一个注解使用关键字：`@interface`、定义一个接口使用关键字：`interface`；
+
+那么我们可以大胆推断，注解也可以有成员变量和成员方法，并且和接口是一样的：
+
+首先我们来看一下 java.lang.annotation.Annotation 接口的定义：
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Annotation {
+    boolean equals(Object obj);
+    int hashCode();
+    String toString();
+    Class<? extends Annotation> annotationType();
+}
+</script></code></pre>
+
+
+
+我们只需要实现 annotationType() 方法，其它的几个 Object 类都帮我们提供了默认实现；
+
+1) 尝试模拟注解类型，失败：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.lang.annotation.Annotation;
+
+public class Main {
+    public static void main(String[] args) {
+        @MyAnnotation
+        Main main = null;
+    }
+}
+
+interface MyAnnotation extends Annotation {}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:36:42]
+$ javac Main.java
+Main.java:5: error: MyAnnotation is not an annotation type
+        @MyAnnotation
+         ^
+1 error
+</script></code></pre>
+
+
+
+2) 尝试实现 Annotation 接口，成功：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.lang.annotation.Annotation;
+
+class A implements Annotation {
+    @Override
+    public Class<A> annotationType() {
+        return A.class;
+    }
+}
+
+@interface MyAnnotation {
+}
+
+class B implements MyAnnotation {
+    @Override
+    public Class<B> annotationType() {
+        return B.class;
+    }
+}
+</script></code></pre>
+
+
+
+3) 注解也可以有方法和属性，成功：
+<pre><code class="language-java line-numbers"><script type="text/plain">@interface MyAnnotation {
+    int field = 100;
+    int method();
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [10:48:45]
+$ javap -c -p MyAnnotation
+Compiled from "Main.java"
+interface MyAnnotation extends java.lang.annotation.Annotation {
+  public static final int field;
+
+  public abstract int method();
+}
+</script></code></pre>
+
+
+
+和接口一样，注解中的字段都是`public static final`修饰的，方法都是`public abstract`修饰的。
+
+**注解中的元素**
+前面我们创建的自定义注解是一个标记注解，即没有元素的注解。
+注解也可以有元素，元素可以有多个，元素其实就是接口中的抽象方法。
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
+    public static void main(String[] args) {
+        @MyAnnotation(name = "ZhangSan",
+                      age = 14,
+                      score = 89.5f,
+                      array = {1, 2, 3, 4, 5})
+        Main main = null;
+    }
+}
+
+@interface MyAnnotation {
+    String name();
+    int age();
+    float score();
+    int[] array();
+}
+</script></code></pre>
+
+
+
+在给元素赋值的时候需要指明元素的名称，语法和调用一个函数是一样的；
+
+元素的类型可以是：
+1) 八大基本类型（boolean、byte、char、short、int、long、float、double）
+2) String 字符串
+3) Class 类
+4) enum 枚举
+5) Annotation 注解接口类型
+6) 以上类型的数组
+
+并且只能使用这些类型，使用其它类型会抛出一个编译错误；
+
+**元素的默认值**
+只需要使用 default 关键字就可以为一个元素指定其默认值，如：
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
+    public static void main(String[] args) {
+        @MyAnnotation(name = "ZhangSan",
+                      age = 14,
+                      score = 89.5f/*,
+                      array = {1, 2, 3, 4, 5}*/)
+        Main main = null;
+    }
+}
+
+@interface MyAnnotation {
+    String name();
+    int age();
+    float score();
+    int[] array() default {1, 2, 3, 4, 5};
+}
+</script></code></pre>
+
+
+
+注意，提供的默认值不能为 null 空指针，只能为一个字面量或者是一个 final 常量（其值为一个字面量）；
+
+**value 元素**
+如果注解只有一个元素，并且元素名为`value`，那么可以省略元素名，直接赋值，如：
+<pre><code class="language-java line-numbers"><script type="text/plain">@TestA("A")
+public class Main {
+    @TestB({"A", "B", "C"})
+    public static void main(String[] args) {}
+}
+
+@interface TestA {
+    String value();
+}
+
+@interface TestB {
+    String[] value();
+}
+</script></code></pre>
+
+
+
+所以，如果注解只有一个元素，请务必将它命名为 value。
+
+
+**四种元注解**
+元注解：即注解的注解，你可以和数据、元数据进行类比。
+
+java.lang.annotation 包提供了 4 种元注解：
+1) `@Target`，限制注解的**作用范围**，作用范围由 java.lang.annotation.ElementType 枚举定义：
+- `TYPE`：类、接口(接口包括注释类型)、enum 枚举
+- `FIELD`：字段，即属性、成员变量
+- `METHOD`：方法
+- `PARAMETER`：方法参数
+- `CONSTRUCTOR`：构造器
+- `LOCAL_VARIABLE`：局部变量
+- `ANNOTATION_TYPE`：注解类型
+- `PACKAGE`：包
+- `TYPE_PARAMETER`：类型参数（JDK1.8）
+- `TYPE_USE`：类型使用声明（JDK1.8）
+
+
+
+2) `@Retention`，限制注解的**生命周期**，生命周期由 java.lang.annotation.RetentionPolicy 枚举定义：
+- `SOURCE`：注解仅存于源代码中，在编译过程中有效，并不会保存至 .class 字节码文件中
+- `CLASS`：默认值，注解在 .class 字节码文件中可用，在类被加载时被 JVM 丢弃
+- `RUNTIME`：注解在运行时也可用，JVM 并不会将注解信息丢弃，可以通过 reflect 反射 API 获取注解信息
+
+
+
+3) `@Inherited`，表示此注解是可继承的，如果父类被此注解标示，那么该父类的子类也会继承父类的该注解
+
+4) `@Documented`，注解可以由 javadoc 及类似工具记录
+
+
+**通过反射获取 Annotation 注解信息**
+若想通过反射获取注解信息，那么注解的生命周期必须为 RUNTIME，否则在被 VM 加载到内存中之前注解就被丢弃了。
+
+1) Class 类中与 Annotation 相关的方法：
+<pre><code class="language-java line-numbers"><script type="text/plain">public boolean isAnnotation(); // 判断当前 Class 代表的是否为 注解类型
+
+// 判断当前类上是否有指定注解，通常用于标记注解
+public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass);
+
+// 获取当前类的指定注解
+public <A extends Annotation> A getAnnotation(Class<A> annotationClass);
+
+// 获取当前类的所有注解
+public Annotation[] getAnnotations();
+// 获取当前类的所有注解(不包含继承的注解)
+public Annotation[] getDeclaredAnnotations();
+</script></code></pre>
+
+
+
+2) Field 类中与 Annotation 相关的方法：
+<pre><code class="language-java line-numbers"><script type="text/plain">// 获取当前字段上的指定注解
+public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
+
+// 获取当前字段上的所有注解
+public Annotation[] getDeclaredAnnotations();
+</script></code></pre>
+
+
+
+3) Method 类中与 Annotation 相关的方法：
+<pre><code class="language-java line-numbers"><script type="text/plain">// 获取当前方法上的指定注解
+public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
+
+// 获取当前方法上的所有注解
+public Annotation[] getDeclaredAnnotations();
+
+// 获取当前方法的所有参数的所有注解
+public Annotation[][] getParameterAnnotations();
+</script></code></pre>
+
+
+
+4) Constructor 类中与 Annotation 相关的方法：
+<pre><code class="language-java line-numbers"><script type="text/plain">// 获取当前构造器上的指定注解
+public <T extends Annotation> T getAnnotation(Class<T> annotationClass);
+
+// 获取当前构造器上的所有注解
+public Annotation[] getDeclaredAnnotations();
+
+// 获取当前构造器的所有参数的所有注解
+public Annotation[][] getParameterAnnotations();
 </script></code></pre>
