@@ -726,7 +726,7 @@ public static double[] copyOfRange(double[] original, int from, int to);
 public static <T> T[] copyOfRange(T[] original, int from, int to);
 public static <T, U> T[] copyOfRange(U[] original, int from, int to, Class<? extends T[]> newType);
 
-// Array -> ArrayList
+// Array -> List<E>集合
 public static <T> List<T> asList(T... a);
 
 // 计算 HashCode 值
@@ -1066,7 +1066,7 @@ CharSequence、String、StringBuffer、StringBuilder 之间的关系图如下：
     public static String valueOf(float f);
     public static String valueOf(double d);
 
-    public native String intern(); // 返回字符串对象的规范化表示形式
+    public native String intern(); // 返回字符串常量池中相同字符串的引用
 }
 </script></code></pre>
 

@@ -88,10 +88,15 @@ Outer::func()
 内部类是一种编译器现象，与虚拟机无关；
 编译器会把内部类翻译成用`$`分隔外部类名与内部类名的常规类文件，而虚拟机则对此一无所知；
 
-注意：必须先有外部类的对象才能生成内部类的对象，因为内部类需要访问外部类中的成员变量，成员变量必须实例化才有意义；
+注意，对于成员式内部类(非静态)必须先有外部类的对象才能生成内部类的对象，因为内部类需要访问外部类中的成员变量，成员变量必须实例化才有意义；
 
 **内部类的分类**
 内部类可分为：成员式内部类、静态内部类、局部内部类、匿名内部类；
+> 
+`成员式内部类`、`静态内部类`就像一个类中的普通成员(属性、方法)，因此可以使用 public/protected/private/[default]、static、final、abstract 等进行修饰；它们的区别就是普通成员和静态成员的区别；
+`局部内部类`、`匿名内部类`都是局部类，可以将它们看做是一个 LocalVariable 局部变量，因此和普通局部变量一样，不能被 static、public/protected/private 所修饰。
+
+无论哪种内部类，实质都是一个独立 .class 字节码文件，本质就是一个拥有特殊类名（`$`美元符）的普通类。
 
 **成员式内部类**
 在外部类内部直接定义（不在方法内部或代码块内部）的类就是`成员式内部类`，它可以直接使用外部类的所有变量和方法（包括 private 属性的成员）；外部类要想访问内部类的成员变量和方法，则需要通过内部类的对象来获取；
@@ -175,8 +180,8 @@ name: Otokaze, age: 18, score: 120.0
 
 
 
-表面上 Student 类使用的变量 name、age、score 和 main() 中的 name、age、score 是同一个变量；
-但是实际上并不是，Student 中获取的变量只是外部作用域 main() 中变量的一个 final 拷贝；
+表面上 Student 类使用的 name、age、score 和 main() 中的 name、age、score 是同一个变量；
+但是实际上它们是两个不同的拷贝，Student 中使用的变量实质是由编译器隐式传入的参数，并且被 final 所修饰；
 
 它们看起来类似：
 <pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
@@ -210,7 +215,8 @@ class Student {
 
 
 
-因此，如果在 Student 中尝试修改自动捕获到的外部变量，将导致一个编译错误，因为 final 变量是不允许被修改的；
+当然，上面的代码只是我的个人猜想，实际上并不可能完全一样，甚至可能完全不同！
+因此，如果在 Student 中尝试修改捕获到的 final 变量，将导致编译错误，因为 final 变量是不能被修改的。
 
 再看这个例子：
 <pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
@@ -257,8 +263,47 @@ name: Otokaze, age: 18, score: 120.0
 
 
 
-因为传递的参数 n 位于 Student 定义之后，所以没有被 Student 捕获为 final 变量；
-因此在 Student 内部修改 n 的值并不会导致编译错误，只不过这个 n 与外部的 n 是没有关联的；
+这个其实更好理解，这其实就是一个普通的函数调用，传入到函数中的值和实参之间没有任何关联，互不影响。
+
+那么，请看这个例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
+    public static void main(String[] args) {
+        StringBuilder name = new StringBuilder("Otokaze");
+        int age = 18;
+        float score = 150.0f;
+
+        class Student {
+            public void print() {
+                System.out.printf("name: %s, age: %d, score: %.1f\n", name, age, score);
+                name.append("738");
+                /*
+                 * age = 20; // Error
+                 * score = 120.0f; // Error
+                 */
+                System.out.printf("name: %s, age: %d, score: %.1f\n", name, age, score);
+            }
+        }
+
+        new Student().print();
+        System.out.printf("name: %s, age: %d, score: %.1f\n", name, age, score);
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [19:02:06]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [19:02:21]
+$ java Main
+name: Otokaze, age: 18, score: 150.0
+name: Otokaze738, age: 18, score: 150.0
+name: Otokaze738, age: 18, score: 150.0
+</script></code></pre>
+
+
+
+前面说了，捕获到的变量实际就是一个 final 变量，对于值类型，如果被 final 修饰，表示它们本身的值不能修改；
+对于引用类型，如果被 final 修饰，表示它们的指向不可变，但是指向的对象是可以修改的！
 
 **匿名内部类**
 1、匿名内部类**必须继承一个类或者实现一个接口**，但两者不可兼得，同时也只能继承一个类或者实现一个接口；
@@ -266,6 +311,8 @@ name: Otokaze, age: 18, score: 120.0
 3、匿名内部类中不能定义任何 static 成员；
 4、匿名内部类是局部内部类的一种特殊形式，因此局部内部类的所有限制同样对匿名内部类有效；
 5、匿名内部类不能是 abstract 的，它必须要实现继承的类或者实现的接口的所有抽象方法；
+
+匿名内部类实际还是一个独立的类，它有着自己的唯一类名，如果将一个使用 new 创建的匿名类对象赋值给其基类/实现的接口的引用变量，那么此过程中将发生向上转型，因为匿名类就是 new 后面的类/接口的一个子类，它们之间的关系就如同普通的基类、派生类。
 
 例子：
 <pre><code class="language-java line-numbers"><script type="text/plain">import static java.lang.System.*;
