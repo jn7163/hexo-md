@@ -650,19 +650,164 @@ Java 平台允许我们在内存中创建可复用的 Java 对象，但一般情
 > 在 Java 中，只要一个类实现了`java.io.Serializable`接口，那么它就可以被序列化；
 
 **序列化及反序列化相关知识**
-1、在 Java 中，只要一个类实现了 java.io.Serializable 接口，那么它就可以被序列化；
-2、通过 ObjectOutputStream 和 ObjectInputStream 对对象进行序列化及反序列化；
-3、虚拟机是否允许反序列化，不仅取决于类路径和功能代码是否一致，一个非常重要的一点是两个类的序列化 ID 是否一致（`serialVersionUID`）
-4、序列化并不保存静态变量；
-5、要想将父类对象也序列化，就需要让父类也实现 Serializable 接口；
-6、`transient`（短暂的）关键字的作用是控制变量的序列化，在变量声明前加上该关键字，可以阻止该变量被序列化到文件中，在被反序列化后，transient 变量的值被设为初始值，如 int 整型的是 0，引用类型的是 null；
-7、Java 允许我们自己定义对象的序列化及反序列化操作，只需要在类中定义两个方法：
+1、序列化只关心实例变量，并不会将静态变量进行序列化（对静态变量进行序列化也没有实际意义）；
+2、使用 ObjectOutputStream 和 ObjectInputStream 的 writeObject()、readObject() 方法进行序列化及反序列化操作；
+3、一个对象能否反序列化成功，非常重要的一点是序列化 ID 是否一致（`serialVersionUID`）；
+4、`serialVersionUID`可以由 IDE 生成，也可以通过 jdk 自带的`serialver`工具生成；
+5、`transient`（短暂的）关键字的作用是控制变量的序列化，在变量声明前加上该关键字，可以阻止该变量被序列化，在反序列化后，transient 变量的值被设为初始值，如 int 整型的是 0，引用类型的是 null；
+6、Java 允许我们自己定义对象的序列化及反序列化操作，只需要在类中定义 writeObject()、readObject() 方法；
 `private void writeObject(ObjectOutputStream out) throws IOException`
 `private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException`
-8、`serialVersionUID`可以由 IDE 生成，也可以通过 jdk 自带的`serialver`命令生成；
 
-如果一个类想被序列化，需要实现 Serializable 接口。否则将抛出 NotSerializableException 异常；
-这是因为，在序列化操作过程中会对类型进行检查，要求被序列化的类必须属于`String`、`Array`、`Enum`和`Serializable`类型其中的任何一种。
+如果一个类想被序列化，就必须实现 java.io.Serializable 接口。否则将抛出 NotSerializableException 运行时异常；
+如果你仔细观察 ObjectOutputStream.writeObject0() 方法，可以发现，如果被序列化的对象不属于**String字符串**、**Array内置数组**、**Enum枚举**、**Serializable可序列化对象**，那么将抛出 NotSerializableException 异常。
+
+特别的，如果序列化对象的成员变量为引用类型，并且它不属于 String、Array、Enum，Serializable 类型，那么在执行序列化的过程中，将会抛出运行时异常 NotSerializableException；
+
+因此对于上述情况的引用类型成员变量，有两种选择：
+1) 使用 transient 关键字声明该成员，在序列化时跳过该成员变量，在反序列化之后自动赋值 null；
+2) 想办法让其实现 Serializable 接口，如果是自定义的类还好办，稍作修改就可以，否则只能选择第一种方式来处理了。
+> 
+其实还有一种刁钻的方式，创建一个序列化类的派生类，这个派生类没有任何声明的成员，仅仅实现了 Serializable 接口；
+然后将这个派生类用于序列化反序列化操作，这样就能完美的避免 ObjectOutputStream.writeObject0() 的类型检查了。
+不过有一个地方需要注意，序列化类不能实现 Serializable 接口，否则在运行时照样抛出 NotSerializableException 异常！
+
+**父类与子类的序列化问题**
+思考两个问题：
+1) 父类实现了 Serializable 接口，而子类没有实现该接口，在序列化子类对象时有问题吗？
+2) 子类实现了 Serializable 接口，而父类没有实现该接口，在序列化子类对象时有问题吗？
+
+第一个问题很好解决，因为如果父类实现了 Serializable 接口，那么继承自父类的子类自然实现了 Serializable 接口，即使子类没有显式实现 Serializable 接口，在序列化子类对象时也不会有任何问题；
+
+第二个问题暂时不能下定论，我们还是实践得真知，先测试一下：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Arrays;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        B b1 = new B();
+        System.out.printf("b1 -> A.n: %d, A.arr: %s %s\n", b1.n, Arrays.toString(b1.arr), b1.arr);
+
+        B b2 = serial(b1);
+        System.out.printf("b2 -> A.n: %d, A.arr: %s %s\n", b2.n, Arrays.toString(b2.arr), b2.arr);
+
+        b1.arr[0] = 8;
+        b2.arr[0] = 9;
+        System.out.printf("b1 -> A.n: %d, A.arr: %s %s\n", b1.n, Arrays.toString(b1.arr), b1.arr);
+        System.out.printf("b2 -> A.n: %d, A.arr: %s %s\n", b2.n, Arrays.toString(b2.arr), b2.arr);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Serializable> T serial(T t) throws IOException, ClassNotFoundException {
+        FileOutputStream fout = new FileOutputStream("/tmp/tmp.ser");
+
+        ObjectOutputStream objout = new ObjectOutputStream(fout);
+        objout.writeObject(t);
+
+        ObjectInputStream objin = new ObjectInputStream(new FileInputStream("/tmp/tmp.ser"));
+        T result = (T) objin.readObject();
+
+        new File("/tmp/tmp.ser").delete();
+        return result;
+    }
+}
+
+class A {
+    public int n;
+    public int[] arr;
+
+    {
+        n = 10;
+        arr = new int[] {1, 2, 3, 4, 5};
+    }
+}
+
+class B extends A implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [18:19:25] C:127
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [18:19:27]
+$ java Main
+b1 -> A.n: 10, A.arr: [1, 2, 3, 4, 5] [I@15db9742
+b2 -> A.n: 10, A.arr: [1, 2, 3, 4, 5] [I@776ec8df
+b1 -> A.n: 10, A.arr: [8, 2, 3, 4, 5] [I@15db9742
+b2 -> A.n: 10, A.arr: [9, 2, 3, 4, 5] [I@776ec8df
+</script></code></pre>
+
+
+
+我们在父类 A 中定义了一个整型 n、一个整型数组 arr，它们都是可序列化对象；
+父类 A 没有实现 Serializable 接口，而子类 B 实现了 Serializable 接口；
+在进行序列化和反序列化之后，发现父类的两个成员变量并未丢失，它们被序列化了。
+
+那么会不会是因为这两个成员都是可序列化的才导致了这么一个现象呢？
+我们再来测试一下：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Arrays;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        B b1 = new B();
+        System.out.printf("b1 -> n: %d, arr: %s >> %s\n", b1.ref.n, Arrays.toString(b1.ref.arr), b1.ref.arr);
+
+        B b2 = serial(b1);
+        System.out.printf("b2 -> n: %d, arr: %s >> %s\n", b2.ref.n, Arrays.toString(b2.ref.arr), b2.ref.arr);
+
+        b1.ref.arr[0] = 8;
+        b2.ref.arr[0] = 9;
+        System.out.printf("b1 -> n: %d, arr: %s >> %s\n", b1.ref.n, Arrays.toString(b1.ref.arr), b1.ref.arr);
+        System.out.printf("b2 -> n: %d, arr: %s >> %s\n", b2.ref.n, Arrays.toString(b2.ref.arr), b2.ref.arr);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Serializable> T serial(T t) throws IOException, ClassNotFoundException {
+        FileOutputStream fout = new FileOutputStream("/tmp/tmp.ser");
+
+        ObjectOutputStream objout = new ObjectOutputStream(fout);
+        objout.writeObject(t);
+
+        ObjectInputStream objin = new ObjectInputStream(new FileInputStream("/tmp/tmp.ser"));
+        T result = (T) objin.readObject();
+
+        new File("/tmp/tmp.ser").delete();
+        return result;
+    }
+}
+
+class A {
+    public Ref ref = new Ref();
+
+    public static class Ref {
+        public int n = 10;
+        public int[] arr = {1, 2, 3, 4, 5};
+    }
+}
+
+class B extends A implements Serializable {
+    private static final long serialVersionUID = 1L;
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [18:33:18]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [18:33:29]
+$ java Main
+b1 -> n: 10, arr: [1, 2, 3, 4, 5] >> [I@15db9742
+b2 -> n: 10, arr: [1, 2, 3, 4, 5] >> [I@776ec8df
+b1 -> n: 10, arr: [8, 2, 3, 4, 5] >> [I@15db9742
+b2 -> n: 10, arr: [9, 2, 3, 4, 5] >> [I@776ec8df
+</script></code></pre>
+
+
+
+到现在总算是可以得出答案了，如果父类没有实现 Serializable 接口，而子类实现了 Serializable 接口，那么序列化子类对象的同时也会序列其所有父类的非静态成员，不管其是否为可序列化对象。
+
+其实从虚拟机的角度来说，只要知道了引用（对象、对象的成员），那么直接可以将引用地址上的内存 dump 出来，完全不需要考虑 Serializable 的相关问题，因为你要知道 Serializable 只是一个标记接口，仅仅当做一个类型来使用，它并没有定义任何关于序列化有用的方法；
 
 
 ### Print 格式化

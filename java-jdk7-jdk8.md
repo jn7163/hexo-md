@@ -608,6 +608,42 @@ Java8 允许给接口添加一个非抽象的方法实现，只需要使用 defa
 
 在实现该接口时，该默认扩展方法在子类上可以直接使用，它的使用方式类似于抽象类中非抽象成员方法。
 但是请注意，接口中的默认方法不能够重载 Object 中的定义的方法。eg：toString、equals、hashCode；
+> 
+为函数式接口添加 default 方法、static 方法并不会对其有任何影响，依旧是合法的函数式接口；
+因为函数式接口的定义是接口中只有一个抽象方法，只要符合这个条件那么就是函数式接口；
+同时，在函数式接口中可以定义 Object 类的相关抽象方法，也不会影响它成为一个函数式接口。
+
+例如，下面这段代码可以正常编译：
+<pre><code class="language-java line-numbers"><script type="text/plain">@FunctionalInterface
+interface FuncInter {
+    void func();
+
+    default void f1() {}
+    default void f2() {}
+    default void f3() {}
+
+    static void f4() {}
+    static void f5() {}
+    static void f6() {}
+
+    boolean equals(Object obj);
+    int hashCode();
+    String toString();
+}
+
+class Test implements FuncInter {
+    @Override
+    public void func() {};
+
+    /*
+     * 1. default 方法不需要强制 Override
+     * 2. static 方法不能被 Override
+     * 3. equals、hashCode、toString 方法在 Object 中已有默认实现
+     */
+}
+</script></code></pre>
+
+
 
 默认方法允许我们在接口里添加新的方法，而不会破坏实现这个接口的已有类的兼容性，也就是说不会强迫实现接口的类实现默认方法。
 默认方法和抽象方法的区别是抽象方法必须要被实现，默认方法不是。作为替代方式，接口可以提供一个默认的方法实现，所有这个接口的实现类都会通过继承得到这个方法（如果有需要也可以重写这个方法）；
