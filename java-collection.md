@@ -451,6 +451,60 @@ public interface ListIterator<E> extends Iterator<E> {
 
 
 
+逆向迭代的例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.ArrayList;
+
+public class Main {
+    public static void main(String[] args) {
+        ArrayList<Integer> list = new ArrayList<>(10);
+
+        // 填充元素
+        for (int i = 0; i < 10; i++) {
+            list.add(i);
+        }
+
+        // Iterable.forEach() 使用 Lambda
+        list.forEach((e) -> System.out.print(e + ", "));
+        System.out.println();
+
+        // Iterable.iterator() 获取迭代器
+        for (Iterator<Integer> iter = list.iterator(); iter.hasNext();) {
+            System.out.print(iter.next() + ", ");
+        }
+        System.out.println();
+
+        // JDK1.5 foreach循环 [语法糖]
+        for (int e : list) {
+            System.out.print(e + ", ");
+        }
+        System.out.println();
+
+        // ListIterator 逆向迭代
+        for (ListIterator<Integer> iter = list.listIterator(list.size()); iter.hasPrevious();) {
+            System.out.print(iter.previous() + ", ");
+        }
+        System.out.println();
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [11:15:23]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [11:18:40]
+$ java Main
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+</script></code></pre>
+
+
+
 **List 接口**
 <pre><code class="language-java line-numbers"><script type="text/plain">
 int size(); // 获取元素的数量
@@ -577,28 +631,521 @@ public int lastIndexOf(Object o); // 最后一次匹配时的索引值
 public boolean removeFirstOccurrence(Object o); // 删除链表中与指定元素首次匹配的元素
 public boolean removeLastOccurrence(Object o); // 最后一次出现
 
-public E getFirst(); // [Deque] 获取双端队列的头部元素, 不存在则抛出NoSuchElementException异常
-public E getLast(); // [Deque] 获取双端队列的尾部元素, 不存在则抛出NoSuchElementException异常
-public void addFirst(E e); // [Deque] 在双端队列的头部插入元素
-public void addLast(E e); // [Deque] 在双端队列的尾部插入元素
-public E removeFirst(); // [Deque] 弹出双端队列的头部元素, 不存在则抛出NoSuchElementException异常
-public E removeLast(); // [Deque] 弹出双端队列的尾部元素, 不存在则抛出NoSuchElementException异常
+// Deque 双端队列
+/* 抛异常 */
+public void addFirst(E e); // 在头部添加元素
+public void addLast(E e); // 在尾部添加元素
+public E removeFirst(); // 在头部弹出元素
+public E removeLast(); // 在尾部弹出元素
+public E getFirst(); // 在头部窥探元素
+public E getLast(); // 在尾部窥探元素
+/* 返回值 */
+public boolean offerFirst(E e); // 在头部添加元素
+public boolean offerLast(E e); // 在尾部添加元素
+public E pollFirst(); // 在头部弹出元素
+public E pollLast(); // 在尾部弹出元素
+public E peekFirst(); // 在头部窥探元素
+public E peekLast(); // 在尾部窥探元素
 
-public E peek(); // [Queue/Deque]窥探队头元素, 不存在则返回null值
-public E poll(); // [Queue/Deque]队头元素出队, 不存在则返回null值
-public E element(); // [Queue/Deque]窥探队头元素, 不存在则抛出NoSuchElementException异常
-public E remove(); // [Queue/Deque]队头元素出队, 不存在则抛出NoSuchElementException异常
-
-public E peekFirst(); // [Deque]窥探队头元素, 不存在则返回null值
-public E peekLast(); // [Deque]窥探队尾元素, 不存在则返回null值
-public E pollFirst(); // [Deque]弹出队头元素, 不存在则返回null值
-public E pollLast(); // [Deque]弹出队尾元素, 不存在则返回null值
-
-public boolean offer(E e); // [Queue/Deque]将元素插入至队头, 几乎总是返回 true
-public boolean offerFirst(E e); // [Deque]将元素插入至队头, 几乎总是返回 true
-public boolean offerLast(E e); // [Deque]将元素插入至队尾, 几乎总是返回 true
+// Queue 队列
+/* 抛异常 */
+public boolean add(E e); // 等同于 addLast()
+public E remove(); // 等同于 removeFirst()
+public E element(); // 等同于 getFirst()
+/* 返回值 */
+public boolean offer(E e); // 等同于 offerLast()
+public E poll(); // 等同于 pollFirst()
+public E peek(); // 等同于 peekFirst()
 
 // Stack 栈
-public void push(E e); // [Deque]压栈操作, 相当于addFirst()
-public E pop(); // [Deque]出栈操作, 相当于removeFirst(), 如果栈为空则抛出NoSuchElementException异常
+/* 抛异常 */
+public void push(E e); // 等同于 addFirst()
+public E pop(); // 等同于 removeFirst()
+</script></code></pre>
+
+
+
+## Queue 队列
+**Queue 接口**
+Queue 队列，遵循 FIFO 先进先出原则，在队尾插入元素叫做入队，在队头弹出元素叫做出队。
+<pre><code class="language-java line-numbers"><script type="text/plain">
+// 失败时抛异常IllegalStateException、NoSuchElementException
+boolean add(E e); // 在队尾插入元素
+E remove(); // 在队头弹出元素
+E element(); // 在队头窥探元素
+
+// 失败时返回false、null值
+boolean offer(E e); // 在队尾插入元素
+E poll(); // 在队头弹出元素
+E peek(); // 在队头窥探元素
+</script></code></pre>
+
+
+
+**Deque 接口**
+Deque 双端队列，是具有**队列**、**栈**性质的一种数据结构，在 Java 中一般作为 Stack 栈使用。
+java.util.Deque 是 java.util.Queue 的子接口，主要有两个实现类：ArrayDeque、LinkedList；
+<pre><code class="language-java line-numbers"><script type="text/plain">
+public int size(); // 获取元素个数
+
+Iterator<E> iterator(); // 获取迭代器
+Iterator<E> descendingIterator(); // 获取逆向迭代器
+
+// 失败时抛异常IllegalStateException、NoSuchElementException
+void addFirst(E e); // 在头部添加元素
+void addLast(E e); // 在尾部添加元素
+E removeFirst(); // 在头部弹出元素
+E removeLast(); // 在尾部弹出元素
+E getFirst(); // 在头部窥探元素
+E getLast(); // 在尾部窥探元素
+
+// 失败时返回false、null值
+boolean offerFirst(E e); // 在头部添加元素
+boolean offerLast(E e); // 在尾部添加元素
+E pollFirst(); // 在头部弹出元素
+E pollLast(); // 在尾部弹出元素
+E peekFirst(); // 在头部窥探元素
+E peekLast(); // 在尾部窥探元素
+
+// 将 Deque 当做 Queue 使用
+boolean add(E e); // 等同于 addLast()
+E remove(); // 等同于 removeFirst()
+E element(); // 等同于 getFirst()
+
+boolean offer(E e); // 等同于 offerLast()
+E poll(); // 等同于 pollFirst()
+E peek(); // 等同于 peekFirst()
+
+// 将 Deque 当做 Stack 使用
+void push(E e); // 等同于 addFirst()
+E pop(); // 等同于 removeFirst()
+
+boolean remove(Object o); // 等同于 removeFirstOccurrence()
+boolean removeFirstOccurrence(Object o); // 移除首次匹配指定元素的队列元素
+boolean removeLastOccurrence(Object o); // 移除最后一次匹配指定元素的队列元素
+
+boolean contains(Object o); // 测试是否包含指定元素
+</script></code></pre>
+
+
+
+**PriorityQueue 类**
+java.util.PriorityQueue 优先队列，通过二叉小顶堆实现，可以用一棵完全二叉树表示；
+
+PriorityQueue 优先队列的作用是能保证每次取出的元素都是队列中**权值最小**的（Java 的优先队列每次取最小元素，C++ 的优先队列每次取最大元素）。
+
+这里牵涉到了大小关系，元素大小的评判可以通过元素本身的**自然顺序**（natural ordering），也可以通过构造时传入的**比较器**（Comparator，类似于 C++ 的仿函数）。
+
+PriorityQueue 实现了 Queue 接口，**不允许放入 null 元素**；其通过堆实现，具体说是通过**完全二叉树（complete binary tree）**实现的小顶堆（任意一个非叶子节点的权值，都不大于其左右子节点的权值），也就意味着可以通过数组来作为 PriorityQueue 的底层实现。
+![PriorityQueue 通过用数组表示的小顶堆实现](/images/java-priorityqueue.png)
+
+上图中我们给每个元素按照层序遍历的方式进行了编号，如果你足够细心，会发现父节点和子节点的编号是有联系的，更确切的说父子节点的编号之间有如下关系：
+> 
+`leftNo = parentNo * 2 + 1`
+`rightNo = parentNo * 2 + 2`
+`parentNo = (nodeNo - 1) / 2`
+
+通过上述三个公式，可以轻易计算出某个节点的父节点以及子节点的下标。这也就是为什么可以直接用数组来存储堆的原因。
+
+PriorityQueue 的 peek() 和 element() 操作是常数时间，add()、offer()、无参数的 remove()、poll() 方法的时间复杂度都是 log(N)。
+
+**主要方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">
+/* 构造函数 */
+public PriorityQueue(); // 初始容量 11
+public PriorityQueue(int initialCapacity); // 指定初始容量
+public PriorityQueue(Comparator<? super E> comparator); // 指定比较器
+public PriorityQueue(int initialCapacity, Comparator<? super E> comparator); // 指定初始容量、比较器
+public PriorityQueue(Collection<? extends E> c); // 通过其他集合进行填充
+public PriorityQueue(PriorityQueue<? extends E> c); // 拷贝构造
+public PriorityQueue(SortedSet<? extends E> c); // 通过 SortedSet 填充
+
+public int size(); // 获取元素个数
+public Comparator<? super E> comparator(); // 获取当前实例的比较器
+public void clear(); // 清空队列
+
+public boolean add(E e); // 内部调用 offer()，添加元素
+public boolean remove(Object o); // 删除与指定元素相匹配的单个实例
+
+public boolean contains(Object o); // 测试是否包含指定元素
+
+public Object[] toArray(); // 转换为 Object[] 数组
+public <T> T[] toArray(T[] a); // 指定数组元素类型
+
+public Iterator<E> iterator(); // 获取迭代器, 不保证按照优先级遍历
+
+public boolean offer(E e); // 添加元素, 失败返回 false
+public E poll(); // 弹出队头元素, 队列为空返回 null
+public E peek(); // 窥探队头元素, 队列为空返回 null
+</script></code></pre>
+
+
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">
+import java.util.Random;
+import java.util.PriorityQueue;
+
+public class Main {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> queue1 = new PriorityQueue<>(10);
+
+        Random rand = new Random();
+        for (int i = 0; i < 10; i++) {
+            queue1.offer(rand.nextInt(90) + 10); // 随机两位数
+        }
+
+        for (int i = 0; i < 10; i++) { // 默认是自然排序 [升序]
+            System.out.print(queue1.poll() + ", ");
+        }
+        System.out.println();
+
+        /*
+         * (int n1, int n2) -> { return n1 - n2; } 升序
+         * (int n1, int n2) -> { return n2 - n1; } 降序
+         */
+        PriorityQueue<Integer> queue2 = new PriorityQueue<>(10, (n1, n2) -> n2 - n1);
+
+        for (int i = 0; i < 10; i++) {
+            queue2.offer(rand.nextInt(90) + 10); // 随机两位数
+        }
+
+        for (int i = 0; i < 10; i++) {
+            System.out.print(queue2.poll() + ", ");
+        }
+        System.out.println();
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [14:13:51]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [14:14:01]
+$ java Main
+10, 10, 15, 24, 36, 39, 69, 70, 85, 90,
+96, 91, 87, 73, 71, 61, 60, 49, 24, 11,
+
+# root @ arch in ~/work on git:master x [14:14:03]
+$ java Main
+12, 36, 45, 50, 64, 73, 80, 88, 90, 91,
+87, 82, 68, 53, 49, 38, 36, 36, 32, 30,
+
+# root @ arch in ~/work on git:master x [14:14:04]
+$ java Main
+15, 28, 42, 69, 82, 83, 90, 92, 96, 99,
+93, 87, 64, 59, 59, 56, 51, 31, 23, 17,
+</script></code></pre>
+
+
+
+**ArrayDeque 类**
+ArrayDeque 内部使用"循环数组"实现，LinkedList 内部使用"双向链表"实现；
+ArrayDeque 不允许 null 元素，LinkedList 允许 null 元素；
+<pre><code class="language-java line-numbers"><script type="text/plain">
+public ArrayDeque(); // 数组初始大小为 16
+public ArrayDeque(int numElements); // 指定数组大小
+public ArrayDeque(Collection<? extends E> c); // 使用指定集合进行填充
+
+// Deque 双端队列
+/* 抛异常 NullPointerException、NoSuchElementException */
+public void addFirst(E e); // 在头部添加元素
+public void addLast(E e); // 在尾部添加元素
+public E removeFirst(); // 在头部弹出元素
+public E removeLast(); // 在尾部弹出元素
+public E getFirst(); // 在头部窥探元素
+public E getLast(); // 在尾部窥探元素
+/* 返回值 false、null */
+public boolean offerFirst(E e); // 在头部添加元素
+public boolean offerLast(E e); // 在尾部添加元素
+public E pollFirst(); // 在头部弹出元素
+public E pollLast(); // 在尾部弹出元素
+public E peekFirst(); // 在头部窥探元素
+public E peekLast(); // 在尾部窥探元素
+
+// Queue 队列
+/* 抛异常 */
+public boolean add(E e); // 等同于 addLast()
+public E remove(); // 等同于 removeFirst()
+public E element(); // 等同于 getFirst()
+/* 返回值 */
+public boolean offer(E e); // 等同于 offerLast()
+public E poll(); // 等同于 pollFirst()
+public E peek(); // 等同于 peekFirst()
+
+// Stack 栈
+/* 抛异常 */
+public void push(E e); // 等同于 addFirst()
+public E pop(); // 等同于 removeFirst()
+
+public boolean removeFirstOccurrence(Object o); // 删除首次匹配的队列元素
+public boolean removeLastOccurrence(Object o); // 删除最后一次匹配的队列元素
+
+public int size(); // 获取元素个数
+public boolean isEmpty(); // 判空
+public void clear(); // 清空队列
+public boolean remove(Object o); // 移除首次匹配的元素
+
+public Iterator<E> iterator(); // 获取迭代器
+public Iterator<E> descendingIterator(); // 获取逆向迭代器
+
+public boolean contains(Object o); // 测试是否包含指定元素
+
+public Object[] toArray(); // 转换为 Object[] 数组
+public <T> T[] toArray(T[] a); // 转换为指定类型数组
+
+public ArrayDeque<E> clone(); // 克隆当前队列
+</script></code></pre>
+
+
+
+## Map 映射
+**Map 接口**
+<pre><code class="language-java line-numbers"><script type="text/plain">
+public interface Map<K, V> {
+    interface Entry<K, V> { // Map.Entry 子接口, public static interface Map.Entry<K, V>
+        K getKey(); // 获取 key
+        V getValue(); // 获取 value
+        V setValue(V value); // 更新 value
+
+        boolean equals(Object o); // entry 判等
+        int hashCode(); // hashCode 值
+
+        // [自然排序] 获取 key 的比较器
+        public static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K, V>> comparingByKey();
+        // [自然排序] 获取 value 的比较器
+        public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K, V>> comparingByValue();
+        // [自定义排序] 获取 key 的比较器
+        public static <K, V> Comparator<Map.Entry<K, V>> comparingByKey(Comparator<? super K> cmp);
+        // [自定义排序] 获取 value 的比较器
+        public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp);
+    }
+
+    int size(); // 获取元素个数
+    boolean isEmpty(); // 判空
+    void clear(); // 清空 map
+
+    boolean containsKey(Object key); // 测试是否包含指定key
+    boolean containsValue(Object value); // 测试是否包含指定value
+
+    V get(Object key); // 获取指定 key 的 value；不存在则返回 null
+    V put(K key, V value); // 添加 key-value 键值对，如果存在则更新 value，返回旧值
+    V remove(Object key); // 删除指定 key-value 键值对，返回旧值
+    void putAll(Map<? extends K, ? extends V> m); // 添加指定 map 中的所有 key-value 对
+
+    Set<K> keySet(); // 返回 key 集合，该 set 集合与当前 map 映射之间会互相影响
+    Collection<V> values(); // 返回 value 集合，该 value 集合与当前 map 映射之间会互相影响
+    Set<Map.Entry<K, V>> entrySet(); // 返回 key-value 集合，该 set 集合与当前 map 映射之间会互相影响
+
+    boolean equals(Object o); // 比较两个 map
+    int hashCode(); // 获取 hashCode 值
+
+    default void forEach(BiConsumer<? super K, ? super V> action); // Lambda foreach循环
+
+    default V getOrDefault(Object key, V defaultValue); // 如果指定 key 不存在则返回默认 value
+    default V putIfAbsent(K key, V value); // 如果 key 不存在则 put(key, value), 否则返回原有 value
+    default boolean remove(Object key, Object value); // 当 map 存在指定 key-value 映射时，执行 remove() 操作
+
+    default boolean replace(K key, V oldValue, V newValue); // 当 map 存在指定 key-value 映射时，执行 replace() 操作
+    default V replace(K key, V value); // 替换指定 key 的 value
+    default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function); // 替换value
+}
+</script></code></pre>
+
+
+
+**HashMap 类**
+HashMap 允许存在 null 键、null 值，不保证遍历的顺序与插入的顺序是一样的，也不保证遍历的顺序可以永恒不变(自动扩容的原因)。
+
+HashMap 是**数组**和**链表**的结合体，HashMap 底层是一个`Entry[]`数组，该数组可以自动扩容；
+Entry[] 数组的每个元素都是一个链表，Entry 有一个 next 指针指向下一个 Node 节点。如下图：
+![HashMap 数据结构](/images/java-collection-hashmap.png)
+
+因为 HashMap 使用 hash() 哈希函数计算 key-value 键值对的索引值，因此它同时具有数组和链表的优点：查找，插入/删除都具有很高的性能。
+
+<pre><code class="language-java line-numbers"><script type="text/plain">
+/**
+ * 主要构造函数，有两个影响 HashMap 性能的参数.
+ * @param initialCapacity 初始容量，即 Entry[] 数组的初始长度，默认为 16
+ * @param loadFactor 负载因子，默认为 0.75f
+ *                   如果当前元素数量(即 Entry 键值对的数量)超过 Entry[].length * loadFactor 时，
+ *                   HashMap 内部将对 Entry[] 数组进行扩容，新容量为当前容量的 2 倍。
+ *                   在扩容时需要重新计算 hash，并且需要拷贝元素，开销非常大。
+ *                   因此，如果可以预见元素的数量，务必指明 initialCapacity 的大小
+ */
+public HashMap(int initialCapacity, float loadFactor);
+public HashMap(int initialCapacity);
+public HashMap();
+public HashMap(Map<? extends K, ? extends V> m);
+
+public int size(); // 元素数量
+public boolean isEmpty(); // 判空
+public void clear(); // 清空元素
+
+public V get(Object key); // 按 key 查找 value，不存在则返回 null
+public V getOrDefault(Object key, V defaultValue); // 获取指定 key 的 value，如果没有则返回默认值
+
+public V put(K key, V value); // 设置指定 key-value 对，返回旧值
+public V putIfAbsent(K key, V value); // 如果 key 不存在则 put()，否则返回原有 value
+public void putAll(Map<? extends K, ? extends V> m); // 将指定 map 全部 put()
+
+public V remove(Object key); // 删除指定 key 映射，并返回相应的 value
+public boolean remove(Object key, Object value); // 当存在指定 key-value 时才进行 remove()
+
+public V replace(K key, V value); // 直接替换
+public boolean replace(K key, V oldValue, V newValue); // 当存在指定 key-value 时才进行 replace()
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function); // 全部执行 replace()
+
+public boolean containsKey(Object key); // 判断是否存在指定 key 映射
+public boolean containsValue(Object value); // 判断是否存在指定 value 值
+
+public Set<K> keySet(); // 获取 key 的集合，它们之间有关联
+public Collection<V> values(); // 获取 value 的集合，他们之间有关联
+public Set<Map.Entry<K,V>> entrySet(); // 获取 key-value 对的集合，通常用于遍历
+
+public void forEach(BiConsumer<? super K, ? super V> action); // JDK1.8 forEach，内部使用 entrySet()
+
+public Object clone(); // 拷贝当前 map
+</script></code></pre>
+
+
+
+**LinkedHashMap 类**
+LinkedHashMap 是 HashMap 的子类，底层还是使用的 HashMap，没有变化；
+不同的是，LinkedHashMap 可以按照**插入顺序**进行遍历，也可以根据**访问顺序**进行遍历。
+
+可以保存顺序的原理就是它除了使用哈希表保存键值对之外，还在内部维护了一个运行时的双向链表；
+当按照**访问顺序**进行排序时，LinkedHashMap 会将最近访问的键值对移动到链表的尾部。
+<pre><code class="language-java line-numbers"><script type="text/plain">
+// accessOrder 为 true 则按照访问顺序排列，为 false 则按照插入顺序排列
+public LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder);
+public LinkedHashMap(int initialCapacity, float loadFactor); // 插入顺序
+public LinkedHashMap(int initialCapacity);
+public LinkedHashMap();
+public LinkedHashMap(Map<? extends K, ? extends V> m);
+
+public void clear();
+
+public boolean containsValue(Object value); // 判断是否存在指定 value
+
+public V get(Object key); // 获取指定 key 的 value
+public V getOrDefault(Object key, V defaultValue);
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function);
+
+/* 有序的 */
+public Set<K> keySet();
+public Collection<V> values();
+public Set<Map.Entry<K,V>> entrySet();
+
+public void forEach(BiConsumer<? super K, ? super V> action); // JDK1.8 forEach
+</script></code></pre>
+
+
+
+LinkedHashMap 例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">
+import java.util.Map;
+import java.util.LinkedHashMap;
+
+public class Main {
+    public static void main(String[] args) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(16, 0.75f, true);
+        for (int i = 0; i < 10; i++) {
+            map.put("K" + i, "V" + i);
+        }
+
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            System.out.println("key: " + entry.getKey() + ", value: " + entry.getValue());
+        }
+
+        map.get("K1");
+        map.get("K2");
+        map.get("K3");
+
+        System.out.println();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            System.out.println("key: " + entry.getKey() + ", value: " + entry.getValue());
+        }
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain">
+# root @ arch in ~/work on git:master x [20:59:45]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [21:00:00]
+$ java Main
+key: K0, value: V0
+key: K1, value: V1
+key: K2, value: V2
+key: K3, value: V3
+key: K4, value: V4
+key: K5, value: V5
+key: K6, value: V6
+key: K7, value: V7
+key: K8, value: V8
+key: K9, value: V9
+
+key: K0, value: V0
+key: K4, value: V4
+key: K5, value: V5
+key: K6, value: V6
+key: K7, value: V7
+key: K8, value: V8
+key: K9, value: V9
+key: K1, value: V1
+key: K2, value: V2
+key: K3, value: V3
+</script></code></pre>
+
+
+
+## Set 集合
+HashSet、LinkedHashSet、TreeSet 都是其对应的 Map 映射的一个包装类；
+因此它们的相关特性也和底层容器一样，它们只使用了 key-value 键值对的 key 部分。
+
+**Set 接口**
+<pre><code class="language-java line-numbers"><script type="text/plain">
+int size(); // 元素个数
+boolean isEmpty(); // 判空
+void clear(); // 清空集合
+
+boolean equals(Object o);
+int hashCode();
+
+boolean contains(Object o); // 测试是否包含指定元素
+
+Iterator<E> iterator(); // 获取迭代器
+
+Object[] toArray(); // 转换为 Object[] 数组
+<T> T[] toArray(T[] a); // 转换为指定类型数组
+
+boolean add(E e); // 添加元素到此集合, 如果添加成功返回true, 已存在则返回false
+boolean remove(Object o); // 移除指定元素, 删除成功返回true
+
+/*
+ * 如果此集合包含指定集合 c 中的所有元素, 则返回 true
+ * 如果集合 c 是一个 Set，表示集合 c 是当前集合的子集
+ */
+boolean containsAll(Collection<?> c);
+
+/*
+ * 将指定集合 c 中的所有元素添加自当前集合中
+ * 如果集合 c 是一个 Set，那么可用于并集操作
+ */
+boolean addAll(Collection<? extends E> c);
+
+/*
+ * 仅保留此集合中包含在指定集合 c 中的元素
+ * 如果集合 c 是一个 Set，那么当前集合将是它们的交集
+ */
+boolean retainAll(Collection<?> c);
+
+/*
+ * 删除此集合中包含在指定集合 c 中的所有元素
+ * 如果集合 c 是一个 Set，那么当前集合将是集合 c 相对于当前集合的补集
+ */
+boolean removeAll(Collection<?> c);
 </script></code></pre>

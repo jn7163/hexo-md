@@ -1472,3 +1472,79 @@ b1.equals(a1 + b2) -> true
 5) `b1 == a1 + a2`：计算`a1 + a2`时触发自动拆箱，结果为 int 类型的值 3，b1 也因此自动拆箱，是 long 类型的值 3；然后 int -> long 自动类型转换，因此返回 true；
 6) `b1.equals(a1 + a2)`：计算`a1 + a2`时触发自动拆箱，结果为 int 类型的值 3，然后再次装箱为 Integer 引用类型，因为比较的两个对象的类型不同，所以返回 false；
 7) `b1.equals(a1 + b2)`：计算`a1 + b2`时触发自动拆箱，并且发生自动类型转换 int -> long，然后装箱为 Long 引用类型，因此返回 true。
+
+
+**Integer 相关方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">// 静态属性
+public static final int MIN_VALUE = 0x80000000;
+public static final int MAX_VALUE = 0x7fffffff;
+public static final int SIZE = 32;
+public static final int BYTES = SIZE / Byte.SIZE;
+
+public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
+
+public static String toString(int i); // 默认为 10 进制
+public static String toString(int i, int radix); // radix 为进制
+public static String toBinaryString(int i); // 2 进制
+public static String toOctalString(int i); // 8 进制
+public static String toHexString(int i); // 16 进制
+
+// 从字符串中解析 int 数值，radix 可指定进制，NumberFormatException 为运行时异常
+public static int parseInt(String s, int radix) throws NumberFormatException;
+public static int parseInt(String s) throws NumberFormatException; // radix = 10
+
+// 内部调用 Integer.valueOf(parseInt(s,radix));
+public static Integer valueOf(String s, int radix) throws NumberFormatException;
+// 内部调用 Integer.valueOf(parseInt(s, 10));
+public static Integer valueOf(String s) throws NumberFormatException;
+
+public static Integer valueOf(int i); // 自动装箱
+public Integer(int value); // 手动装箱
+public Integer(String s) throws NumberFormatException;
+
+public byte byteValue(); // 内部使用强制类型转换
+public short shortValue();
+public int intValue(); // 自动拆箱
+public long longValue();
+public float floatValue();
+public double doubleValue();
+
+public String toString();
+
+public int hashCode();
+public static int hashCode(int value); // JDK1.8
+public boolean equals(Object obj);
+
+public int compareTo(Integer anotherInteger);
+public static int compare(int x, int y); // JDK1.7
+
+public static int sum(int a, int b);
+public static int max(int a, int b);
+public static int min(int a, int b);
+</script></code></pre>
+
+
+
+**Character 相关方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public static final char MIN_VALUE = '\u0000';
+public static final char MAX_VALUE = '\uFFFF';
+public static final Class<Character> TYPE = (Class<Character>) Class.getPrimitiveClass("char");
+
+public Character(char value);
+public static Character valueOf(char c);
+
+public char charValue();
+
+public int hashCode();
+public static int hashCode(char value);
+public boolean equals(Object obj);
+
+public String toString();
+public static String toString(char c);
+
+public static boolean isLowerCase(char ch);
+public static boolean isUpperCase(char ch);
+
+public static char toLowerCase(char ch);
+public static char toUpperCase(char ch);
+</script></code></pre>
