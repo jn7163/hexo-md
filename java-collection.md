@@ -46,15 +46,15 @@ Collection 框架主要位于 java.util 包，类继承结构：
 **HashSet**：基于 HashMap 实现，元素不可重复，特性同 HashMap；
 **LinkedHashSet**：基于 LinkedHashMap 实现，元素不可重复，特性同 LinkedHashMap；
 **TreeSet**：基于 TreeMap 实现，元素不可重复，特性同 TreeMap；
-**RegularEnumSet**：枚举专用的 Set 集合，由 EnumSet 调用，其构造函数权限为 [default]，元素必须为枚举类型，与其他 Set 实现不同，其内部使用位向量实现，拥有极高的时间和空间性能；
-**JumboEnumSet**：枚举专用的 Set 集合，由 EnumSet 调用，其构造函数权限为 [default]，元素必须为枚举类型，与其他 Set 实现不同，其内部使用位向量实现，拥有极高的时间和空间性能；
+**RegularEnumSet**：枚举专用的 Set 集合，由 EnumSet 调用，因为该类的权限为 [default]，元素必须为枚举类型，与其他 Set 实现不同，其内部使用位向量实现，拥有极高的时间和空间性能；
+**JumboEnumSet**：枚举专用的 Set 集合，由 EnumSet 调用，因为该类的权限为 [default]，元素必须为枚举类型，与其他 Set 实现不同，其内部使用位向量实现，拥有极高的时间和空间性能；
 
-5) Map 主要实现类：HashMap、LinkedHashMap、TreeMap、IdentityHashMap、WeekHashMap、EnumMap
+5) Map 主要实现类：HashMap、LinkedHashMap、TreeMap、IdentityHashMap、WeakHashMap、EnumMap
 **HashMap**：key 不可重复，使用 equals 判断，根据 key 的 hashCode 存储数据，具有很快的访问速度，记录的遍历顺序与记录的输入顺序基本不一致；最多只允许一条记录的 key 为 null；
 **LinkedHashMap**：key 不可重复，使用 equals 判断，HashMap 的子类，内部使用双向链表保存了记录的插入顺序，使得输入的记录顺序和输出的记录顺序是相同的；
 **TreeMap**：key 不可重复，使用 equals 判断，能够把它保存的记录根据键排序，默认是按键值的升序排序，也可以指定排序的比较器，当用 Iterator 遍历时，得到的记录是排过序的；如需使用排序的映射，建议使用 TreeMap；
 **IdentityHashMap**：key 不可重复，使用 == 判断，比较内存地址，可以说是某种意义上的可重复 key 的映射；
-**WeekHashMap**：弱引用 Map，特别适合用于需要缓存的场景，WeekHashMap 中的 Entry 可能随时被 GC 回收；
+**WeakHashMap**：弱引用 Map，特别适合用于需要缓存的场景，WeakHashMap 中的 Entry 可能随时被 GC 回收；
 **EnumMap**：枚举专用的 Map 映射，其 key 必须为某种枚举类型的枚举常量，内部通过数组实现，因此效率比一般的 Map 高；
 
 
@@ -65,8 +65,7 @@ Iterable，"可迭代的"，如果一个集合类实现了该接口，那么表�
 Collection 框架主要有两大接口：Collection、Map，其中 Collection 接口继承了 Iterable 接口，因此所有实现了 Collection 接口的类都是可迭代的，可用于类似 foreach 操作；
 
 Iterable 接口位于 java.lang 包，其主要方法为 iterator()，获取当前集合对象的一个迭代器 Iterator。
-<pre><code class="language-java line-numbers"><script type="text/plain">
-Iterator<T> iterator(); // 获取当前集合的迭代器
+<pre><code class="language-java line-numbers"><script type="text/plain">Iterator<T> iterator(); // 获取当前集合的迭代器
 default void forEach(Consumer<? super T> action); // forEach，与 Lambda 结合使用
 </script></code></pre>
 
@@ -79,8 +78,7 @@ default void forEach(Consumer<? super T> action); // forEach，与 Lambda 结合
 Iterator 接口主要有两个方法：hasNext()、next()，通常这两个方法需要配合使用；
 hasNext() 方法，判断该集合对象是否还有下一个可操作对象，如果有则返回 true，通常用于 for、while 条件；
 next() 方法，返回下一个可操作对象，同时将迭代器向后推进一个元素单位，指向下一个位置。
-<pre><code class="language-java line-numbers"><script type="text/plain">
-boolean hasNext(); // 判断是否还有元素
+<pre><code class="language-java line-numbers"><script type="text/plain">boolean hasNext(); // 判断是否还有元素
 E next(); // 获取下一个元素
 
 default void remove(); // 默认不支持该操作，抛出 UnsupportedOperationException 异常
@@ -92,8 +90,7 @@ default void forEachRemaining(Consumer<? super E> action); // forEach 剩余的�
 **Collection 接口**
 java.util.Collection 接口是 Java Collection 框架的两大主要接口之一，有三个主要子接口 List、Queue、Set；
 因为 Collection 接口是 java.lang.Iterable 接口的子接口，因此 List、Queue、Deque、Set 都可直接用于 foreach 循环；
-<pre><code class="language-java line-numbers"><script type="text/plain">
-int size(); // 获取元素的数量
+<pre><code class="language-java line-numbers"><script type="text/plain">int size(); // 获取元素的数量
 boolean isEmpty(); // 判空
 void clear(); // 清空集合
 
@@ -131,8 +128,7 @@ java.util.Comparator，"比较器"
 如果一个类没有实现 Comparable 接口，但是它有专门的 Comparator 比较器，那么也可用于排序，并且自由度更高，可以实现升序、倒序排序；
 
 Comparable 接口：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public interface Comparable<T> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Comparable<T> {
     /**
      * @return 小于0: this < o
      *         等于0: this = o
@@ -145,8 +141,7 @@ public interface Comparable<T> {
 
 
 Comparator 接口（函数式接口）：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-@FunctionalInterface
+<pre><code class="language-java line-numbers"><script type="text/plain">@FunctionalInterface
 public interface Comparator<T> {
     /**
      * @param o1 第一个对象
@@ -190,8 +185,7 @@ Serializable 接口：如果一个类实现了该接口，表示这个类支持 
 默认情况下，我们不能直接调用一个对象的 clone() 方法，因为它被 protected 所修饰；
 
 那么我们先把它给重写，并且把其访问性改为 public 试试：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public class Main {
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
     public static void main(String[] args) throws CloneNotSupportedException {
         A a1 = new A();
         A a2 = a1.clone();
@@ -206,8 +200,7 @@ class A {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [21:06:21]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [21:06:21]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:06:35]
@@ -222,8 +215,7 @@ Exception in thread "main" java.lang.CloneNotSupportedException: A
 
 编译没有问题，但是运行时抛出异常 CloneNotSupportedException，不支持 clone 操作。
 这是因为我们没有实现 Cloneable 接口，就和 Serializable 序列化一样，会进行类型检查；
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public class Main {
+<pre><code class="language-java line-numbers"><script type="text/plain">public class Main {
     public static void main(String[] args) throws CloneNotSupportedException {
         A a1 = new A();
         A a2 = a1.clone();
@@ -241,8 +233,7 @@ class A implements Cloneable {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [21:09:10]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [21:09:10]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:09:21]
@@ -254,8 +245,7 @@ A@6d06d69c
 
 
 可以了哈，先提前说一下，这种直接调用 Object.clone() 方法的克隆方式称为"浅拷贝"；我们来看一下它的局限性：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.util.Arrays;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) throws CloneNotSupportedException {
@@ -293,8 +283,7 @@ class A implements Cloneable {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [21:27:26]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [21:27:26]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:27:37]
@@ -318,8 +307,7 @@ a2 -> i: 40, f: 3.14, obj: java.lang.Object@15db9742, arr: [I@6d06d69c [9, 2, 3,
 我们既然通过 clone 创建新对象，目的就是为了它们之间的修改不会对对方产生影响。
 
 那么如何做到"深拷贝"呢，其实也很简单，只要把每个引用对象都拷贝就行了，如下：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.util.Arrays;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) throws CloneNotSupportedException {
@@ -347,8 +335,7 @@ class A implements Cloneable {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [21:42:01]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [21:42:01]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:42:11]
@@ -375,8 +362,7 @@ A@7852e922, [I@4e25154f, [9, 2, 3, 4, 5]
 3) 创建一个派生类，这个派生类没有任何声明的方法和属性，仅仅用于序列化和反序列化。
 
 其中第一、二种方式并不是我们想要的，我们来实现第三种方式：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.io.ByteArrayInputStream;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -412,8 +398,7 @@ class A { // 注意 A 不能实现 Serializable 接口！
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [9:02:48]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [9:02:48]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [9:03:00]
@@ -430,8 +415,7 @@ A$Serial@776ec8df, java.lang.Object@4eec7777
 ## List 列表
 **ListIterator 接口**
 ListIterator 是 Iterator 的一个子接口，是专门用于 List 列表的迭代器。
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public interface ListIterator<E> extends Iterator<E> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface ListIterator<E> extends Iterator<E> {
     boolean hasNext(); // [正向] 判断是否还有元素
     E next(); // [正向] 获取下一个元素
 
@@ -452,8 +436,7 @@ public interface ListIterator<E> extends Iterator<E> {
 
 
 逆向迭代的例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.util.Iterator;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.ArrayList;
 
@@ -491,8 +474,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [11:15:23]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [11:15:23]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [11:18:40]
@@ -506,8 +488,7 @@ $ java Main
 
 
 **List 接口**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-int size(); // 获取元素的数量
+<pre><code class="language-java line-numbers"><script type="text/plain">int size(); // 获取元素的数量
 boolean isEmpty(); // 判空
 void clear(); // 清空列表
 
@@ -550,8 +531,7 @@ int hashCode(); // hashCode 值
 
 
 **ArrayList 类**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public ArrayList(int initialCapacity); // 指定初始化容量
+<pre><code class="language-java line-numbers"><script type="text/plain">public ArrayList(int initialCapacity); // 指定初始化容量
 public ArrayList(); // 默认为一个空的 Object[] 数组
 public ArrayList(Collection<? extends E> c); // 根据指定集合构造一个列表
 
@@ -600,8 +580,7 @@ public void replaceAll(UnaryOperator<E> operator); // 全部替换
 
 
 **LinkedList 类**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public LinkedList(); // 默认构造，空函数体
+<pre><code class="language-java line-numbers"><script type="text/plain">public LinkedList(); // 默认构造，空函数体
 public LinkedList(Collection<? extends E> c); // 使用指定集合进行填充
 
 public int size(); // 获取元素个数
@@ -668,8 +647,7 @@ public E pop(); // 等同于 removeFirst()
 ## Queue 队列
 **Queue 接口**
 Queue 队列，遵循 FIFO 先进先出原则，在队尾插入元素叫做入队，在队头弹出元素叫做出队。
-<pre><code class="language-java line-numbers"><script type="text/plain">
-// 失败时抛异常IllegalStateException、NoSuchElementException
+<pre><code class="language-java line-numbers"><script type="text/plain">// 失败时抛异常IllegalStateException、NoSuchElementException
 boolean add(E e); // 在队尾插入元素
 E remove(); // 在队头弹出元素
 E element(); // 在队头窥探元素
@@ -685,8 +663,7 @@ E peek(); // 在队头窥探元素
 **Deque 接口**
 Deque 双端队列，是具有**队列**、**栈**性质的一种数据结构，在 Java 中一般作为 Stack 栈使用。
 java.util.Deque 是 java.util.Queue 的子接口，主要有两个实现类：ArrayDeque、LinkedList；
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public int size(); // 获取元素个数
+<pre><code class="language-java line-numbers"><script type="text/plain">public int size(); // 获取元素个数
 
 Iterator<E> iterator(); // 获取迭代器
 Iterator<E> descendingIterator(); // 获取逆向迭代器
@@ -750,8 +727,7 @@ PriorityQueue 实现了 Queue 接口，**不允许放入 null 元素**；其通�
 PriorityQueue 的 peek() 和 element() 操作是常数时间，add()、offer()、无参数的 remove()、poll() 方法的时间复杂度都是 log(N)。
 
 **主要方法**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-/* 构造函数 */
+<pre><code class="language-java line-numbers"><script type="text/plain">/* 构造函数 */
 public PriorityQueue(); // 初始容量 11
 public PriorityQueue(int initialCapacity); // 指定初始容量
 public PriorityQueue(Comparator<? super E> comparator); // 指定比较器
@@ -782,8 +758,7 @@ public E peek(); // 窥探队头元素, 队列为空返回 null
 
 
 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.util.Random;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Random;
 import java.util.PriorityQueue;
 
 public class Main {
@@ -818,8 +793,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [14:13:51]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [14:13:51]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [14:14:01]
@@ -843,8 +817,7 @@ $ java Main
 **ArrayDeque 类**
 ArrayDeque 内部使用"循环数组"实现，LinkedList 内部使用"双向链表"实现；
 ArrayDeque 不允许 null 元素，LinkedList 允许 null 元素；
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public ArrayDeque(); // 数组初始大小为 16
+<pre><code class="language-java line-numbers"><script type="text/plain">public ArrayDeque(); // 数组初始大小为 16
 public ArrayDeque(int numElements); // 指定数组大小
 public ArrayDeque(Collection<? extends E> c); // 使用指定集合进行填充
 
@@ -902,8 +875,7 @@ public ArrayDeque<E> clone(); // 克隆当前队列
 
 ## Map 映射
 **Map 接口**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-public interface Map<K, V> {
+<pre><code class="language-java line-numbers"><script type="text/plain">public interface Map<K, V> {
     interface Entry<K, V> { // Map.Entry 子接口, public static interface Map.Entry<K, V>
         K getKey(); // 获取 key
         V getValue(); // 获取 value
@@ -964,8 +936,7 @@ Entry[] 数组的每个元素都是一个链表，Entry 有一个 next 指针指
 
 因为 HashMap 使用 hash() 哈希函数计算 key-value 键值对的索引值，因此它同时具有数组和链表的优点：查找，插入/删除都具有很高的性能。
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-/**
+<pre><code class="language-java line-numbers"><script type="text/plain">/**
  * 主要构造函数，有两个影响 HashMap 性能的参数.
  * @param initialCapacity 初始容量，即 Entry[] 数组的初始长度，默认为 16
  * @param loadFactor 负载因子，默认为 0.75f
@@ -1017,8 +988,7 @@ LinkedHashMap 是 HashMap 的子类，底层还是使用的 HashMap，没有变�
 
 可以保存顺序的原理就是它除了使用哈希表保存键值对之外，还在内部维护了一个运行时的双向链表；
 当按照**访问顺序**进行排序时，LinkedHashMap 会将最近访问的键值对移动到链表的尾部。
-<pre><code class="language-java line-numbers"><script type="text/plain">
-// accessOrder 为 true 则按照访问顺序排列，为 false 则按照插入顺序排列
+<pre><code class="language-java line-numbers"><script type="text/plain">// accessOrder 为 true 则按照访问顺序排列，为 false 则按照插入顺序排列
 public LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder);
 public LinkedHashMap(int initialCapacity, float loadFactor); // 插入顺序
 public LinkedHashMap(int initialCapacity);
@@ -1044,8 +1014,7 @@ public void forEach(BiConsumer<? super K, ? super V> action); // JDK1.8 forEach
 
 
 LinkedHashMap 例子：
-<pre><code class="language-java line-numbers"><script type="text/plain">
-import java.util.Map;
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.Map;
 import java.util.LinkedHashMap;
 
 public class Main {
@@ -1071,8 +1040,7 @@ public class Main {
 }
 </script></code></pre>
 
-<pre><code class="language-java line-numbers"><script type="text/plain">
-# root @ arch in ~/work on git:master x [20:59:45]
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [20:59:45]
 $ javac Main.java
 
 # root @ arch in ~/work on git:master x [21:00:00]
@@ -1102,13 +1070,334 @@ key: K3, value: V3
 
 
 
+**TreeMap 类**
+TreeMap 是一个**有序**的 key-value 集合，它是通过**红黑树**实现的；
+TreeMap 实现了 NavigableMap 接口，意味着它支持一系列的导航方法；比如返回有序的 key 集合。
+
+TreeMap 基于`红黑树（Red-Black tree）`实现。该映射根据其键的**自然顺序**进行排序，或者根据创建映射时提供的 Comparator 进行排序，具体取决于使用的构造方法。
+
+TreeMap 不允许 null 键，但是可以存在 null 值。
+TreeMap 的基本操作 containsKey、get、put 和 remove 的时间复杂度是 log(n)。
+<pre><code class="language-java line-numbers"><script type="text/plain">public TreeMap(); // 自然顺序，key 必须实现 java.lang.Comparable 接口
+public TreeMap(Comparator<? super K> comparator); // 自定义排序，key 不必实现 Comparable 接口，提供比较器即可
+public TreeMap(Map<? extends K, ? extends V> m); // 自然排序
+public TreeMap(SortedMap<K, ? extends V> m); // 从 m 中获取比较器
+
+public int size(); // 获取元素个数
+public Comparator<? super K> comparator(); // 获取当前比较器
+public void clear(); // 清空元素
+public Object clone(); // 拷贝map
+
+public V get(Object key); // 获取指定 value
+public V put(K key, V value); // 添加指定 key-value，并返回旧值
+public void putAll(Map<? extends K, ? extends V> map); // 全部 put()
+public V remove(Object key); // 删除指定 key-value，并返回相应的 value
+
+public boolean containsKey(Object key); // 是否包含指定 key
+public boolean containsValue(Object value); // 是否包含指定 value
+
+public K firstKey(); // 获取第一个 key，(lowest)，如果为空则抛出 NoSuchElementException
+public K lastKey(); // 获取最后一个 key，(highest)，如果为空则抛出 NoSuchElementException
+
+public Map.Entry<K,V> firstEntry(); // 获取第一个 Entry，如果为空则返回 null
+public Map.Entry<K,V> lastEntry(); // 获取最后一个 Entry，如果为空则返回 null
+public Map.Entry<K,V> pollFirstEntry(); // 弹出第一个 Entry，如果为空则返回 null
+public Map.Entry<K,V> pollLastEntry(); // 弹出最后一个 Entry，如果为空则返回 null
+
+/*
+ * lower "小于"，即当前 key 的前一个 key/Entry (与 key 的 Comparator 有关)
+ * floor "小于等于"
+ * higher "大于"，即当前 key 的后一个 key/Entry (与 key 的 Comparator 有关)
+ * ceiling "大于等于"
+ */
+public Map.Entry<K,V> lowerEntry(K key); // 获取一个"小于"指定 key 的 Entry
+public K lowerKey(K key); // 获取一个"小于"指定 key 的 key
+public Map.Entry<K,V> floorEntry(K key); // 获取一个"小于等于"指定 key 的 Entry
+public K floorKey(K key); // 获取一个"小于等于"指定 key 的 key
+
+public Map.Entry<K,V> higherEntry(K key); // 获取一个"大于"指定 key 的 Entry
+public K higherKey(K key); // 获取一个"大于"指定 key 的 key
+public Map.Entry<K,V> ceilingEntry(K key); // 获取一个"大于等于"指定 key 的 Entry
+public K ceilingKey(K key); // 获取一个"大于等于"指定 key 的 key
+
+public Set<K> keySet(); // [升序] 获取一个包含所有 key 的 Set 集合，此 set 集合的修改会影响当前 map
+public NavigableSet<K> navigableKeySet(); // [升序] 获取一个包含所有 key 的 NavigableSet 集合，此 set 集合的修改会影响当前 map
+public NavigableSet<K> descendingKeySet(); // [降序]
+
+public Collection<V> values(); // [升序]，value 的集合，会互相影响
+
+public Set<Map.Entry<K,V>> entrySet(); // [升序] entry 的集合，会互相影响
+
+public NavigableMap<K, V> descendingMap(); // [降序] 互相影响
+
+// 提取子 map
+public NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive);
+// 提取 head 部分
+public NavigableMap<K,V> headMap(K toKey, boolean inclusive);
+// 提取 tail 部分
+public NavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
+
+public SortedMap<K,V> subMap(K fromKey, K toKey); // [fromKey, toKey) 区间
+public SortedMap<K,V> headMap(K toKey); // [firstKey, toKey) 区间
+public SortedMap<K,V> tailMap(K fromKey); // [fromKey, lastKey] 区间
+
+public V replace(K key, V value); // 直接替换
+public boolean replace(K key, V oldValue, V newValue); // 如果存在指定 key-value，则替换 value
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function); // 全部替换
+
+public void forEach(BiConsumer<? super K, ? super V> action); // forEach 循环
+</script></code></pre>
+
+
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.TreeMap;
+
+public class Main {
+    public static void main(String[] args) {
+        TreeMap<Integer, Integer> map = new TreeMap<>(); // 默认升序
+        for (int i = 0; i < 10; i++) {
+            map.put(9 - i, 9 - i);
+        }
+        System.out.println(map);
+
+        TreeMap<Integer, Integer> map2 = new TreeMap<>((n1, n2) -> n2 - n1); // 降序
+        for (int i = 0; i < 10; i++) {
+            map2.put(i, i);
+        }
+        System.out.println(map2);
+
+        System.out.println(map.get(map.lowerKey(5))); // 4
+        System.out.println(map.get(map.floorKey(5))); // 5
+        System.out.println(map.get(map.higherKey(5))); // 6
+        System.out.println(map.get(map.ceilingKey(5))); // 5
+        System.out.println();
+        System.out.println(map2.get(map2.lowerKey(5))); // 6
+        System.out.println(map2.get(map2.floorKey(5))); // 5
+        System.out.println(map2.get(map2.higherKey(5))); // 4
+        System.out.println(map2.get(map2.ceilingKey(5))); // 5
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [17:40:22] C:127
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [17:40:24]
+$ java Main
+{0=0, 1=1, 2=2, 3=3, 4=4, 5=5, 6=6, 7=7, 8=8, 9=9}
+{9=9, 8=8, 7=7, 6=6, 5=5, 4=4, 3=3, 2=2, 1=1, 0=0}
+4
+5
+6
+5
+
+6
+5
+4
+5
+</script></code></pre>
+
+
+
+**IdentityHashMap 类**
+IdentityHashMap 与常用的 HashMap 的区别是：
+1) 前者比较 key 时是“引用相等”而后者是“对象相等”，即对于 k1 和 k2，当 k1 == k2 时，IdentityHashMap 认为两个 key 相等，而 HashMap 只有在 k1.equals(k2) == true 时才会认为两个 key 相等；
+2) IdentityHashMap 允许使用 null 作为 key 和 value；不保证任何 Key-value 对的之间的顺序，更不能保证他们的顺序随时间的推移不会发生变化；
+3) IdentityHashMap 有其特殊用途，比如**序列化**或者**深度复制**、**记录对象代理**等；
+
+举个例子，JVM 中的所有对象都是独一无二的，就算两个对象的数据完全相同，对于 JVM 来说，他们也是完全不同的；
+因此，如果要用一个 map 来记录这样的对象，你就需要用 IdentityHashMap，而不能使用其他 Map 来实现。
+<pre><code class="language-java line-numbers"><script type="text/plain">public IdentityHashMap(); // 默认容量 32
+public IdentityHashMap(int expectedMaxSize); // 指定初始容量
+public IdentityHashMap(Map<? extends K, ? extends V> m); // 从其他 map 中获取 Entry
+
+public int size(); // 获取元素个数
+public boolean isEmpty(); // 判空
+public void clear(); // 清空
+
+public V get(Object key); // get 指定 value
+public V put(K key, V value); // put 指定 key-value
+public void putAll(Map<? extends K, ? extends V> m);
+public V remove(Object key); // 移除
+
+public boolean containsKey(Object key); // 判断是否存在指定 key
+public boolean containsValue(Object value); // 判断是否存在指定 value
+
+public boolean equals(Object o); // 判等 Object.equals() 方法
+public int hashCode(); // 获取 hashCode 值
+
+public Object clone(); // 拷贝当前对象
+
+public Set<K> keySet(); // 获取 key 视图
+public Collection<V> values(); // 获取 value 视图
+public Set<Map.Entry<K,V>> entrySet(); // 获取 entry 视图
+
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function); // 全部替换
+public void forEach(BiConsumer<? super K, ? super V> action); // forEach 循环
+</script></code></pre>
+
+
+
+例子：
+<pre><code class="language-java line-numbers"><script type="text/plain">import java.util.IdentityHashMap;
+
+public class Main {
+    public static void main(String[] args) {
+        IdentityHashMap<Integer, Integer> map = new IdentityHashMap<>();
+        Integer[] array = {1, 2, 3, 100, 200, 300};
+        for (Integer i : array) {
+            map.put(i, i);
+        }
+        System.out.println(map);
+
+        map.put(1, 11);
+        map.put(2, 22);
+        map.put(3, 33);
+        System.out.println(map);
+
+        map.put(100, 111);
+        map.put(200, 222);
+        map.put(300, 333);
+        System.out.println(map);
+    }
+}
+</script></code></pre>
+
+<pre><code class="language-java line-numbers"><script type="text/plain"># root @ arch in ~/work on git:master x [19:20:13]
+$ javac Main.java
+
+# root @ arch in ~/work on git:master x [19:20:34]
+$ java Main
+{1=1, 3=3, 300=300, 200=200, 100=100, 2=2}
+{1=11, 3=33, 300=300, 200=200, 100=100, 2=22}
+{1=11, 3=33, 300=333, 300=300, 200=200, 100=111, 200=222, 2=22}
+</script></code></pre>
+
+
+
+> 
+Integer 自动装箱并非每次都是 new 一个新的 Integer 对象，自动装箱调用 Integer.valueOf() 方法；
+valueOf() 首先检查 int 是否在区间 [-128, 127]，如果是则返回已存在的 Integer 对象(如果有的话)，否则 new 一个新的对象；
+
+**WeakHashMap 类**
+和 HashMap 一样，WeakHashMap 也是一个 key-value 映射表，并且键、值都可以为 null；
+但是，WeakHashMap 的键(key)是**弱引用(WeakReference)**的，即"弱键"，但是值(value)是强引用的。
+
+要明白 WeakHashMap 的特性，必须先了解 Java 的四种引用类型：
+1) **强引用（StrongReference）**
+一般情况下我们使用的都是强引用，如`Test t = new Test();`的 t 就是一个强引用；
+> 当内存不足，JVM 宁愿抛出 OutOfMemoryError 错误，使程序异常终止，也不会回收强引用对象来释放内存
+
+2) **软引用（SoftReference）**
+> 如果一个对象只有软引用，则内存空间足够，GC 就不会回收它；如果内存空间不足了，就会回收这些对象的内存
+
+3) **弱引用（WeakReference）**
+> 只具有弱引用的对象拥有更短暂的生命周期；在 GC 线程扫描它所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存
+
+4) **虚引用（PhantomReference）**
+> 虚引用主要用来跟踪对象被垃圾回收器回收的活动，虚引用必须和`引用队列（ReferenceQueue）`联合使用
+
+“虚引用”顾名思义，就是形同虚设，与其他几种引用都不同，虚引用并不会决定对象的生命周期；如果一个对象仅持有虚引用，那么它就和没有任何引用一样，在任何时候都可能被垃圾回收器回收。
+当垃圾回收器准备回收一个对象时，如果发现它还有虚引用，就会在回收对象的内存之前，把这个虚引用加入到与之关联的引用队列中。
+
+除了强引用之外，其他三种引用都在 java.lang.ref 包中。
+
+这里解释一下**引用队列（ReferenceQueue）**：
+> 
+如果我们在创建一个引用对象时，指定了 ReferenceQueue，那么当引用对象指向的对象达到合适的状态（根据引用类型不同而不同）时，GC 会把引用对象本身添加到这个队列中，方便我们处理它；
+因为引用对象指向的对象 GC 会自动清理，但是引用对象本身也是对象（是对象就占用一定资源），所以需要我们自己清理。
+
+举个例子：`SoftReference<String> ss = new SoftReference<String>("abc", queue);`
+其中，ss 是一个引用对象（一个普通的对象，本身是强引用），指向`"abc"`对象（该对象只有一个软引用 ss 指向它）；
+`"abc"`对象会在一定时机被 GC 自动清理，但是 ss 对象本身的清理工作依赖于 queue，当 ss 出现在 queue 中时，说明其指向的对象已经无效，可以放心清理 ss 了。
+
+**引用对象的四种状态**
+每一时刻，Reference 对象都处于下面四种状态中：
+1) `Active`："活动状态"，新创建的引用对象都是这个状态，GC 会根据引用对象是否在创建时指定 ReferenceQueue 参数进行状态转移，如果指定了，那么转移到 Pending 状态，如果没指定，转移到 Inactive 状态；
+2) `Pending`："待定状态"，该状态的引用对象等着被内部线程 ReferenceHandler 处理（会调用 ReferenceQueue.enqueue 方法）
+3) `Enqueued`："入队状态"，调用 ReferenceQueue.enqueued 方法后的引用对象处于这个状态中；
+4) `Inactive`："死亡状态"，处于该状态的引用对象将被 GC 自动清理。
+
+![java.lang.ref 引用对象的四种状态](/images/java-collection-weakref.png)
+
+总之，我们目前只需要知道以下两点就可以了：
+> 
+如果构造函数中指定了 ReferenceQueue，那么引用对象需要手动进行清理；
+如果构造函数中没有指定 ReferenceQueue，那么 GC 会自动清理引用对象。
+
+**软引用、弱引用的应用场景**
+软引用/弱引用都可用来实现内存敏感的高速缓存；通常和引用队列联合使用，如果引用对象所引用的对象被 GC 回收，Java 虚拟机就会把这个引用对象加入到与之关联的引用队列中，方便我们进行后需清理工作。
+
+区别是：软引用的生命周期比弱引用的生命周期更长一些，因为软引用只有在内存不足时才会进行垃圾回收，而弱引用随时都可能被 GC 回收。
+
+WeakHashMap 和 HashMap 最主要的区别就在于 Entry 类，WeakHashMap 的 Entry 中的 key 使用的是弱引用对象。
+
+**主要方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">public WeakHashMap(int initialCapacity, float loadFactor); // 初始容量、负载因子
+public WeakHashMap(int initialCapacity); // 初始容量，默认负载因子为 0.75f
+public WeakHashMap(); // 默认初始容量为 16，默认负载因子为 0.75f
+public WeakHashMap(Map<? extends K, ? extends V> m); // 使用指定map进行填充
+
+public int size(); // 获取元素个数
+public boolean isEmpty(); // 判空
+public void clear(); // 清空
+
+public V get(Object key); // get 指定 value
+public V put(K key, V value); // put 指定 key-value
+public void putAll(Map<? extends K, ? extends V> m); // put all
+public V remove(Object key); // remove 指定 key-value
+
+public boolean containsKey(Object key); // 判断是否存在指定 key
+public boolean containsValue(Object value); // 判断是否存在指定 value
+
+public Set<K> keySet(); // key 视图
+public Collection<V> values(); // value 视图
+public Set<Map.Entry<K,V>> entrySet(); // entry 视图
+
+public void forEach(BiConsumer<? super K, ? super V> action); // JDK1.8 forEach迭代
+public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function); // 全部替换
+</script></code></pre>
+
+
+
+**EnumMap 类**
+1) EnumMap 是枚举的专属的 Map 键值对集合（key 必须为 Enum 类型）；
+2) EnumMap 因为其内部是通过数组实现的，所以相对来说效率比普通的 Map 高；
+3) EnumMap 虽说是枚举专属集合，但其操作与一般的 Map 差不多，都实现了 Map 接口；
+<pre><code class="language-java line-numbers"><script type="text/plain">public EnumMap(Class<K> keyType); // 需要传入 key 的 Class 对象
+public EnumMap(EnumMap<K, ? extends V> m); // 拷贝构造
+public EnumMap(Map<K, ? extends V> m); // 从其他 map 获取 entry
+
+public int size(); // 元素个数
+public void clear(); // 清空
+
+public boolean containsKey(Object key); // 是否包含指定 key
+public boolean containsValue(Object value); // 是否包含指定 value
+
+public V get(Object key); // get 指定 value
+public V put(K key, V value); // put 指定 key-value
+public void putAll(Map<? extends K, ? extends V> m); // put all
+public V remove(Object key); // remove 指定 key-value
+
+public Set<K> keySet(); // key 视图
+public Collection<V> values(); // value 视图
+public Set<Map.Entry<K,V>> entrySet(); // entry 视图
+
+public boolean equals(Object o);
+public int hashCode();
+
+public EnumMap<K, V> clone();
+</script></code></pre>
+
+
+
 ## Set 集合
 HashSet、LinkedHashSet、TreeSet 都是其对应的 Map 映射的一个包装类；
 因此它们的相关特性也和底层容器一样，它们只使用了 key-value 键值对的 key 部分。
 
 **Set 接口**
-<pre><code class="language-java line-numbers"><script type="text/plain">
-int size(); // 元素个数
+<pre><code class="language-java line-numbers"><script type="text/plain">int size(); // 元素个数
 boolean isEmpty(); // 判空
 void clear(); // 清空集合
 
@@ -1148,4 +1437,117 @@ boolean retainAll(Collection<?> c);
  * 如果集合 c 是一个 Set，那么当前集合将是集合 c 相对于当前集合的补集
  */
 boolean removeAll(Collection<?> c);
+</script></code></pre>
+
+
+
+**HashSet 类**
+<pre><code class="language-java line-numbers"><script type="text/plain">public HashSet(int initialCapacity, float loadFactor);
+public HashSet(int initialCapacity);
+public HashSet();
+public HashSet(Collection<? extends E> c);
+
+public Iterator<E> iterator(); // 获取迭代器
+public int size(); // 元素个数
+public boolean isEmpty();
+public void clear();
+
+public boolean contains(Object o);
+
+public boolean add(E e);
+public boolean remove(Object o);
+
+public Object clone();
+</script></code></pre>
+
+
+
+**LinkedHashSet 类**
+<pre><code class="language-java line-numbers"><script type="text/plain">public LinkedHashSet(int initialCapacity, float loadFactor);
+public LinkedHashSet(int initialCapacity);
+public LinkedHashSet();
+public LinkedHashSet(Collection<? extends E> c);
+</script></code></pre>
+
+
+
+**TreeSet 类**
+<pre><code class="language-java line-numbers"><script type="text/plain">public TreeSet();
+public TreeSet(Comparator<? super E> comparator);
+public TreeSet(Collection<? extends E> c);
+public TreeSet(SortedSet<E> s);
+
+public Iterator<E> iterator();
+public Iterator<E> descendingIterator();
+
+public NavigableSet<E> descendingSet();
+
+public int size();
+public boolean isEmpty();
+public void clear();
+public Comparator<? super E> comparator();
+
+public boolean contains(Object o);
+
+public boolean add(E e);
+public boolean addAll(Collection<? extends E> c);
+public boolean remove(Object o);
+
+// 提取子 set
+public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive);
+public NavigableSet<E> headSet(E toElement, boolean inclusive); // 提取 head 部分
+public NavigableSet<E> tailSet(E fromElement, boolean inclusive); // 提取 tail 部分
+
+public SortedSet<E> subSet(E fromElement, E toElement); // [from, to)
+public SortedSet<E> headSet(E toElement); // [first, to)
+public SortedSet<E> tailSet(E fromElement); // [from, last]
+
+public E first(); // 获取第一个元素，set 为空则抛出 NoSuchElementException 异常
+public E last(); // 获取最后一个元素，set 为空则抛出 NoSuchElementException 异常
+public E pollFirst(); // 弹出
+public E pollLast(); // 弹出
+
+public E lower(E e); // "小于"
+public E floor(E e); // "小于等于"
+public E higher(E e); // "大于"
+public E ceiling(E e); // "大于等于"
+
+public Object clone();
+</script></code></pre>
+
+
+
+**EnumSet 抽象类**
+EnumSet 和 EnumMap 一样，都是枚举专用（JDK1.5 引入了 Enum 枚举类型）的容器。
+
+EnumSet 是一个抽象类，它有两个实现类（实现类的访问权限是包权限，因此无法在外部直接访问）：RegularEnumSet、JumboEnumSet。
+
+EnumSet 抽象类提供了几个静态方法，用于创建这两个实现类的对象，具体使用谁由 EnumSet 内部决定。
+
+1) EnumSet 是与枚举类型一起使用的专用 Set 集合，EnumSet 中所有元素都必须是 Enum 枚举类型；
+2) EnumSet 与其他 Set 接口的实现类 HashSet/TreeSet（内部都是用对应的 HashMap/TreeMap 实现的）不同的是，EnumSet 的内部实现是**位向量**，它是一种极为高效的位运算操作，由于直接存储和操作都是 bit，因此 EnumSet 空间和时间性能都十分可观，足以媲美传统上基于 int 的“位标志”的运算；
+3) EnumSet 不允许使用 null 元素；试图插入 null 元素将抛出 NullPointerException，但试图测试判断是否存在 null 元素或移除 null 元素则不会抛出异常；
+<pre><code class="language-java line-numbers"><script type="text/plain">// 创建一个空 set 集合
+public static <E extends Enum<E>> EnumSet<E> noneOf(Class<E> elementType);
+// 创建一个包含所有枚举常量的 set 集合
+public static <E extends Enum<E>> EnumSet<E> allOf(Class<E> elementType);
+// 创建 s 的补集
+public static <E extends Enum<E>> EnumSet<E> complementOf(EnumSet<E> s);
+
+// 拷贝构造
+public static <E extends Enum<E>> EnumSet<E> copyOf(EnumSet<E> s);
+public static <E extends Enum<E>> EnumSet<E> copyOf(Collection<E> c);
+
+// 创建一个包含指定元素的 set 集合
+public static <E extends Enum<E>> EnumSet<E> of(E e);
+public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2);
+public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3);
+public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4);
+public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4, E e5);
+public static <E extends Enum<E>> EnumSet<E> of(E first, E... rest); // 可变参数(本质为数组)
+
+// 指定范围(由枚举类型的 ordinal 决定)
+public static <E extends Enum<E>> EnumSet<E> range(E from, E to);
+
+public EnumSet<E> clone(); // 克隆
 </script></code></pre>
