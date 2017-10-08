@@ -1551,3 +1551,1693 @@ public static <E extends Enum<E>> EnumSet<E> range(E from, E to);
 
 public EnumSet<E> clone(); // 克隆
 </script></code></pre>
+
+
+
+## Collections
+java.util.Collections 类是 Java 集合框架的一员，它提供了很多 static 方法服务于各集合对象；
+如：对集合元素的排序、取极值、批量拷贝、集合结构转换、循环移位以及匹配性检查等功能；
+> 因为 Collections 类的构造方法被声明为 private，因此无法进行对象的实例化。
+
+**常用方法**
+<pre><code class="language-java line-numbers"><script type="text/plain">// 调用 list.sort(null) [自然排序]
+public static <T extends Comparable<? super T>> void sort(List<T> list);
+// 调用 list.sort(c) [自定义排序]
+public static <T> void sort(List<T> list, Comparator<? super T> c);
+
+// 使用二分查找算法，该 list 必须是按照自然排序的升序列表，否则结果是未定义的
+public static <T> int binarySearch(List<? extends Comparable<? super T>> list, T key);
+// 使用二分查找算法，该 list 必须是按照指定排序的升序列表，否则结果是未定义的
+public static <T> int binarySearch(List<? extends T> list, T key, Comparator<? super T> c);
+
+public static void reverse(List<?> list); // 翻转 list
+
+public static void shuffle(List<?> list); // 随机排列 list
+public static void shuffle(List<?> list, Random rnd); // 指定随机源
+
+public static void swap(List<?> list, int i, int j); // 交换两个指定索引的元素
+
+public static <T> void fill(List<? super T> list, T obj); // 使用指定 obj 填充 list
+
+public static <T> void copy(List<? super T> dest, List<? extends T> src); // 拷贝 list
+
+// 返回自然排序情况下的 minimum 元素，元素必须实现 Comparable 接口
+public static <T extends Object & Comparable<? super T>> T min(Collection<? extends T> coll);
+// 返回指定比较器下的 minimum 元素，需要额外提供 Comparator 比较器
+public static <T> T min(Collection<? extends T> coll, Comparator<? super T> comp);
+
+public static <T extends Object & Comparable<? super T>> T max(Collection<? extends T> coll);
+public static <T> T max(Collection<? extends T> coll, Comparator<? super T> comp);
+
+public static void rotate(List<?> list, int distance); // 旋转元素
+
+public static <T> boolean replaceAll(List<T> list, T oldVal, T newVal); // 将指定 oldVal 全部替换为 newVal
+
+// 返回指定 target 子列表在 source 源列表中首次匹配的索引位置，没有匹配则返回 -1
+public static int indexOfSubList(List<?> source, List<?> target);
+public static int lastIndexOfSubList(List<?> source, List<?> target); // 最后一次匹配的索引位置
+
+// 获取不可修改的集合，尝试修改将导致 UnsupportedOperationException 异常
+public static <T> Collection<T> unmodifiableCollection(Collection<? extends T> c);
+public static <T> List<T> unmodifiableList(List<? extends T> list);
+public static <T> Set<T> unmodifiableSet(Set<? extends T> s);
+public static <T> SortedSet<T> unmodifiableSortedSet(SortedSet<T> s);
+public static <T> NavigableSet<T> unmodifiableNavigableSet(NavigableSet<T> s);
+public static <K,V> Map<K,V> unmodifiableMap(Map<? extends K, ? extends V> m);
+public static <K,V> SortedMap<K,V> unmodifiableSortedMap(SortedMap<K, ? extends V> m);
+public static <K,V> NavigableMap<K,V> unmodifiableNavigableMap(NavigableMap<K, ? extends V> m);
+
+// 获取线程安全的集合
+public static <T> Collection<T> synchronizedCollection(Collection<T> c);
+public static <T> List<T> synchronizedList(List<T> list);
+public static <T> Set<T> synchronizedSet(Set<T> s);
+public static <T> SortedSet<T> synchronizedSortedSet(SortedSet<T> s);
+public static <T> NavigableSet<T> synchronizedNavigableSet(NavigableSet<T> s);
+public static <K,V> Map<K,V> synchronizedMap(Map<K,V> m);
+public static <K,V> SortedMap<K,V> synchronizedSortedMap(SortedMap<K,V> m);
+public static <K,V> NavigableMap<K,V> synchronizedNavigableMap(NavigableMap<K,V> m);
+
+// 返回类型安全的集合
+public static <E> Collection<E> checkedCollection(Collection<E> c, Class<E> type);
+public static <E> List<E> checkedList(List<E> list, Class<E> type);
+public static <E> Queue<E> checkedQueue(Queue<E> queue, Class<E> type);
+public static <E> Set<E> checkedSet(Set<E> s, Class<E> type);
+public static <E> SortedSet<E> checkedSortedSet(SortedSet<E> s, Class<E> type);
+public static <E> NavigableSet<E> checkedNavigableSet(NavigableSet<E> s, Class<E> type);
+public static <K, V> Map<K, V> checkedMap(Map<K, V> m, Class<K> keyType, Class<V> valueType);
+public static <K,V> SortedMap<K,V> checkedSortedMap(SortedMap<K, V> m, Class<K> keyType, Class<V> valueType);
+public static <K,V> NavigableMap<K,V> checkedNavigableMap(NavigableMap<K, V> m, Class<K> keyType, Class<V> valueType);
+
+public static <T> Iterator<T> emptyIterator(); // 获取一个没有任何元素的空迭代器
+public static <T> ListIterator<T> emptyListIterator(); // ListIterator
+public static <T> Enumeration<T> emptyEnumeration(); // 返回没有元素的枚举
+public static final <T> List<T> emptyList();
+public static final <T> Set<T> emptySet();
+public static <E> SortedSet<E> emptySortedSet();
+public static <E> NavigableSet<E> emptyNavigableSet();
+public static final <K,V> Map<K,V> emptyMap();
+public static final <K,V> SortedMap<K,V> emptySortedMap();
+public static final <K,V> NavigableMap<K,V> emptyNavigableMap();
+
+// 返回一个只包含指定对象的不可变集合
+public static <T> List<T> singletonList(T o);
+public static <T> Set<T> singleton(T o);
+public static <K,V> Map<K,V> singletonMap(K key, V value);
+// 返回一个包含指定多个副本的不可变集合
+public static <T> List<T> nCopies(int n, T o);
+
+public static <T> Comparator<T> reverseOrder(); // 获取自然排序的降序比较器
+public static <T> Comparator<T> reverseOrder(Comparator<T> cmp); // 获取指定比较器的降序比较器
+
+public static <T> Enumeration<T> enumeration(final Collection<T> c); // 返回指定集合的枚举
+public static <T> ArrayList<T> list(Enumeration<T> e); // 返回指定枚举的 list 列表
+
+public static int frequency(Collection<?> c, Object o); // 统计集合中指定元素的个数
+public static boolean disjoint(Collection<?> c1, Collection<?> c2); // 如果两个指定集合没有相同的元素则返回true
+
+public static <T> boolean addAll(Collection<? super T> c, T... elements); // 添加所有传入的元素
+
+public static <E> Set<E> newSetFromMap(Map<E, Boolean> map); // 从 map 中创建对应的 set 集合
+public static <T> Queue<T> asLifoQueue(Deque<T> deque); // 返回一个 LIFO 双端队列
+</script></code></pre>
+
+
+
+## Collection 总结
+经过前面大量篇幅的学习，现在我们已经熟悉了 Java Collection 框架的基本使用和各种容器的优点、缺点、特性、适用场景等。
+但是仅仅学习怎么使用还是不够的，我们不仅要会用，更应该去学习其实现原理，因此，现在就来实现一个简单的 Collection 框架吧。
+> 
+github 仓库：[Java - Collection 框架的简单实现](https://github.com/zfl9/java-collection)
+
+**ArrayList**
+"动态数组"，其实就是 built-in 数组的包装，其最主要的功能就是要实现容量的自动增长。
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.lang.reflect.Array;
+
+public class ArrayList<E> implements Iterable<E> {
+    private Object[] array; // Object[] 数组，用于存放所有元素
+    private int size; // 元素的数量
+    private final int DEFAULT_CAPACITY = 10; // 默认容量(数组的长度)
+
+    /* 构造函数 */
+    public ArrayList() {
+        array = new Object[DEFAULT_CAPACITY];
+    }
+    public ArrayList(int capacity) {
+        array = new Object[capacity];
+    }
+
+    public int size() { // 获取元素个数
+        return size;
+    }
+    public int capacity() { // 获取当前数组的容量(数组的长度)
+        return array.length;
+    }
+    public boolean empty() { // 判断是否为空数组
+        return size == 0;
+    }
+    public void clear() { // 清空所有元素
+        size = 0;
+        array = null;
+    }
+
+    /* 直接扩容到指定大小 */
+    private void manualGrow(int capacity) {
+        array = Arrays.copyOf(array, capacity);
+    }
+    /* 自动扩容 1.5 倍增长 */
+    private void autoGrow(int capacity) {
+        if (capacity > array.length) {
+            capacity *= 1.5;
+            array = Arrays.copyOf(array, capacity);
+        }
+    }
+
+    // 扩容, 只有当 capacity 参数大于当前容量时生效
+    public void ensureCapacity(int capacity) {
+        if (capacity > array.length) {
+            manualGrow(capacity);
+        }
+    }
+    // 缩减容量(回收所有未填充元素的空间)
+    public void trimToSize() {
+        manualGrow(size);
+    }
+
+    /* getter、setter 方法 */
+    @SuppressWarnings("unchecked")
+    public E get(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("get(), index: %d, size: %d", index, size));
+        }
+        return (E) array[index];
+    }
+    @SuppressWarnings("unchecked")
+    public E set(int index, E elem) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("set(), index: %d, size: %d", index, size));
+        }
+        E oldElem = (E) array[index];
+        array[index] = elem;
+        return oldElem;
+    }
+
+    /* 在尾部插入、删除 */
+    public void append(E elem) {
+        autoGrow(size + 1);
+        array[size++] = elem;
+    }
+    @SuppressWarnings("unchecked")
+    public E pop() {
+        if (size != 0) {
+            E elem = (E) array[size-- - 1];
+            array[size] = null;
+            return elem;
+        } else {
+            return null;
+        }
+    }
+
+    /* 在任意位置插入、删除 */
+    public void insert(int index, E elem) {
+        if (index > size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("insert(), index: %d, size: %d", index, size));
+        }
+        autoGrow(size++ + 1);
+        for (int i = size - 1; i > index; i--) {
+            array[i] = array[i - 1];
+        }
+        array[index] = elem;
+    }
+    @SuppressWarnings("unchecked")
+    public E delete(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("delete(), index: %d, size: %d", index, size));
+        }
+        E elem = (E) array[index];
+        size--;
+        for (int i = index; i < size; i++) {
+            array[i] = array[i + 1];
+        }
+        array[size] = null;
+        return elem;
+    }
+
+    /* 查找指定元素首次出现的索引 */
+    public int find(E elem) {
+        for (int i = 0; i < size; i++) {
+            if (elem.equals(array[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /* 升序、降序 */
+    public void sort() {
+        Arrays.sort(array, 0, size);
+    }
+    @SuppressWarnings("unchecked")
+    public void reverseSort() {
+        Arrays.sort(array, 0, size, (Object o1, Object o2) -> {
+            return ((Comparable<? super E>) o2).compareTo((E) o1);
+        });
+    }
+
+    /* 转换为 built-in 数组 */
+    @SuppressWarnings("unchecked")
+    public E[] toArray() {
+        if (size == 0) {
+            return null;
+        }
+        E[] array = (E[]) Array.newInstance(this.array[0].getClass(), size);
+        System.arraycopy(this.array, 0, array, 0, size);
+        return array;
+    }
+
+    @Override
+    public String toString() {
+        if (size == 0) {
+            return "(null)";
+        } else {
+            StringBuilder sb = new StringBuilder("{ ");
+            for (int i = 0; i < size; i++) {
+                sb.append(array[i] + ", ");
+            }
+            sb.append("\b\b }");
+            return sb.toString();
+        }
+    }
+
+    @Override
+    public Iterator<E> iterator() { // 获取迭代器
+        return new Itr();
+    }
+
+    private class Itr implements Iterator<E> {
+        private int cursor;
+
+        @Override
+        public boolean hasNext() {
+            return cursor < size;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public E next() {
+            return (E) array[cursor++];
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**LinkList**
+"单向链表"，只有 next 节点，每次访问元素只能从 HEAD 头结点开始遍历。
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.lang.reflect.Array;
+
+public class LinkList<E> implements Iterable<E> {
+    // 节点 Node
+    private static class Node<E> {
+        public E data; // 数据域
+        public Node<E> next; // 指针域
+
+        public Node(E data, Node<E> next) {
+            this.data = data;
+            this.next = next;
+        }
+    }
+
+    private final Node<E> HEAD = new Node<E>(null, null); // 头结点, 数据域为 null
+    private int size; // 元素个数
+
+    public LinkList() {}
+
+    public int size() {
+        return size;
+    }
+    public boolean empty() {
+        return HEAD.next == null;
+    }
+    public void clear() {
+        for (Node<E> temp; HEAD.next != null;) {
+            temp = HEAD.next.next;
+            HEAD.next.data = null;
+            HEAD.next.next = null;
+            HEAD.next = temp;
+        }
+        size = 0;
+    }
+
+    /* 在链表尾部插入、删除节点 */
+    public void append(E elem) {
+        Node<E> node = HEAD;
+        for (; node.next != null; node = node.next);
+        node.next = new Node<E>(elem, null);
+        size++;
+    }
+    public E pop() {
+        if (HEAD.next == null) {
+            throw new IndexOutOfBoundsException(String.format("pop(), size: %d\n", size));
+        }
+        Node<E> node = HEAD;
+        for (; node.next.next != null; node = node.next);
+        E elem = node.next.data;
+        node.next.data = null;
+        node.next = null;
+        size--;
+        return elem;
+    }
+
+    /* 在链表任意位置插入、删除节点 */
+    public void insert(int index, E elem) {
+        if (index > size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("insert(), index: %d, size: %d", index, size));
+        }
+        Node<E> node = HEAD;
+        for (int i = 0; i < index; i++, node = node.next);
+        node.next = new Node<E>(elem, node.next);
+        size++;
+    }
+    public E delete(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("delete(), index: %d, size: %d", index, size));
+        }
+        Node<E> node = HEAD;
+        for (int i = 0; i < index; i++, node = node.next);
+        Node<E> temp = node.next.next;
+        E elem = node.next.data;
+        node.next.data = null;
+        node.next.next = null;
+        node.next = temp;
+        size--;
+        return elem;
+    }
+
+    /* getter、setter */
+    public E get(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("get(), index: %d, size: %d", index, size));
+        }
+        Node<E> node = HEAD;
+        for (int i = 0; i < index; i++, node = node.next);
+        return node.next.data;
+    }
+    public E set(int index, E elem) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("set(), index: %d, size: %d", index, size));
+        }
+        Node<E> node = HEAD;
+        for (int i = 0; i < index; i++, node = node.next);
+        E oldElem = node.next.data;
+        node.next.data = elem;
+        return oldElem;
+    }
+
+    /* 查找指定元素首次出现的索引 */
+    public int find(E elem) {
+        Node<E> node = HEAD;
+        for (int i = 0; i < size; i++, node = node.next) {
+            if (elem.equals(node.next.data)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /* 升序、降序 */
+    public void sort() {
+        sort(true);
+    }
+    public void reverseSort() {
+        sort(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void sort(boolean ascending) {
+        boolean sorted = true;
+        Node<E> node = null;
+        for (int i = 0; i < size - 1; i++) {
+            node = HEAD.next;
+            for (int j = 0; j < size - 1 - i; j++, node = node.next) {
+                if (ascending ?
+                    ((Comparable<? super E>)node.data).compareTo(node.next.data) > 0 :
+                    ((Comparable<? super E>)node.next.data).compareTo(node.data) > 0)
+                {
+                    sorted = false;
+                    E temp = node.data;
+                    node.data = node.next.data;
+                    node.next.data = temp;
+                }
+            }
+            if (sorted) {
+                break;
+            }
+        }
+    }
+
+    /* 转换为 built-in 数组 */
+    @SuppressWarnings("unchecked")
+    public E[] toArray() {
+        if (size == 0) {
+            return null;
+        }
+        E[] array = (E[]) Array.newInstance(HEAD.next.data.getClass(), size);
+        Node<E> node = HEAD.next;
+        for (int i = 0; i < size; i++, node = node.next) {
+            array[i] = node.data;
+        }
+        return array;
+    }
+
+    @Override
+    public String toString() {
+        if (HEAD.next == null) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (Node<E> node = HEAD; node.next != null; node = node.next) {
+            sb.append(node.next.data + ", ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    /* 获取迭代器 */
+    @Override
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+
+    private class Itr implements Iterator<E> {
+        private Node<E> node = HEAD;
+
+        @Override
+        public boolean hasNext() {
+            return node.next != null;
+        }
+
+        @Override
+        public E next() {
+            node = node.next;
+            return node.data;
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**DLinkList**
+"双向链表"，有 prev/next 两个节点，头结点 HEAD、尾节点 TAIL；头结点的 prev 为 null，尾节点的 next 为 null。
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Iterator;
+import java.lang.reflect.Array;
+
+public class DLinkList<E> implements Iterable<E> {
+    // 节点 Node
+    private static class Node<E> {
+        public E data; // 数据域
+        public Node<E> prev; // prev 指针
+        public Node<E> next; // next 指针
+
+        public Node(Node<E> prev, E data, Node<E> next) {
+            this.prev = prev;
+            this.data = data;
+            this.next = next;
+        }
+    }
+
+    /* 头尾结点 */
+    private final Node<E> HEAD = new Node<E>(null, null, null);
+    private final Node<E> TAIL = new Node<E>(null, null, null);
+    private int size;
+
+    public DLinkList() {
+        HEAD.next = TAIL;
+        TAIL.prev = HEAD;
+    }
+
+    public int size() {
+        return size;
+    }
+    public boolean empty() {
+        return HEAD.next == TAIL;
+    }
+    public void clear() {
+        for (Node<E> temp; HEAD.next != TAIL;) {
+            temp = HEAD.next.next;
+            HEAD.next.prev = null;
+            HEAD.next.data = null;
+            HEAD.next.next = null;
+            HEAD.next = temp;
+            temp.prev = HEAD;
+        }
+        size = 0;
+    }
+
+    /* 在链表尾部插入、删除 */
+    public void append(E elem) {
+        TAIL.prev = new Node<E>(TAIL.prev, elem, TAIL);
+        TAIL.prev.prev.next = TAIL.prev;
+        size++;
+    }
+    public E pop() {
+        if (HEAD.next == TAIL) {
+            throw new IndexOutOfBoundsException(String.format("pop(), size: %d", size));
+        }
+        E elem = TAIL.prev.data;
+        Node<E> temp = TAIL.prev.prev;
+        TAIL.prev.prev = null;
+        TAIL.prev.data = null;
+        TAIL.prev.next = null;
+        TAIL.prev = temp;
+        temp.next = TAIL;
+        size--;
+        return elem;
+    }
+
+    /* 在任意位置插入、删除 */
+    public void insert(int index, E elem) {
+        if (index > size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("insert(), index: %d, size: %d", index, size));
+        }
+        if (index < size / 2) {
+            Node<E> node = HEAD;
+            for (int i = 0; i < index; i++, node = node.next);
+            node.next = new Node<E>(node, elem, node.next);
+            node.next.next.prev = node.next;
+            size++;
+        } else {
+            Node<E> node = TAIL;
+            for (int i = 0; i < size - index; i++, node = node.prev);
+            node.prev = new Node<E>(node.prev, elem, node);
+            node.prev.prev.next = node.prev;
+            size++;
+        }
+    }
+    public E delete(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("delete(), index: %d, size: %d", index, size));
+        }
+        if (index < size / 2) {
+            Node<E> node = HEAD;
+            for (int i = 0; i < index; i++, node = node.next);
+            E elem = node.next.data;
+            Node<E> temp = node.next.next;
+            node.next.prev = null;
+            node.next.data = null;
+            node.next.next = null;
+            node.next = temp;
+            temp.prev = node;
+            size--;
+            return elem;
+        } else {
+            Node<E> node = TAIL;
+            for (int i = 0; i < size - index - 1; i++, node = node.prev);
+            E elem = node.prev.data;
+            Node<E> temp = node.prev.prev;
+            node.prev.prev = null;
+            node.prev.data = null;
+            node.prev.next = null;
+            node.prev = temp;
+            temp.next = node;
+            size--;
+            return elem;
+        }
+    }
+
+    /* getter、setter */
+    public E get(int index) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("get(), index: %d, size: %d", index, size));
+        }
+        if (index < size / 2) {
+            Node<E> node = HEAD.next;
+            for (int i = 0; i < index; i++, node = node.next);
+            return node.data;
+        } else {
+            Node<E> node = TAIL.prev;
+            for (int i = 0; i < size - index - 1; i++, node = node.prev);
+            return node.data;
+        }
+    }
+    public E set(int index, E elem) {
+        if (index >= size || index < 0) {
+            throw new IndexOutOfBoundsException(String.format("set(), index: %d, size: %d", index, size));
+        }
+        if (index < size / 2) {
+            Node<E> node = HEAD.next;
+            for (int i = 0; i < index; i++, node = node.next);
+            E oldElem = node.data;
+            node.data = elem;
+            return oldElem;
+        } else {
+            Node<E> node = TAIL.prev;
+            for (int i = 0; i < size - index - 1; i++, node = node.prev);
+            E oldElem = node.data;
+            node.data = elem;
+            return oldElem;
+        }
+    }
+
+    /* 查找指定元素首次出现的索引 */
+    public int find(E elem) {
+        Node<E> node = HEAD;
+        for (int i = 0; i < size; i++, node = node.next) {
+            if (node.next.data.equals(elem)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /* 升序、降序 */
+    public void sort() {
+        sort(true);
+    }
+    public void descSort() {
+        sort(false);
+    }
+    @SuppressWarnings("unchecked")
+    private void sort(boolean ascending) {
+        boolean sorted = true;
+        Node<E> node = null;
+        for (int i = 0; i < size - 1; i++) {
+            node = HEAD.next;
+            for (int j = 0; j < size - 1 - i; j++, node = node.next) {
+                if (ascending ?
+                    ((Comparable<? super E>) node.data).compareTo(node.next.data) > 0 :
+                    ((Comparable<? super E>) node.next.data).compareTo(node.data) > 0)
+                {
+                    sorted = false;
+                    E temp = node.data;
+                    node.data = node.next.data;
+                    node.next.data = temp;
+                }
+            }
+            if (sorted) {
+                break;
+            }
+        }
+    }
+
+    /* 转换为 built-in 数组 */
+    @SuppressWarnings("unchecked")
+    public E[] toArray() {
+        if (size == 0) {
+            return null;
+        }
+        E[] array = (E[]) Array.newInstance(HEAD.next.data.getClass(), size);
+        Node<E> node = HEAD.next;
+        for (int i = 0; i < size; i++, node = node.next) {
+            array[i] = node.data;
+        }
+        return array;
+    }
+
+    @Override
+    public String toString() { // 正向遍历
+        if (HEAD.next == TAIL) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        Node<E> node = HEAD.next;
+        for (int i = 0; i < size; i++, node = node.next) {
+            sb.append(node.data + ", ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+    public String toStringReversed() { // 逆向遍历
+        if (TAIL.prev == HEAD) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        Node<E> node = TAIL.prev;
+        for (int i = 0; i < size; i++, node = node.prev) {
+            sb.append(node.data + ", ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    @Override
+    public Iterator<E> iterator() { // 正向
+        return new Itr(true);
+    }
+    public Iterator<E> descIterator() { // 逆向
+        return new Itr(false);
+    }
+
+    private class Itr implements Iterator<E> {
+        private boolean ascending;
+        private Node<E> node;
+
+        public Itr(boolean ascending) {
+            this.ascending = ascending;
+            node = ascending ? HEAD : TAIL;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return ascending ? node.next != TAIL : node.prev != HEAD;
+        }
+
+        @Override
+        public E next() {
+            node = ascending ? node.next : node.prev;
+            return node.data;
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**HashMap**
+"哈希表"，使用 hash() 函数计算 key 的 hash 值，使用 indexFor() 函数计算指定 hash 的数组索引，使用"拉链法"解决 hash 冲突。
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.lang.reflect.Array;
+
+public class HashMap<K, V> implements Iterable<HashMap.Entry<K, V>> {
+    // 键值对 key-value，称为记录 Entry
+    public static class Entry<K, V> {
+        int hash; // 记录 hash
+        K key; // 记录 key
+        V value; // 记录 value
+        Entry<K, V> next; // next 指针
+
+        Entry(int hash, K key, V value, Entry<K, V> next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+
+        /* getter、setter */
+        public K getKey() {
+            return key;
+        }
+        public V getValue() {
+            return value;
+        }
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+    }
+
+    Entry<K, V>[] table; // Entry[] 数组
+    int capacity; // 数组的容量
+    static final int DEFAULT_CAPACITY = 32; // 默认为 32
+    float loadFactor; // 负载因子
+    static final float DEFAULT_LOAD_FACTOR = 0.75f; // 默认为 0.75
+    int size;
+
+    /* 构造函数 */
+    public HashMap(int capacity, float loadFactor) {
+        if (capacity % 2 != 0 || capacity <= 0) {
+            throw new IllegalArgumentException("illegal capacity: " + capacity);
+        }
+        if (loadFactor <= 0) {
+            throw new IllegalArgumentException("illegal loadFactor: " + loadFactor);
+        }
+        this.capacity = capacity;
+        this.loadFactor = loadFactor;
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Entry<K, V>[] table = (Entry<K, V>[]) new Entry[capacity];
+        this.table = table;
+    }
+    public HashMap(int capacity) {
+        this(capacity, DEFAULT_LOAD_FACTOR);
+    }
+    public HashMap() {
+        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+    }
+
+    public int size() {
+        return size;
+    }
+    public int capacity() {
+        return capacity;
+    }
+    public float loadFactor() {
+        return loadFactor;
+    }
+    public boolean empty() {
+        return size == 0;
+    }
+    public void clear() {
+        Entry<K, V> temp;
+        for (int i = 0; i < capacity; i++) {
+            while (table[i] != null) {
+                temp = table[i].next;
+                table[i].hash = 0;
+                table[i].key = null;
+                table[i].value = null;
+                table[i].next = null;
+                table[i] = temp;
+            }
+        }
+        size = 0;
+    }
+
+    int hash(K key) { // 计算 key 的散列值，参考自 JDK1.8 源码
+        int hash;
+        return key == null ? 0 : (hash = key.hashCode()) ^ (hash >>> 16);
+    }
+    int indexFor(int hash) { // 根据 hash 计算对应的数组索引
+        return hash & (capacity - 1);
+    }
+
+    /* 自动扩容 */
+    private void autoGrow(int minSize) {
+        if (minSize > capacity * loadFactor) {
+            table = Arrays.copyOf(table, capacity * 2);
+            capacity = table.length;
+            Entry<K, V> head = new Entry<K, V>(0, null, null, null), entry, temp;
+            int index;
+            for (int i = 0; i < capacity / 2; i++) {
+                head.next = table[i];
+                for (entry = head; entry.next != null;) {
+                    if ((index = indexFor(entry.next.hash)) != i) {
+                        temp = entry.next;
+                        entry.next = entry.next.next;
+                        temp.next = table[index];
+                        table[index] = temp;
+                    } else {
+                        entry = entry.next;
+                    }
+                }
+                table[i] = head.next;
+            }
+        }
+    }
+
+    // 添加 key-value 对
+    public V put(K key, V value) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                V oldValue = entry.value;
+                entry.value = value;
+                return oldValue;
+            }
+        }
+        autoGrow(size + 1);
+        index = indexFor(hash);
+        table[index] = new Entry<K, V>(hash, key, value, table[index]);
+        size++;
+        return null;
+    }
+    // 获取指定 value
+    public V get(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                return entry.value;
+            }
+        }
+        return null;
+    }
+    // 移除指定 key-value
+    public V remove(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        if (table[index] == null) {
+            return null;
+        }
+        Entry<K, V> head = new Entry<K, V>(0, null, null, table[index]), entry, temp;
+        for (entry = head; entry.next != null; entry = entry.next) {
+            if (entry.next.hash == hash) {
+                temp = entry.next.next;
+                V value = entry.next.value;
+                entry.next.hash = 0;
+                entry.next.key = null;
+                entry.next.value = null;
+                entry.next.next = null;
+                entry.next = temp;
+                table[index] = head.next;
+                size--;
+                return value;
+            }
+        }
+        return null;
+    }
+
+    // 判断是否存在指定 key、value
+    public boolean hasKey(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasValue(V value) {
+        for (int i = 0; i < capacity; i++) {
+            for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                if (entry.value.equals(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 获取一个包含所有 key 的数组
+    public K[] keys() {
+        if (size == 0) {
+            return null;
+        }
+        K key = null;
+        for (int i = 0; i < capacity; i++) {
+            for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                if (entry.key != null) {
+                    key = entry.key;
+                    break;
+                }
+            }
+            if (key != null) {
+                break;
+            }
+        }
+        @SuppressWarnings("unchecked")
+        K[] array = (K[]) Array.newInstance(key.getClass(), size);
+        int index = 0;
+        for (int i = 0; i < capacity; i++) {
+            for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                array[index++] = entry.key;
+            }
+        }
+        return array;
+    }
+    // 获取一个包含所有 value 的数组
+    public V[] values() {
+        if (size == 0) {
+            return null;
+        }
+        V value = null;
+        for (int i = 0; i < capacity; i++) {
+            for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                if (entry.value != null) {
+                    value = entry.value;
+                    break;
+                }
+            }
+            if (value != null) {
+                break;
+            }
+        }
+        @SuppressWarnings("unchecked")
+        V[] array = (V[]) Array.newInstance(value.getClass(), size);
+        int index = 0;
+        for (int i = 0; i < capacity; i++) {
+            for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                array[index++] = entry.value;
+            }
+        }
+        return array;
+    }
+
+    @Override
+    public String toString() {
+        if (size == 0) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        Entry<K, V> entry;
+        for (int i = 0; i < capacity; i++) {
+            for (entry = table[i]; entry != null; entry = entry.next) {
+                sb.append("{" + entry.key + ", " + entry.value + "}, ");
+            }
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    @Override
+    public Iterator<HashMap.Entry<K, V>> iterator() { // 获取迭代器
+        return new Itr();
+    }
+
+    private class Itr implements Iterator<HashMap.Entry<K, V>> {
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private HashMap.Entry<K, V>[] array = (HashMap.Entry<K, V>[]) new HashMap.Entry[size];
+        private int cursor;
+
+        {
+            int index = 0;
+            for (int i = 0; i < capacity; i++) {
+                for (Entry<K, V> entry = table[i]; entry != null; entry = entry.next) {
+                    array[index++] = entry;
+                }
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor < size;
+        }
+
+        @Override
+        public HashMap.Entry<K, V> next() {
+            return array[cursor++];
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**HashSet 包装类**
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Iterator;
+
+public class HashSet<E> implements Iterable<E> {
+    private HashMap<E, Object> map; // 使用 HashMap 存储
+
+    /* 构造函数 */
+    public HashSet(int capacity, float loadFactor) {
+        map = new HashMap<E, Object>(capacity, loadFactor);
+    }
+    public HashSet(int capacity) {
+        map = new HashMap<E, Object>(capacity);
+    }
+    public HashSet() {
+        map = new HashMap<E, Object>();
+    }
+
+    /* 查询、清空 */
+    public int size() {
+        return map.size;
+    }
+    public int capacity() {
+        return map.capacity;
+    }
+    public float loadFactor() {
+        return map.loadFactor;
+    }
+    public boolean empty() {
+        return map.empty();
+    }
+    public void clear() {
+        map.clear();
+    }
+
+    // 添加、移除
+    public void add(E elem) {
+        map.put(elem, null);
+    }
+    public void remove(E elem) {
+        map.remove(elem);
+    }
+
+    // 子集
+    public boolean containsAll(HashSet<E> set) {
+        HashMap.Entry<E, Object> entry;
+        for (int i = 0; i < set.map.capacity; i++) {
+            for (entry = set.map.table[i]; entry != null; entry = entry.next) {
+                if (!map.hasKey(entry.key)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // 并集
+    public void addAll(HashSet<E> set) {
+        HashMap.Entry<E, Object> entry;
+        for (int i = 0; i < set.map.capacity; i++) {
+            for (entry = set.map.table[i]; entry != null; entry = entry.next) {
+                map.put(entry.key, null);
+            }
+        }
+    }
+
+    // 交集
+    public void retainAll(HashSet<E> set) {
+        HashMap<E, Object> newMap = new HashMap<>(map.capacity, map.loadFactor);
+        HashMap.Entry<E, Object> entry;
+        for (int i = 0; i < map.capacity; i++) {
+            for (entry = map.table[i]; entry != null; entry = entry.next) {
+                if (set.map.hasKey(entry.key)) {
+                    newMap.put(entry.key, null);
+                }
+            }
+        }
+        map = newMap;
+    }
+
+    // 补集
+    public void removeAll(HashSet<E> set) {
+        HashMap.Entry<E, Object> entry;
+        for (int i = 0; i < set.map.capacity; i++) {
+            for (entry = set.map.table[i]; entry != null; entry = entry.next) {
+                map.remove(entry.key);
+            }
+        }
+    }
+
+    // 判断是否存在指定元素
+    public boolean has(E elem) {
+        return map.hasKey(elem);
+    }
+
+    // 获取一个包含所有元素的数组
+    public E[] values() {
+        return map.keys();
+    }
+
+    @Override
+    public String toString() {
+        if (map.empty()) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (int i = 0; i < map.capacity; i++) {
+            for (HashMap.Entry<E, Object> entry = map.table[i]; entry != null; entry = entry.next) {
+                sb.append(entry.key + ", ");
+            }
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+
+    private class Itr implements Iterator<E> {
+        private E[] array = values();
+        private int cursor;
+
+        @Override
+        public boolean hasNext() {
+            return cursor < array.length;
+        }
+
+        @Override
+        public E next() {
+            return array[cursor++];
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**LinkHashMap 类**
+"哈希表" + "双向链表"，可保存 Entry 的插入顺序，同时可按照 Entry 的访问顺序进行动态排列，最新访问的记录排在链表的头部。
+与 HashMap 相比，它的 Entry 增加了两个新的指针 before、after，分别指向前一个、后一个 Entry 记录。
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.lang.reflect.Array;
+
+public class LinkHashMap<K, V> implements Iterable<LinkHashMap.Entry<K, V>> {
+    // Entry 记录
+    public static class Entry<K, V> {
+        int hash;
+        K key;
+        V value;
+        Entry<K, V> next;
+        Entry<K, V> before; // 指向前一个节点的指针
+        Entry<K, V> after; // 指向后一个节点的指针
+
+        Entry(int hash, K key, V value, Entry<K, V> next, Entry<K, V> before, Entry<K, V> after) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+            this.before = before;
+            this.after = after;
+        }
+        Entry(int hash, K key, V value, Entry<K, V> next) {
+            this(hash, key, value, next, null, null);
+        }
+
+        /* getter、setter */
+        public K getKey() { return key; }
+        public V getValue() { return value; }
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+    }
+
+    Entry<K, V>[] table;
+    int capacity;
+    static final int DEFAULT_CAPACITY = 32;
+    float loadFactor;
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    int size;
+    final Entry<K, V> HEAD = new Entry<K, V>(0, null, null, null, null, null); // 头结点
+    final Entry<K, V> TAIL = new Entry<K, V>(0, null, null, null, null, null); // 尾结点
+    boolean accessOrder; // 是否按照访问顺序进行动态排列
+
+    /* 构造函数 */
+    public LinkHashMap(int capacity, float loadFactor, boolean accessOrder) {
+        if (capacity % 2 !=0 || capacity <= 0) {
+            throw new IllegalArgumentException("illegal capacity: " + capacity);
+        }
+        if (loadFactor <= 0) {
+            throw new IllegalArgumentException("illegal loadFactor: " + loadFactor);
+        }
+        this.capacity = capacity;
+        this.loadFactor = loadFactor;
+        this.accessOrder = accessOrder;
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Entry<K, V>[] table = (Entry<K, V>[]) new Entry[capacity];
+        this.table = table;
+        HEAD.after = TAIL;
+        TAIL.before = HEAD;
+    }
+    public LinkHashMap(int capacity, float loadFactor) {
+        this(capacity, loadFactor, false);
+    }
+    public LinkHashMap(int capacity, boolean accessOrder) {
+        this(capacity, DEFAULT_LOAD_FACTOR, accessOrder);
+    }
+    public LinkHashMap(int capacity) {
+        this(capacity, DEFAULT_LOAD_FACTOR, false);
+    }
+    public LinkHashMap(boolean accessOrder) {
+        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, accessOrder);
+    }
+    public LinkHashMap() {
+        this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR, false);
+    }
+
+    /* 查询、清空 */
+    public int size() {
+        return size;
+    }
+    public int capacity() {
+        return capacity;
+    }
+    public float loadFactor() {
+        return loadFactor;
+    }
+    public boolean accessOrder() {
+        return accessOrder;
+    }
+    public boolean empty() {
+        return size == 0;
+    }
+    public void clear() {
+        Entry<K, V> temp;
+        for (int i = 0; i < capacity; i++) {
+            while (table[i] != null) {
+                temp = table[i].next;
+                table[i].hash = 0;
+                table[i].key = null;
+                table[i].value = null;
+                table[i].next = null;
+                table[i].before = null;
+                table[i].after = null;
+                table[i] = temp;
+            }
+        }
+        HEAD.after = TAIL;
+        TAIL.before = HEAD;
+        size = 0;
+    }
+
+    /* hash 相关 */
+    int hash(K key) {
+        int hash;
+        return key == null ? 0 : (hash = key.hashCode()) ^ (hash >>> 16);
+    }
+    int indexFor(int hash) {
+        return hash & (capacity - 1);
+    }
+
+    /* 自动扩容 */
+    private void autoGrow(int minSize) {
+        if (minSize > capacity * loadFactor) {
+            table = Arrays.copyOf(table, capacity * 2);
+            capacity = table.length;
+            Entry<K, V> head = new Entry<K, V>(0, null, null, null), entry, temp;
+            int index;
+            for (int i = 0; i < capacity / 2; i++) {
+                head.next = table[i];
+                for (entry = head; entry.next != null;) {
+                    if ((index = indexFor(entry.next.hash)) != i) {
+                        temp = entry.next;
+                        entry.next = entry.next.next;
+                        temp.next = table[index];
+                        table[index] = temp;
+                    } else {
+                        entry = entry.next;
+                    }
+                }
+                table[i] = head.next;
+            }
+        }
+    }
+
+    /* put、get、remove */
+    public V put(K key, V value) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                V oldValue = entry.value;
+                entry.value = value;
+                return oldValue;
+            }
+        }
+        autoGrow(size + 1);
+        index = indexFor(hash);
+        table[index] = new Entry<K, V>(hash, key, value, table[index], TAIL.before, TAIL);
+        TAIL.before = table[index];
+        table[index].before.after = table[index];
+        size++;
+        return null;
+    }
+    public V get(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                if (accessOrder) {
+                    entry.before.after = entry.after;
+                    entry.after.before = entry.before;
+                    entry.after = HEAD.after;
+                    entry.after.before = entry;
+                    HEAD.after = entry;
+                    entry.before = HEAD;
+                }
+                return entry.value;
+            }
+        }
+        return null;
+    }
+    public V remove(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        if (table[index] == null) {
+            return null;
+        }
+        Entry<K, V> head = new Entry<K, V>(0, null, null, table[index]), entry, temp;
+        for (entry = head; entry.next != null; entry = entry.next) {
+            if (entry.next.hash == hash) {
+                temp = entry.next.next;
+                entry.next.before.after = entry.next.after;
+                entry.next.after.before = entry.next.before;
+                V value = entry.next.value;
+                entry.next.hash = 0;
+                entry.next.key = null;
+                entry.next.value = null;
+                entry.next.next = null;
+                entry.next.before = null;
+                entry.next.after = null;
+                entry.next = temp;
+                table[index] = head.next;
+                size--;
+                return value;
+            }
+        }
+        return null;
+    }
+
+    // 是否包含指定 key、value
+    public boolean hasKey(K key) {
+        int hash = hash(key);
+        int index = indexFor(hash);
+        for (Entry<K, V> entry = table[index]; entry != null; entry = entry.next) {
+            if (entry.hash == hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasValue(V value) {
+        for (Entry<K, V> entry = HEAD.after; entry != TAIL; entry = entry.after) {
+            if (entry.value.equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 获取 key、value 的数组
+    public K[] keys() {
+        if (size == 0) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        K[] array = (K[]) Array.newInstance(HEAD.after.key.getClass(), size);
+        int index = 0;
+        for (Entry<K, V> entry = HEAD.after; entry != TAIL; entry = entry.after) {
+            array[index++] = entry.key;
+        }
+        return array;
+    }
+    public V[] values() {
+        if (size == 0) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        V[] array = (V[]) Array.newInstance(HEAD.after.value.getClass(), size);
+        int index = 0;
+        for (Entry<K, V> entry = HEAD.after; entry != TAIL; entry = entry.after) {
+            array[index++] = entry.value;
+        }
+        return array;
+    }
+
+    @Override
+    public String toString() {
+        if (size == 0) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (Entry<K, V> entry = HEAD.after; entry != TAIL; entry = entry.after) {
+            sb.append("{" + entry.key + ", " + entry.value + "}, ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+    public String toDescString() {
+        if (size == 0) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (Entry<K, V> entry = TAIL.before; entry != HEAD; entry = entry.before) {
+            sb.append("{" + entry.key + ", " + entry.value + "}, ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    @Override
+    public Iterator<LinkHashMap.Entry<K, V>> iterator() {
+        return new Itr(true);
+    }
+    public Iterator<LinkHashMap.Entry<K, V>> descIterator() {
+        return new Itr(false);
+    }
+
+    private class Itr implements Iterator<LinkHashMap.Entry<K, V>> {
+        private Entry<K, V> entry;
+        private boolean ascending;
+
+        private Itr(boolean ascending) {
+            this.ascending = ascending;
+            entry = ascending ? HEAD : TAIL;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return ascending ? entry.after != TAIL : entry.before != HEAD;
+        }
+
+        @Override
+        public LinkHashMap.Entry<K, V> next() {
+            return entry = ascending ? entry.after : entry.before;
+        }
+    }
+}
+</script></code></pre>
+
+
+
+**LinkHashSet 包装类**
+<pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
+
+import java.util.Iterator;
+
+public class LinkHashSet<E> implements Iterable<E> {
+    private LinkHashMap<E, Object> map; // 使用 LinkHashMap 存储
+
+    /* 构造函数 */
+    public LinkHashSet(int capacity, float loadFactor, boolean accessOrder) {
+        map = new LinkHashMap<E, Object>(capacity, loadFactor, accessOrder);
+    }
+    public LinkHashSet(int capacity, float loadFactor) {
+        map = new LinkHashMap<E, Object>(capacity, loadFactor);
+    }
+    public LinkHashSet(int capacity, boolean accessOrder) {
+        map = new LinkHashMap<E, Object>(capacity, accessOrder);
+    }
+    public LinkHashSet(int capacity) {
+        map = new LinkHashMap<E, Object>(capacity);
+    }
+    public LinkHashSet(boolean accessOrder) {
+        map = new LinkHashMap<E, Object>(accessOrder);
+    }
+    public LinkHashSet() {
+        map = new LinkHashMap<E, Object>();
+    }
+
+    /* 查询、清空 */
+    public int size() {
+        return map.size;
+    }
+    public int capacity() {
+        return map.capacity;
+    }
+    public float loadFactor() {
+        return map.loadFactor;
+    }
+    public boolean accessOrder() {
+        return map.accessOrder;
+    }
+    public boolean empty() {
+        return map.empty();
+    }
+    public void clear() {
+        map.clear();
+    }
+
+    /* 添加、移除 */
+    public void add(E elem) {
+        map.put(elem, null);
+    }
+    public void remove(E elem) {
+        map.remove(elem);
+    }
+
+    // 子集
+    public boolean containsAll(LinkHashSet<E> set) {
+        for (LinkHashMap.Entry<E, Object> entry = set.map.HEAD.after; entry != set.map.TAIL; entry = entry.after) {
+            if (!map.hasKey(entry.key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 并集
+    public void addAll(LinkHashSet<E> set) {
+        for (LinkHashMap.Entry<E, Object> entry = set.map.HEAD.after; entry != set.map.TAIL; entry = entry.after) {
+            map.put(entry.key, null);
+        }
+    }
+
+    // 交集
+    public void retainAll(LinkHashSet<E> set) {
+        LinkHashMap<E, Object> newMap = new LinkHashMap<>(map.capacity, map.loadFactor, map.accessOrder);
+        for (LinkHashMap.Entry<E, Object> entry = map.HEAD.after; entry != map.TAIL; entry = entry.after) {
+            if (set.map.hasKey(entry.key)) {
+                newMap.put(entry.key, null);
+            }
+        }
+        map = newMap;
+    }
+
+    // 补集
+    public void removeAll(LinkHashSet<E> set) {
+        for (LinkHashMap.Entry<E, Object> entry = set.map.HEAD.after; entry != set.map.TAIL; entry = entry.after) {
+            map.remove(entry.key);
+        }
+    }
+
+    // 是否包含指定元素
+    public boolean has(E elem) {
+        return map.hasKey(elem);
+    }
+
+    // 获取包含所有元素的数组
+    public E[] values() {
+        return map.keys();
+    }
+
+    @Override
+    public String toString() {
+        if (map.size == 0) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (LinkHashMap.Entry<E, Object> entry = map.HEAD.after; entry != map.TAIL; entry = entry.after) {
+            sb.append(entry.key + ", ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+    public String toDescString() {
+        if (map.size == 0) {
+            return "(null)";
+        }
+        StringBuilder sb = new StringBuilder("{ ");
+        for (LinkHashMap.Entry<E, Object> entry = map.TAIL.before; entry != map.HEAD; entry = entry.before) {
+            sb.append(entry.key + ", ");
+        }
+        sb.append("\b\b }");
+        return sb.toString();
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return new Itr(true);
+    }
+    public Iterator<E> descIterator() {
+        return new Itr(false);
+    }
+
+    private class Itr implements Iterator<E> {
+        private boolean ascending;
+        private LinkHashMap.Entry<E, Object> entry;
+
+        private Itr(boolean ascending) {
+            this.ascending = ascending;
+            entry = ascending ? map.HEAD : map.TAIL;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return ascending ? entry.after != map.TAIL : entry.before != map.HEAD;
+        }
+
+        @Override
+        public E next() {
+            return (entry = ascending ? entry.after : entry.before).key;
+        }
+    }
+}
+</script></code></pre>
