@@ -1669,7 +1669,7 @@ public static <T> Queue<T> asLifoQueue(Deque<T> deque); // 返回一个 LIFO 双
 > 
 github 仓库：[Java - Collection 框架的简单实现](https://github.com/zfl9/java-collection)
 
-**ArrayList**
+**ArrayList 类**
 "动态数组"，其实就是 built-in 数组的包装，其最主要的功能就是要实现容量的自动增长。
 <pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
 
@@ -1856,7 +1856,7 @@ public class ArrayList<E> implements Iterable<E> {
 
 
 
-**LinkList**
+**LinkList 类**
 "单向链表"，只有 next 节点，每次访问元素只能从 HEAD 头结点开始遍历。
 <pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
 
@@ -2056,7 +2056,7 @@ public class LinkList<E> implements Iterable<E> {
 
 
 
-**DLinkList**
+**DLinkList 类**
 "双向链表"，有 prev/next 两个节点，头结点 HEAD、尾节点 TAIL；头结点的 prev 为 null，尾节点的 next 为 null。
 <pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
 
@@ -2324,7 +2324,7 @@ public class DLinkList<E> implements Iterable<E> {
 
 
 
-**HashMap**
+**HashMap 类**
 "哈希表"，使用 hash() 函数计算 key 的 hash 值，使用 indexFor() 函数计算指定 hash 的数组索引，使用"拉链法"解决 hash 冲突。
 <pre><code class="language-java line-numbers"><script type="text/plain">package com.zfl9.collection;
 
